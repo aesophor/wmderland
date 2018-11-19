@@ -1,5 +1,5 @@
 #include "wm.hpp"
-#include <iostream>
+#include <algorithm>
 #include <glog/logging.h>
 
 std::unique_ptr<WindowManager> WindowManager::GetInstance() {
@@ -85,14 +85,7 @@ void WindowManager::Run() {
 }
 
 void WindowManager::OnCreateNotify() {
-    Window w = event_.xmaprequest.window;
-    XClassHint hint;
-    XGetClassHint(dpy_, w, &hint);
 
-    if (strcmp(hint.res_class, "Polybar") != 0) {
-        LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
-        workspaces_[current_workspace_]->windows.push_back(w);
-    }
 }
 
 void WindowManager::OnDestroyNotify() {
@@ -115,7 +108,12 @@ void WindowManager::OnMapRequest() {
     if (strcmp(hint.res_class, "Polybar") != 0) {
         XSetWindowBorderWidth(dpy_, w, BORDER_WIDTH);
         XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
-        //workspaces_[current_workspace_]->windows.push_back(w);
+        LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
+        
+        std::vector<Window>& windows = workspaces_[current_workspace_]->windows;
+        if (std::find(windows.begin(), windows.end(), w) == windows.end()) {
+            workspaces_[current_workspace_]->windows.push_back(w);
+        }
     }
 
     XMapWindow(dpy_, w);
