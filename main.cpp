@@ -1,6 +1,9 @@
 #include "wm.hpp"
+#include <glog/logging.h>
 
-int main(void) {
+int main(int argc, char** args) {
+    google::InitGoogleLogging(args[0]);
+
     std::unique_ptr<WindowManager> wm = WindowManager::GetInstance();
 
     if (wm == None) {

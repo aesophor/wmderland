@@ -1,5 +1,6 @@
 #include "wm.hpp"
-#include "util.hpp"
+#include <iostream>
+#include <glog/logging.h>
 
 std::unique_ptr<WindowManager> WindowManager::GetInstance() {
     Display* dpy;    
@@ -10,6 +11,12 @@ std::unique_ptr<WindowManager> WindowManager::GetInstance() {
 WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
     fullscreen_ = false;
+
+    // Initialize 10 workspaces.
+    for (int i = 0; i < WORKSPACE_COUNT - 1; i++) {
+        workspaces_.push_back(new Workspace());
+    }
+    current_workspace_ = 0;
 
     // Set _NET_WM_NAME.
     XChangeProperty(dpy_, DefaultRootWindow(dpy_),
@@ -28,6 +35,10 @@ WindowManager::WindowManager(Display* dpy) {
 }
 
 WindowManager::~WindowManager() {
+    for (auto w : workspaces_) {
+        delete w;
+    }
+
     XCloseDisplay(dpy_);
 }
 
@@ -40,6 +51,12 @@ void WindowManager::Run() {
         XNextEvent(dpy_, &event_);
         
         switch (event_.type) {
+            case CreateNotify:
+                OnCreateNotify();
+                break;
+            case DestroyNotify:
+                OnDestroyNotify();
+                break;
             case MapRequest:
                 OnMapRequest();
                 break;
@@ -55,10 +72,24 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify();
                 break;
+            case FocusIn:
+                OnFocusIn();
+                break;
+            case FocusOut:
+                OnFocusOut();
+                break;
             default:
                 break;
         }
     }
+}
+
+void WindowManager::OnCreateNotify() {
+    //workspaces_[current_workspace_]->windows.push_back(event_.xcreatewindow.window);
+}
+
+void WindowManager::OnDestroyNotify() {
+    // Remove the window struct from the window vector of current workspace.
 }
 
 void WindowManager::OnMapRequest() {
@@ -70,6 +101,8 @@ void WindowManager::OnMapRequest() {
     if (strcmp(hint.res_class, "Polybar") != 0) {
         XSetWindowBorderWidth(dpy_, w, BORDER_WIDTH);
         XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
+        LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
+        workspaces_[current_workspace_]->windows.push_back(w);
     }
 
     XMapWindow(dpy_, w);
@@ -85,6 +118,10 @@ void WindowManager::OnKeyPress() {
         return;
     } else if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("d"))) {
         system("rofi -show drun");
+        return;
+    } else if (event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+            && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+        GotoWorkspace(event_.xkey.keycode - 10);
         return;
     }
 
@@ -120,6 +157,11 @@ void WindowManager::OnButtonPress() {
     // Clicking on a window raises that window to the top.
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
     XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
+    
+    //for (auto const& w : workspaces_[current_workspace_]->windows) {
+    //    XSetWindowBorder(dpy_, w, UNFOCUSED_COLOR);
+    //}
+    //XSetWindowBorder(dpy_, event_.xbutton.subwindow, FOCUSED_COLOR);
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
@@ -150,4 +192,34 @@ void WindowManager::OnMotionNotify() {
     if (new_width < MIN_WINDOW_WIDTH) new_width = MIN_WINDOW_WIDTH;
     if (new_height < MIN_WINDOW_HEIGHT) new_height = MIN_WINDOW_HEIGHT;
     XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
+}
+
+void WindowManager::OnFocusIn() {
+    XSetWindowBorder(dpy_, event_.xfocus.window, FOCUSED_COLOR);
+    workspaces_[current_workspace_]->active_window = event_.xfocus.window;
+}
+
+
+void WindowManager::OnFocusOut() {
+    XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
+    workspaces_[current_workspace_]->active_window = None;
+}
+
+
+void WindowManager::GotoWorkspace(int n) {
+    if (workspaces_[n] == workspaces_[current_workspace_]) {
+        return;
+    }
+
+    // Unmap all windows in the current workspace.
+    for (auto const w : workspaces_[current_workspace_]->windows) {
+        XUnmapWindow(dpy_, w);
+    }
+   
+    // Map all windows in the new workspace.
+    for (auto const w : workspaces_[n]->windows) {
+        XMapWindow(dpy_, w);
+    }
+
+    current_workspace_ = n;
 }
