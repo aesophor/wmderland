@@ -224,7 +224,7 @@ void WindowManager::GotoWorkspace(int n) {
     // Unmap all windows in the current workspace.
     for (auto const w : workspaces_[current_workspace_]->windows) {
         XUnmapWindow(dpy_, w);
-    }
+    } 
    
     // Map all windows in the new workspace.
     for (auto const w : workspaces_[n]->windows) {
