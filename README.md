@@ -1,6 +1,6 @@
 <div align="center">
 <h3>Wmderland</h3>
-<img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.png">
+<img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.jpg">
 
 </div>
 
