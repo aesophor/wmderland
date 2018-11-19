@@ -85,11 +85,25 @@ void WindowManager::Run() {
 }
 
 void WindowManager::OnCreateNotify() {
-    //workspaces_[current_workspace_]->windows.push_back(event_.xcreatewindow.window);
+    Window w = event_.xmaprequest.window;
+    XClassHint hint;
+    XGetClassHint(dpy_, w, &hint);
+
+    if (strcmp(hint.res_class, "Polybar") != 0) {
+        LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
+        workspaces_[current_workspace_]->windows.push_back(w);
+    }
 }
 
 void WindowManager::OnDestroyNotify() {
     // Remove the window struct from the window vector of current workspace.
+    std::vector<Window>& windows = workspaces_[current_workspace_]->windows;
+
+    for (size_t i = 0; i < windows.size(); i++) {
+        if (windows[i] == event_.xdestroywindow.window) {
+            windows.erase(windows.begin() + i);
+        }
+    }
 }
 
 void WindowManager::OnMapRequest() {
@@ -101,8 +115,7 @@ void WindowManager::OnMapRequest() {
     if (strcmp(hint.res_class, "Polybar") != 0) {
         XSetWindowBorderWidth(dpy_, w, BORDER_WIDTH);
         XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
-        LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
-        workspaces_[current_workspace_]->windows.push_back(w);
+        //workspaces_[current_workspace_]->windows.push_back(w);
     }
 
     XMapWindow(dpy_, w);
