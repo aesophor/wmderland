@@ -171,10 +171,9 @@ void WindowManager::OnButtonPress() {
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
     XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
     
-    //for (auto const& w : workspaces_[current_workspace_]->windows) {
-    //    XSetWindowBorder(dpy_, w, UNFOCUSED_COLOR);
-    //}
-    //XSetWindowBorder(dpy_, event_.xbutton.subwindow, FOCUSED_COLOR);
+    for (auto const w : workspaces_[current_workspace_]->windows) {
+        XSetWindowBorder(dpy_, w, (w == event_.xbutton.subwindow) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
+    }
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
