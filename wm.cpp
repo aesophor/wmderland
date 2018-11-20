@@ -1,23 +1,31 @@
 #include "wm.hpp"
+#include "global.hpp"
 #include <algorithm>
 #include <glog/logging.h>
 
-std::unique_ptr<WindowManager> WindowManager::GetInstance() {
-    Display* dpy;    
-    return ((dpy = XOpenDisplay(None)) == None) ? 
-        None : std::unique_ptr<WindowManager>(new WindowManager(dpy));
+WindowManager* WindowManager::instance_;
+
+WindowManager* WindowManager::GetInstance() {
+    // If the instance is not yet initialized, we'll try to open a display
+    // to X server. If it fails (i.e., dpy is None), then we return None
+    // to the caller. Otherwise we return an instance of WindowManager.
+    if (!instance_) {
+        Display* dpy;
+        instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : None;
+    }
+    return instance_;
 }
 
 WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
+    current_ = 0;
     fullscreen_ = false;
 
     // Initialize 10 workspaces.
     for (int i = 0; i < WORKSPACE_COUNT - 1; i++) {
-        workspaces_.push_back(new Workspace());
+        workspaces_.push_back(new Workspace(dpy_, i));
     }
-    current_workspace_ = 0;
-
+    
     // Set _NET_WM_NAME.
     XChangeProperty(dpy_, DefaultRootWindow(dpy_),
             XInternAtom(dpy_, "_NET_WM_NAME", False),
@@ -49,7 +57,7 @@ void WindowManager::Run() {
     for(;;) {
         // Retrieve and dispatch next X event.
         XNextEvent(dpy_, &event_);
-        
+
         switch (event_.type) {
             case CreateNotify:
                 OnCreateNotify();
@@ -72,12 +80,6 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify();
                 break;
-            case FocusIn:
-                OnFocusIn();
-                break;
-            case FocusOut:
-                OnFocusOut();
-                break;
             default:
                 break;
         }
@@ -89,14 +91,9 @@ void WindowManager::OnCreateNotify() {
 }
 
 void WindowManager::OnDestroyNotify() {
-    // Remove the window struct from the window vector of current workspace.
-    std::vector<Window>& windows = workspaces_[current_workspace_]->windows;
-
-    for (size_t i = 0; i < windows.size(); i++) {
-        if (windows[i] == event_.xdestroywindow.window) {
-            windows.erase(windows.begin() + i);
-        }
-    }
+    // When a window is destroyed, remove it from the list of windows
+    // in the current workspace.
+    workspaces_[current_]->Remove(event_.xdestroywindow.window);
 }
 
 void WindowManager::OnMapRequest() {
@@ -110,9 +107,9 @@ void WindowManager::OnMapRequest() {
         XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
         LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
         
-        std::vector<Window>& windows = workspaces_[current_workspace_]->windows;
-        if (std::find(windows.begin(), windows.end(), w) == windows.end()) {
-            workspaces_[current_workspace_]->windows.push_back(w);
+        // If this window is already in the vector, don't re-add it.
+        if (!workspaces_[current_]->Has(w)) {
+            workspaces_[current_]->Add(w);
         }
     }
 
@@ -169,9 +166,9 @@ void WindowManager::OnButtonPress() {
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
     XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
     
-    for (auto const w : workspaces_[current_workspace_]->windows) {
-        XSetWindowBorder(dpy_, w, (w == event_.xbutton.subwindow) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
-    }
+    //for (auto const w : workspaces_[current_workspace_]->windows) {
+    //    XSetWindowBorder(dpy_, w, (w == event_.xbutton.subwindow) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
+    //}
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
@@ -204,32 +201,12 @@ void WindowManager::OnMotionNotify() {
     XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
 }
 
-void WindowManager::OnFocusIn() {
-    XSetWindowBorder(dpy_, event_.xfocus.window, FOCUSED_COLOR);
-    workspaces_[current_workspace_]->active_window = event_.xfocus.window;
-}
-
-
-void WindowManager::OnFocusOut() {
-    XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
-    workspaces_[current_workspace_]->active_window = None;
-}
-
-
-void WindowManager::GotoWorkspace(int n) {
-    if (workspaces_[n] == workspaces_[current_workspace_]) {
+void WindowManager::GotoWorkspace(short next) {
+    if (current_ == next) {
         return;
     }
 
-    // Unmap all windows in the current workspace.
-    for (auto const w : workspaces_[current_workspace_]->windows) {
-        XUnmapWindow(dpy_, w);
-    } 
-   
-    // Map all windows in the new workspace.
-    for (auto const w : workspaces_[n]->windows) {
-        XMapWindow(dpy_, w);
-    }
-
-    current_workspace_ = n;
+    workspaces_[current_]->UnmapAllWindows();
+    workspaces_[next]->MapAllWindows();
+    current_ = next;
 }

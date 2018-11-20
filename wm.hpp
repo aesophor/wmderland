@@ -6,32 +6,18 @@
 #include <X11/Xutil.h>
 #include <cstring>
 #include <vector>
-#include <memory>
-
-#define WM_NAME "Wmderland"
-#define VERSION 0.1
-
-#define MOUSE_LEFT_BTN 1
-#define MOUSE_RIGHT_BTN 3
-
-#define MIN_WINDOW_WIDTH 50
-#define MIN_WINDOW_HEIGHT 50
-#define SCREEN_WIDTH 1680
-#define SCREEN_HEIGHT 1050
-
-#define BORDER_WIDTH 3
-#define FOCUSED_COLOR 0xffffff
-#define UNFOCUSED_COLOR 0x41485f
-
-#define WORKSPACE_COUNT 8
 
 class WindowManager {
 public:
-    static std::unique_ptr<WindowManager> GetInstance();
+    /* Singleton since only a single WM is required at once. */
+    static WindowManager* GetInstance();
     ~WindowManager();
     void Run();
 private:
+    static WindowManager* instance_;
     WindowManager(Display* dpy);
+    
+    /* XEvent handlers. */
     void OnCreateNotify();
     void OnDestroyNotify();
     void OnMapRequest();
@@ -39,10 +25,12 @@ private:
     void OnButtonPress();
     void OnButtonRelease();
     void OnMotionNotify();
-    void OnFocusIn();
-    void OnFocusOut();
 
-    void GotoWorkspace(int n);
+    /* Workspace related */
+    void GotoWorkspace(short n);
+
+    /* Client related */
+    void Decorate(Window w);
     
     Display* dpy_;
     XEvent event_;
@@ -50,8 +38,9 @@ private:
     XButtonEvent start_;
     bool fullscreen_;
 
+    /* Workspaces */
     std::vector<Workspace*> workspaces_;
-    short current_workspace_;
+    short current_;
 };
 
 #endif
