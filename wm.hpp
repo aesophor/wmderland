@@ -25,6 +25,9 @@ private:
     void OnButtonPress();
     void OnButtonRelease();
     void OnMotionNotify();
+    void OnFocusIn();
+    void OnFocusOut();
+    static int OnXError(Display* dpy, XErrorEvent* e);
 
     /* Workspace related */
     void GotoWorkspace(short n);

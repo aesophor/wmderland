@@ -1,5 +1,6 @@
 #include "wm.hpp"
 #include "global.hpp"
+#include <string>
 #include <algorithm>
 #include <glog/logging.h>
 
@@ -39,7 +40,10 @@ WindowManager::WindowManager(Display* dpy) {
     XGrabButton(dpy_, AnyButton, AnyModifier, DefaultRootWindow(dpy_), True,
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
+    // Enable substructure redirection on the root window.
     XSelectInput(dpy_, DefaultRootWindow(dpy_), SubstructureNotifyMask | SubstructureRedirectMask);
+
+    //XSetErrorHandler(&WindowManager::OnXError);
 }
 
 WindowManager::~WindowManager() {
@@ -53,7 +57,7 @@ WindowManager::~WindowManager() {
 
 void WindowManager::Run() {
     system("displayctl && ~/.config/polybar/launch.sh");
-    
+
     for(;;) {
         // Retrieve and dispatch next X event.
         XNextEvent(dpy_, &event_);
@@ -79,6 +83,12 @@ void WindowManager::Run() {
                 break;
             case MotionNotify:
                 OnMotionNotify();
+                break;
+            case FocusIn:
+                OnFocusIn();
+                break;
+            case FocusOut:
+                OnFocusOut();
                 break;
             default:
                 break;
@@ -110,6 +120,7 @@ void WindowManager::OnMapRequest() {
         // If this window is already in the vector, don't re-add it.
         if (!workspaces_[current_]->Has(w)) {
             workspaces_[current_]->Add(w);
+            XSelectInput(dpy_, w, FocusChangeMask);
         }
     }
 
@@ -201,6 +212,31 @@ void WindowManager::OnMotionNotify() {
     XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
 }
 
+void WindowManager::OnFocusIn() {
+    XSetWindowBorder(dpy_, event_.xfocus.window, FOCUSED_COLOR);
+}
+
+void WindowManager::OnFocusOut() {
+    XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
+}
+
+std::string XRequestCodeToString(unsigned char request_code);
+
+int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
+    const int MAX_ERROR_TEXT_LENGTH = 1024;
+    char error_text[MAX_ERROR_TEXT_LENGTH];
+    XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
+    LOG(ERROR) << "Received X error:\n"
+        << "    Request: " << int(e->request_code)
+        << " - " << XRequestCodeToString(e->request_code) << "\n"
+        << "    Error code: " << int(e->error_code)
+        << " - " << error_text << "\n"
+        << "    Resource ID: " << e->resourceid;
+    // The return value is ignored.
+    return 0;
+}
+
+
 void WindowManager::GotoWorkspace(short next) {
     if (current_ == next) {
         return;
@@ -209,4 +245,131 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllWindows();
     workspaces_[next]->MapAllWindows();
     current_ = next;
+}
+
+std::string XRequestCodeToString(unsigned char request_code) {
+  static const char* const X_REQUEST_CODE_NAMES[] = {
+      "",
+      "CreateWindow",
+      "ChangeWindowAttributes",
+      "GetWindowAttributes",
+      "DestroyWindow",
+      "DestroySubwindows",
+      "ChangeSaveSet",
+      "ReparentWindow",
+      "MapWindow",
+      "MapSubwindows",
+      "UnmapWindow",
+      "UnmapSubwindows",
+      "ConfigureWindow",
+      "CirculateWindow",
+      "GetGeometry",
+      "QueryTree",
+      "InternAtom",
+      "GetAtomName",
+      "ChangeProperty",
+      "DeleteProperty",
+      "GetProperty",
+      "ListProperties",
+      "SetSelectionOwner",
+      "GetSelectionOwner",
+      "ConvertSelection",
+      "SendEvent",
+      "GrabPointer",
+      "UngrabPointer",
+      "GrabButton",
+      "UngrabButton",
+      "ChangeActivePointerGrab",
+      "GrabKeyboard",
+      "UngrabKeyboard",
+      "GrabKey",
+      "UngrabKey",
+      "AllowEvents",
+      "GrabServer",
+      "UngrabServer",
+      "QueryPointer",
+      "GetMotionEvents",
+      "TranslateCoords",
+      "WarpPointer",
+      "SetInputFocus",
+      "GetInputFocus",
+      "QueryKeymap",
+      "OpenFont",
+      "CloseFont",
+      "QueryFont",
+      "QueryTextExtents",
+      "ListFonts",
+      "ListFontsWithInfo",
+      "SetFontPath",
+      "GetFontPath",
+      "CreatePixmap",
+      "FreePixmap",
+      "CreateGC",
+      "ChangeGC",
+      "CopyGC",
+      "SetDashes",
+      "SetClipRectangles",
+      "FreeGC",
+      "ClearArea",
+      "CopyArea",
+      "CopyPlane",
+      "PolyPoint",
+      "PolyLine",
+      "PolySegment",
+      "PolyRectangle",
+      "PolyArc",
+      "FillPoly",
+      "PolyFillRectangle",
+      "PolyFillArc",
+      "PutImage",
+      "GetImage",
+      "PolyText8",
+      "PolyText16",
+      "ImageText8",
+      "ImageText16",
+      "CreateColormap",
+      "FreeColormap",
+      "CopyColormapAndFree",
+      "InstallColormap",
+      "UninstallColormap",
+      "ListInstalledColormaps",
+      "AllocColor",
+      "AllocNamedColor",
+      "AllocColorCells",
+      "AllocColorPlanes",
+      "FreeColors",
+      "StoreColors",
+      "StoreNamedColor",
+      "QueryColors",
+      "LookupColor",
+      "CreateCursor",
+      "CreateGlyphCursor",
+      "FreeCursor",
+      "RecolorCursor",
+      "QueryBestSize",
+      "QueryExtension",
+      "ListExtensions",
+      "ChangeKeyboardMapping",
+      "GetKeyboardMapping",
+      "ChangeKeyboardControl",
+      "GetKeyboardControl",
+      "Bell",
+      "ChangePointerControl",
+      "GetPointerControl",
+      "SetScreenSaver",
+      "GetScreenSaver",
+      "ChangeHosts",
+      "ListHosts",
+      "SetAccessControl",
+      "SetCloseDownMode",
+      "KillClient",
+      "RotateProperties",
+      "ForceScreenSaver",
+      "SetPointerMapping",
+      "GetPointerMapping",
+      "SetModifierMapping",
+      "GetModifierMapping",
+      "NoOperation",
+  };
+  return X_REQUEST_CODE_NAMES[request_code];
 }
