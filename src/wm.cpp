@@ -61,14 +61,14 @@ WindowManager::WindowManager(Display* dpy) {
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
     // Enable substructure redirection on the root window.
-    XSelectInput(dpy_, DefaultRootWindow(dpy_), SubstructureNotifyMask | SubstructureRedirectMask);
+    XSelectInput(dpy_, DefaultRootWindow(dpy_), PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask);
 
     // Setup the bitch catcher.
     XSetErrorHandler(&WindowManager::OnXError);
 }
 
 WindowManager::~WindowManager() {
-    for (auto w : workspaces_) {
+    for (auto const w : workspaces_) {
         delete w;
     }
 
@@ -106,6 +106,9 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify();
                 break;
+            case PropertyNotify:
+                OnPropertyNotify();
+                break;
             case FocusIn:
                 OnFocusIn();
                 break;
@@ -124,7 +127,11 @@ void WindowManager::OnCreateNotify() {
 
 void WindowManager::OnDestroyNotify() {
     // When a window is destroyed, remove it from the current workspace's client list.
-    workspaces_[current_]->Remove(event_.xdestroywindow.window);
+    Window w = event_.xdestroywindow.window;
+    workspaces_[current_]->Remove(w);
+
+    Atom net_active_window = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
+    property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window);
 }
 
 void WindowManager::OnMapRequest() {
@@ -134,9 +141,7 @@ void WindowManager::OnMapRequest() {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
-    if (wm_utils::IsBar(dpy_, w)) {
-        return;
-    }
+    if (wm_utils::IsBar(dpy_, w)) return;
     
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
@@ -191,9 +196,7 @@ void WindowManager::OnKeyPress() {
 }
 
 void WindowManager::OnButtonPress() {
-    if (event_.xbutton.subwindow == None) {
-        return;
-    }
+    if (event_.xbutton.subwindow == None) return;
 
     // Clicking on a window raises that window to the top.
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
@@ -232,10 +235,15 @@ void WindowManager::OnMotionNotify() {
     XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
 }
 
+void WindowManager::OnPropertyNotify() {
+
+}
+
 void WindowManager::OnFocusIn() {
+    XSetWindowBorder(dpy_, event_.xfocus.window, FOCUSED_COLOR);
+
     Window w = event_.xfocus.window;
     Client* c = workspaces_[current_]->Get(w);
-    XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
     property_mgr_->Set(
             DefaultRootWindow(dpy_),
             property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW],
@@ -244,9 +252,8 @@ void WindowManager::OnFocusIn() {
 }
 
 void WindowManager::OnFocusOut() {
-    Window w = event_.xfocus.window;
     Atom net_active_window = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
-    property_mgr_->Delete(w, net_active_window);
+    property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {

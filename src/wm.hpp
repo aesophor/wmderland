@@ -28,6 +28,7 @@ private:
     void OnButtonPress();
     void OnButtonRelease();
     void OnMotionNotify();
+    void OnPropertyNotify();
     void OnFocusIn();
     void OnFocusOut();
 

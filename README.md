@@ -19,10 +19,9 @@ Caution: it is NOT YET ready for daily use!
 Just fook off
 
 ## What's not working yet
-
 * Dynamic Tiling
 * User Configuration for defining keybinds, startup applications, colors... etc.
-* Compatiblity with Polybar's `xwindow` module
+
 
 ## What's working
 Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
@@ -35,6 +34,7 @@ Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
 * Kill applications with `Super + q`
 * Fullscreen applications with `Super + f` 
 * _NET_WM_NAME set to "Wmderland"
+* Compatible with Polybar's `xwindow` module (_NET_ACTIVE_WINDOW)
 * Recognizes polybar (because I use polybar lol)
 
 ## License
