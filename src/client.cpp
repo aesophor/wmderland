@@ -8,7 +8,7 @@ Client::Client(Display* dpy, Window window) {
     wm_class_ = wm_utils::QueryWmClass(dpy, window);
     is_bar_ = wm_utils::IsBar(wm_class_);
 
-    //XSelectInput(dpy, window, FocusChangeMask);
+    XSelectInput(dpy, window, FocusChangeMask);
     SetBorderWidth(BORDER_WIDTH);
     SetBorderColor(FOCUSED_COLOR);
 }

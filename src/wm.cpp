@@ -143,7 +143,7 @@ void WindowManager::OnMapRequest() {
     if (!workspaces_[current_]->Has(w)) {
         // XSelectInput() and Borders are automatically done 
         // in the constructor of Client class.
-        workspaces_[current_]->Add(new Client(dpy_, w));
+        workspaces_[current_]->Add(w);
         Center(w);
     }
 
@@ -198,7 +198,7 @@ void WindowManager::OnButtonPress() {
     // Clicking on a window raises that window to the top.
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
     XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
-    workspaces_[current_]->SetFocusClient(event_.xbutton.subwindow);
+    //workspaces_[current_]->SetFocusClient(event_.xbutton.subwindow);
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window

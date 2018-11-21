@@ -10,9 +10,10 @@
 class Workspace {
 public:
     Workspace(Display* dpy, short id);
+    ~Workspace();
 
-    /* clients_ vector manipulation */
-    void Add(Client* c);
+    /* clients_ unordered_map manipulation */
+    void Add(Window w);
     void Remove(Window w);
     bool Has(Window w);
     Client* Get(Window w);

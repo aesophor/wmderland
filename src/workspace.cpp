@@ -8,9 +8,15 @@ Workspace::Workspace(Display* dpy, short id) {
     id_ = id;
 }
 
+Workspace::~Workspace() {
+    for (auto const c : clients_) {
+        delete c;
+    }
+}
 
-void Workspace::Add(Client* c) {
-    clients_.push_back(c);
+
+void Workspace::Add(Window w) {
+    clients_.push_back(new Client(dpy_, w));
 }
 
 void Workspace::Remove(Window w) {
