@@ -1,9 +1,11 @@
 #ifndef WM_HPP_
 #define WM_HPP_
 
+#include "property_manager.hpp"
 #include "workspace.hpp"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #include <cstring>
 #include <vector>
 
@@ -29,12 +31,10 @@ private:
     void OnFocusIn();
     void OnFocusOut();
 
-    /* X Property shit */
-
     /* Workspace manipulation */
     void GotoWorkspace(short n);
 
-    /* Client window manipulation */
+    /* Client window placement */
     void Center(Window w);
     
     Display* dpy_;
@@ -45,6 +45,9 @@ private:
     bool fullscreen_;
 
     void SetCursor(Window w, Cursor c);
+
+    /* Properties */
+    PropertyManager* property_mgr_;
 
     /* Cursors */
     Cursor cursors_[4];

@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 #include <X11/cursorfont.h>
+#include <X11/Xproto.h>
+#include <X11/Xatom.h>
 #include <glog/logging.h>
 
 WindowManager* WindowManager::instance_;
@@ -25,6 +27,15 @@ WindowManager::WindowManager(Display* dpy) {
     current_ = 0;
     fullscreen_ = false;
 
+    // Initialize property manager and set _NET_WM_NAME.
+    property_mgr_ = new PropertyManager(dpy_);
+    property_mgr_->Set(
+            DefaultRootWindow(dpy_), 
+            property_mgr_->GetNetAtom(PropertyManager::NET_WM_NAME),
+            property_mgr_->utf8string(),
+            8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
+    );
+
     // Initialize 10 workspaces.
     for (int i = 0; i < WORKSPACE_COUNT - 1; i++) {
         workspaces_.push_back(new Workspace(dpy_, i));
@@ -35,13 +46,6 @@ WindowManager::WindowManager(Display* dpy) {
     cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
     cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
     SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
-
-    
-    // Set _NET_WM_NAME.
-    XChangeProperty(dpy_, DefaultRootWindow(dpy_),
-            XInternAtom(dpy_, "_NET_WM_NAME", False),
-            XInternAtom(dpy_, "UTF8_STRING", False),
-            8, PropModeReplace, (unsigned char *) WM_NAME, sizeof(WM_NAME));
 
     // Define which key combinations will send us X events.
     XGrabKey(dpy_, AnyKey, Mod4Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
@@ -62,6 +66,7 @@ WindowManager::~WindowManager() {
         delete w;
     }
 
+    delete property_mgr_;
     XCloseDisplay(dpy_);
 }
 
@@ -222,11 +227,24 @@ void WindowManager::OnMotionNotify() {
 }
 
 void WindowManager::OnFocusIn() {
-    XSetWindowBorder(dpy_, event_.xfocus.window, FOCUSED_COLOR);
+    Window w = event_.xfocus.window;
+    XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
+
+    std::string wm_class = wm_utils::QueryWmClass(dpy_, w);
+
+    XChangeProperty(dpy_, DefaultRootWindow(dpy_),
+            XInternAtom(dpy_, "_NET_ACTIVE_WINDOW", False),
+            XInternAtom(dpy_, "UTF8_STRING", False),
+            8, PropModeReplace, (unsigned char *) wm_class.c_str(), wm_class.length());
 }
 
 void WindowManager::OnFocusOut() {
-    XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
+    Window w = event_.xfocus.window;
+    XSetWindowBorder(dpy_, w, UNFOCUSED_COLOR);
+
+    std::string wm_class = wm_utils::QueryWmClass(dpy_, w);
+
+//    XDeleteProperty(dpy_, w, "_NET_ACTIVE_WINDOW");
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
@@ -253,6 +271,8 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[next]->MapAllClients();
     current_ = next;
 }
+
+
 
 void WindowManager::Center(Window w) {
     XWindowAttributes w_attr = wm_utils::QueryWindowAttributes(dpy_, w);

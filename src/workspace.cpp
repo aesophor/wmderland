@@ -73,11 +73,6 @@ void Workspace::SetFocusClient(Window focused_window) {
     }
 }
 
-void Workspace::Center(Window w) {
-    Client* c = Get(w);
-    
-}
-
 
 short Workspace::id() {
     return id_;

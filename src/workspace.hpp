@@ -22,7 +22,6 @@ public:
     void MapAllClients();
     void UnmapAllClients();
     void SetFocusClient(Window focused_window);
-    void Center(Window w);
     
     short id();
     Client* active_client();
