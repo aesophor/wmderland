@@ -1,5 +1,7 @@
 #include "wm.hpp"
 #include "global.hpp"
+#include "client.hpp"
+#include "util.hpp"
 #include <string>
 #include <algorithm>
 #include <glog/logging.h>
@@ -107,26 +109,21 @@ void WindowManager::OnDestroyNotify() {
 }
 
 void WindowManager::OnMapRequest() {
+    // Just map the window now. We'll discuss other things later.
     Window w = event_.xmaprequest.window;
-    XClassHint hint;
-    XGetClassHint(dpy_, w, &hint);
-
-    // Don't apply border on polybar.
-    if (strcmp(hint.res_class, "Polybar") != 0) {
-        XSetWindowBorderWidth(dpy_, w, BORDER_WIDTH);
-        XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
-        LOG(INFO) << "Adding " << hint.res_class << " (" << w << ")";
-        
-        // If this window is already in the vector, don't re-add it.
-        if (!workspaces_[current_]->Has(w)) {
-            workspaces_[current_]->Add(w);
-            XSelectInput(dpy_, w, FocusChangeMask);
-        }
-    }
-
     XMapWindow(dpy_, w);
-    XRaiseWindow(dpy_, w);
-    XSetInputFocus(dpy_, w, RevertToParent, CurrentTime);
+
+    // Bars should not have border or be added to a workspace.
+    // We check if w is a bar by inspecting its WM_CLASS.
+    if (wm_utils::IsBar(dpy_, w)) {
+        return;
+    }
+    
+    // Regular applications should be added to workspace window list,
+    // but first we have to check if it's already in the list!
+    if (!workspaces_[current_]->Has(w)) {
+        workspaces_[current_]->Add(new Client(dpy_, w));
+    }
 }
 
 void WindowManager::OnKeyPress() {
@@ -217,10 +214,8 @@ void WindowManager::OnFocusIn() {
 }
 
 void WindowManager::OnFocusOut() {
-    XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
+    //XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
 }
-
-std::string XRequestCodeToString(unsigned char request_code);
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     const int MAX_ERROR_TEXT_LENGTH = 1024;
@@ -228,7 +223,7 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
     LOG(ERROR) << "Received X error:\n"
         << "    Request: " << int(e->request_code)
-        << " - " << XRequestCodeToString(e->request_code) << "\n"
+//        << " - " << XRequestCodeToString(e->request_code) << "\n"
         << "    Error code: " << int(e->error_code)
         << " - " << error_text << "\n"
         << "    Resource ID: " << e->resourceid;
@@ -245,131 +240,4 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllWindows();
     workspaces_[next]->MapAllWindows();
     current_ = next;
-}
-
-std::string XRequestCodeToString(unsigned char request_code) {
-  static const char* const X_REQUEST_CODE_NAMES[] = {
-      "",
-      "CreateWindow",
-      "ChangeWindowAttributes",
-      "GetWindowAttributes",
-      "DestroyWindow",
-      "DestroySubwindows",
-      "ChangeSaveSet",
-      "ReparentWindow",
-      "MapWindow",
-      "MapSubwindows",
-      "UnmapWindow",
-      "UnmapSubwindows",
-      "ConfigureWindow",
-      "CirculateWindow",
-      "GetGeometry",
-      "QueryTree",
-      "InternAtom",
-      "GetAtomName",
-      "ChangeProperty",
-      "DeleteProperty",
-      "GetProperty",
-      "ListProperties",
-      "SetSelectionOwner",
-      "GetSelectionOwner",
-      "ConvertSelection",
-      "SendEvent",
-      "GrabPointer",
-      "UngrabPointer",
-      "GrabButton",
-      "UngrabButton",
-      "ChangeActivePointerGrab",
-      "GrabKeyboard",
-      "UngrabKeyboard",
-      "GrabKey",
-      "UngrabKey",
-      "AllowEvents",
-      "GrabServer",
-      "UngrabServer",
-      "QueryPointer",
-      "GetMotionEvents",
-      "TranslateCoords",
-      "WarpPointer",
-      "SetInputFocus",
-      "GetInputFocus",
-      "QueryKeymap",
-      "OpenFont",
-      "CloseFont",
-      "QueryFont",
-      "QueryTextExtents",
-      "ListFonts",
-      "ListFontsWithInfo",
-      "SetFontPath",
-      "GetFontPath",
-      "CreatePixmap",
-      "FreePixmap",
-      "CreateGC",
-      "ChangeGC",
-      "CopyGC",
-      "SetDashes",
-      "SetClipRectangles",
-      "FreeGC",
-      "ClearArea",
-      "CopyArea",
-      "CopyPlane",
-      "PolyPoint",
-      "PolyLine",
-      "PolySegment",
-      "PolyRectangle",
-      "PolyArc",
-      "FillPoly",
-      "PolyFillRectangle",
-      "PolyFillArc",
-      "PutImage",
-      "GetImage",
-      "PolyText8",
-      "PolyText16",
-      "ImageText8",
-      "ImageText16",
-      "CreateColormap",
-      "FreeColormap",
-      "CopyColormapAndFree",
-      "InstallColormap",
-      "UninstallColormap",
-      "ListInstalledColormaps",
-      "AllocColor",
-      "AllocNamedColor",
-      "AllocColorCells",
-      "AllocColorPlanes",
-      "FreeColors",
-      "StoreColors",
-      "StoreNamedColor",
-      "QueryColors",
-      "LookupColor",
-      "CreateCursor",
-      "CreateGlyphCursor",
-      "FreeCursor",
-      "RecolorCursor",
-      "QueryBestSize",
-      "QueryExtension",
-      "ListExtensions",
-      "ChangeKeyboardMapping",
-      "GetKeyboardMapping",
-      "ChangeKeyboardControl",
-      "GetKeyboardControl",
-      "Bell",
-      "ChangePointerControl",
-      "GetPointerControl",
-      "SetScreenSaver",
-      "GetScreenSaver",
-      "ChangeHosts",
-      "ListHosts",
-      "SetAccessControl",
-      "SetCloseDownMode",
-      "KillClient",
-      "RotateProperties",
-      "ForceScreenSaver",
-      "SetPointerMapping",
-      "GetPointerMapping",
-      "SetModifierMapping",
-      "GetModifierMapping",
-      "NoOperation",
-  };
-  return X_REQUEST_CODE_NAMES[request_code];
 }

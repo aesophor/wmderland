@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_HPP_
 #define WORKSPACE_HPP_
 
+#include "client.hpp"
 #include <X11/Xlib.h>
 #include <algorithm>
 #include <vector>
@@ -11,21 +12,24 @@ class Workspace {
 public:
     Workspace(Display* dpy, short id);
 
+    void Add(Client* c);
+    void Remove(Window w);
+    bool Has(Window w);
+    Client* Get(Window w);
+    std::string ToString();
+
     void MapAllWindows();
     void UnmapAllWindows();
-    
-    void Add(const Window w);
-    void Remove(const Window w);
-    bool Has(const Window w);
-
+     
     short id();
-    Window active_window();
+    Client* active_client();
 
 private:
     Display* dpy_;
     short id_;
-    Window active_window_;
-    std::vector<Window> windows_;
+    
+    Client* active_client_;
+    std::vector<Client*> clients_;
 };
 
 #endif

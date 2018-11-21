@@ -29,6 +29,8 @@ private:
     void OnFocusOut();
     static int OnXError(Display* dpy, XErrorEvent* e);
 
+    /* X Property shit */
+
     /* Workspace related */
     void GotoWorkspace(short n);
 
