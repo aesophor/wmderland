@@ -31,15 +31,15 @@ WindowManager::WindowManager(Display* dpy) {
     property_mgr_ = new PropertyManager(dpy_);
     property_mgr_->Set(
             DefaultRootWindow(dpy_), 
-            property_mgr_->net_atoms_[PropertyManager::NET_WM_NAME],
+            property_mgr_->net_atoms_[NET_WM_NAME],
             property_mgr_->utf8string_,
             8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
     );
     property_mgr_->Set(
             DefaultRootWindow(dpy_),
-            property_mgr_->net_atoms_[PropertyManager::NET_SUPPORTED],
+            property_mgr_->net_atoms_[NET_SUPPORTED],
             XA_ATOM, 32, PropModeReplace, (unsigned char*) property_mgr_->net_atoms_,
-            PropertyManager::NET_ATOM_SIZE
+            NET_ATOM_SIZE
     );
 
     // Initialize 10 workspaces.
@@ -244,13 +244,13 @@ void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->Get(focused_window);
     property_mgr_->Set(
             DefaultRootWindow(dpy_),
-            property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW],
+            property_mgr_->net_atoms_[NET_ACTIVE_WINDOW],
             XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1
     );
 }
 
 void WindowManager::ClearNetActiveWindow() {
-    Atom net_active_window_atom = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
+    Atom net_active_window_atom = property_mgr_->net_atoms_[NET_ACTIVE_WINDOW];
     property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window_atom);
 }
 
