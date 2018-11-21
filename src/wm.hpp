@@ -28,9 +28,12 @@ private:
     void OnButtonPress();
     void OnButtonRelease();
     void OnMotionNotify();
-    void OnPropertyNotify();
     void OnFocusIn();
     void OnFocusOut();
+
+    /* Properties manipulation */
+    void SetNetActiveWindow(Window focused_window);
+    void ClearNetActiveWindow();
 
     /* Workspace manipulation */
     void GotoWorkspace(short n);

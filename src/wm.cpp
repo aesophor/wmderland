@@ -57,11 +57,11 @@ WindowManager::WindowManager(Display* dpy) {
     XGrabKey(dpy_, AnyKey, Mod4Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
 
     // Define which mouse clicks will send us X events.
-    XGrabButton(dpy_, AnyButton, AnyModifier, DefaultRootWindow(dpy_), True,
+    XGrabButton(dpy_, AnyButton, Mod4Mask, DefaultRootWindow(dpy_), True,
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
     // Enable substructure redirection on the root window.
-    XSelectInput(dpy_, DefaultRootWindow(dpy_), PropertyChangeMask | SubstructureNotifyMask | SubstructureRedirectMask);
+    XSelectInput(dpy_, DefaultRootWindow(dpy_), SubstructureNotifyMask | SubstructureRedirectMask);
 
     // Setup the bitch catcher.
     XSetErrorHandler(&WindowManager::OnXError);
@@ -106,9 +106,6 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify();
                 break;
-            case PropertyNotify:
-                OnPropertyNotify();
-                break;
             case FocusIn:
                 OnFocusIn();
                 break;
@@ -129,9 +126,7 @@ void WindowManager::OnDestroyNotify() {
     // When a window is destroyed, remove it from the current workspace's client list.
     Window w = event_.xdestroywindow.window;
     workspaces_[current_]->Remove(w);
-
-    Atom net_active_window = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
-    property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window);
+    ClearNetActiveWindow();
 }
 
 void WindowManager::OnMapRequest() {
@@ -201,7 +196,7 @@ void WindowManager::OnButtonPress() {
     // Clicking on a window raises that window to the top.
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
     XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
-    //workspaces_[current_]->SetFocusClient(event_.xbutton.subwindow);
+    workspaces_[current_]->SetFocusClient(event_.xbutton.subwindow);
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
@@ -235,15 +230,18 @@ void WindowManager::OnMotionNotify() {
     XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
 }
 
-void WindowManager::OnPropertyNotify() {
-
+void WindowManager::OnFocusIn() {
+    Window w = event_.xfocus.window;
+    //XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
+    SetNetActiveWindow(w);
 }
 
-void WindowManager::OnFocusIn() {
-    XSetWindowBorder(dpy_, event_.xfocus.window, FOCUSED_COLOR);
+void WindowManager::OnFocusOut() {
+    ClearNetActiveWindow();
+}
 
-    Window w = event_.xfocus.window;
-    Client* c = workspaces_[current_]->Get(w);
+void WindowManager::SetNetActiveWindow(Window focused_window) {
+    Client* c = workspaces_[current_]->Get(focused_window);
     property_mgr_->Set(
             DefaultRootWindow(dpy_),
             property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW],
@@ -251,9 +249,9 @@ void WindowManager::OnFocusIn() {
     );
 }
 
-void WindowManager::OnFocusOut() {
-    Atom net_active_window = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
-    property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window);
+void WindowManager::ClearNetActiveWindow() {
+    Atom net_active_window_atom = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
+    property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window_atom);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
