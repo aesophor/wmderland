@@ -27,7 +27,6 @@ private:
     void OnMotionNotify();
     void OnFocusIn();
     void OnFocusOut();
-    static int OnXError(Display* dpy, XErrorEvent* e);
 
     /* X Property shit */
 

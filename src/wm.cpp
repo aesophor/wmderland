@@ -44,8 +44,6 @@ WindowManager::WindowManager(Display* dpy) {
 
     // Enable substructure redirection on the root window.
     XSelectInput(dpy_, DefaultRootWindow(dpy_), SubstructureNotifyMask | SubstructureRedirectMask);
-
-    //XSetErrorHandler(&WindowManager::OnXError);
 }
 
 WindowManager::~WindowManager() {
@@ -105,7 +103,9 @@ void WindowManager::OnCreateNotify() {
 void WindowManager::OnDestroyNotify() {
     // When a window is destroyed, remove it from the list of windows
     // in the current workspace.
-    workspaces_[current_]->Remove(event_.xdestroywindow.window);
+    Window w = event_.xdestroywindow.window;
+    XSelectInput(dpy_, w, NoEventMask);
+    workspaces_[current_]->Remove(w);
 }
 
 void WindowManager::OnMapRequest() {
@@ -122,6 +122,8 @@ void WindowManager::OnMapRequest() {
     // Regular applications should be added to workspace window list,
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) {
+        // XSelectInput(), Borders, RaiseWindow and XSetInputFocus
+        // are automatically done in the constructor of Client class.
         workspaces_[current_]->Add(new Client(dpy_, w));
     }
 }
@@ -214,23 +216,8 @@ void WindowManager::OnFocusIn() {
 }
 
 void WindowManager::OnFocusOut() {
-    //XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
+    XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
 }
-
-int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
-    const int MAX_ERROR_TEXT_LENGTH = 1024;
-    char error_text[MAX_ERROR_TEXT_LENGTH];
-    XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
-    LOG(ERROR) << "Received X error:\n"
-        << "    Request: " << int(e->request_code)
-//        << " - " << XRequestCodeToString(e->request_code) << "\n"
-        << "    Error code: " << int(e->error_code)
-        << " - " << error_text << "\n"
-        << "    Resource ID: " << e->resourceid;
-    // The return value is ignored.
-    return 0;
-}
-
 
 void WindowManager::GotoWorkspace(short next) {
     if (current_ == next) {
