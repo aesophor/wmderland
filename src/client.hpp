@@ -17,7 +17,7 @@ public:
     void SetBorderColor(unsigned long color);
     XWindowAttributes GetXWindowAttributes();
 
-    Window window();
+    Window& window();
     std::string& wm_class();
     bool is_bar();
 

@@ -31,9 +31,15 @@ WindowManager::WindowManager(Display* dpy) {
     property_mgr_ = new PropertyManager(dpy_);
     property_mgr_->Set(
             DefaultRootWindow(dpy_), 
-            property_mgr_->GetNetAtom(PropertyManager::NET_WM_NAME),
-            property_mgr_->utf8string(),
+            property_mgr_->net_atoms_[PropertyManager::NET_WM_NAME],
+            property_mgr_->utf8string_,
             8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
+    );
+    property_mgr_->Set(
+            DefaultRootWindow(dpy_),
+            property_mgr_->net_atoms_[PropertyManager::NET_SUPPORTED],
+            XA_ATOM, 32, PropModeReplace, (unsigned char*) property_mgr_->net_atoms_,
+            PropertyManager::NET_ATOM_SIZE
     );
 
     // Initialize 10 workspaces.
@@ -228,23 +234,19 @@ void WindowManager::OnMotionNotify() {
 
 void WindowManager::OnFocusIn() {
     Window w = event_.xfocus.window;
+    Client* c = workspaces_[current_]->Get(w);
     XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
-
-    std::string wm_class = wm_utils::QueryWmClass(dpy_, w);
-
-    XChangeProperty(dpy_, DefaultRootWindow(dpy_),
-            XInternAtom(dpy_, "_NET_ACTIVE_WINDOW", False),
-            XInternAtom(dpy_, "UTF8_STRING", False),
-            8, PropModeReplace, (unsigned char *) wm_class.c_str(), wm_class.length());
+    property_mgr_->Set(
+            DefaultRootWindow(dpy_),
+            property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW],
+            XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1
+    );
 }
 
 void WindowManager::OnFocusOut() {
     Window w = event_.xfocus.window;
-    XSetWindowBorder(dpy_, w, UNFOCUSED_COLOR);
-
-    std::string wm_class = wm_utils::QueryWmClass(dpy_, w);
-
-//    XDeleteProperty(dpy_, w, "_NET_ACTIVE_WINDOW");
+    Atom net_active_window = property_mgr_->net_atoms_[PropertyManager::NET_ACTIVE_WINDOW];
+    property_mgr_->Delete(w, net_active_window);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
@@ -271,7 +273,6 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[next]->MapAllClients();
     current_ = next;
 }
-
 
 
 void WindowManager::Center(Window w) {

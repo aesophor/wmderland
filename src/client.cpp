@@ -31,7 +31,7 @@ XWindowAttributes Client::GetXWindowAttributes() {
 }
 
 
-Window Client::window() {
+Window& Client::window() {
     return window_;
 }
 
