@@ -18,6 +18,7 @@ private:
     WindowManager(Display* dpy);
     
     /* XEvent handlers. */
+    static int OnXError(Display* dpy, XErrorEvent* e);
     void OnCreateNotify();
     void OnDestroyNotify();
     void OnMapRequest();
@@ -40,7 +41,13 @@ private:
     XEvent event_;
     XWindowAttributes attr_;
     XButtonEvent start_;
+    Cursor cursor_;
     bool fullscreen_;
+
+    void SetCursor(Window w, Cursor c);
+
+    /* Cursors */
+    Cursor cursors_[4];
 
     /* Workspaces */
     std::vector<Workspace*> workspaces_;

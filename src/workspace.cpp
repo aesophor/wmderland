@@ -1,4 +1,6 @@
 #include "workspace.hpp"
+#include "global.hpp"
+#include <algorithm>
 #include <string>
 
 Workspace::Workspace(Display* dpy, short id) {
@@ -46,15 +48,28 @@ std::string Workspace::ToString() {
 }
 
 
-void Workspace::MapAllWindows() {
+void Workspace::MapAllClients() {
     for (auto const c : clients_) {
         XMapWindow(dpy_, c->window());
     }
 }
 
-void Workspace::UnmapAllWindows() {
+void Workspace::UnmapAllClients() {
     for (auto const c : clients_) {
         XUnmapWindow(dpy_, c->window());
+    }
+}
+
+void Workspace::SetFocusClient(Window focused_window) {
+    // Raise the window to the top and set input focus to it.
+    XRaiseWindow(dpy_, focused_window);
+    XSetInputFocus(dpy_, focused_window, RevertToParent, CurrentTime);
+
+    // For all clients (i.e., windows we've decided to manage) in this workspace,
+    // set all of their border colors to UNFOCUSED_COLOR except focused_window.
+    for (auto const c : clients_) {
+        c->SetBorderColor((c->window() == focused_window) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
+        if (c->window() == focused_window) active_client_ = c;
     }
 }
 

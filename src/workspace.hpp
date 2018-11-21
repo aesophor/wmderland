@@ -3,7 +3,6 @@
 
 #include "client.hpp"
 #include <X11/Xlib.h>
-#include <algorithm>
 #include <vector>
  
 // A Workspace contains its id, the active window in this workspace
@@ -12,15 +11,18 @@ class Workspace {
 public:
     Workspace(Display* dpy, short id);
 
+    /* clients_ manipulation */
     void Add(Client* c);
     void Remove(Window w);
     bool Has(Window w);
     Client* Get(Window w);
     std::string ToString();
 
-    void MapAllWindows();
-    void UnmapAllWindows();
-     
+    /* windows manipulation */
+    void MapAllClients();
+    void UnmapAllClients();
+    void SetFocusClient(Window focused_window);
+    
     short id();
     Client* active_client();
 

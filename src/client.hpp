@@ -15,7 +15,6 @@ public:
 
     void SetBorderWidth(unsigned int width);
     void SetBorderColor(unsigned long color);
-    void SetFocused();
 
     Window window();
     std::string& wm_class();

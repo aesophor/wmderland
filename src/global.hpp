@@ -12,6 +12,10 @@
 #define SCREEN_WIDTH 1680
 #define SCREEN_HEIGHT 1050
 
+#define LEFT_PTR_CURSOR 0
+#define MOVE_CURSOR 1
+#define RESIZE_CURSOR 3
+
 #define BORDER_WIDTH 3
 #define FOCUSED_COLOR 0xffffff
 #define UNFOCUSED_COLOR 0x41485f

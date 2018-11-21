@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include <string>
 #include <algorithm>
+#include <X11/cursorfont.h>
 #include <glog/logging.h>
 
 WindowManager* WindowManager::instance_;
@@ -28,6 +29,13 @@ WindowManager::WindowManager(Display* dpy) {
     for (int i = 0; i < WORKSPACE_COUNT - 1; i++) {
         workspaces_.push_back(new Workspace(dpy_, i));
     }
+
+    // Initializes cursor.
+    cursors_[LEFT_PTR_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
+    cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
+    cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
+    SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
+
     
     // Set _NET_WM_NAME.
     XChangeProperty(dpy_, DefaultRootWindow(dpy_),
@@ -44,6 +52,9 @@ WindowManager::WindowManager(Display* dpy) {
 
     // Enable substructure redirection on the root window.
     XSelectInput(dpy_, DefaultRootWindow(dpy_), SubstructureNotifyMask | SubstructureRedirectMask);
+
+    // Setup the bitch catcher.
+    XSetErrorHandler(&WindowManager::OnXError);
 }
 
 WindowManager::~WindowManager() {
@@ -101,11 +112,8 @@ void WindowManager::OnCreateNotify() {
 }
 
 void WindowManager::OnDestroyNotify() {
-    // When a window is destroyed, remove it from the list of windows
-    // in the current workspace.
-    Window w = event_.xdestroywindow.window;
-    XSelectInput(dpy_, w, NoEventMask);
-    workspaces_[current_]->Remove(w);
+    // When a window is destroyed, remove it from the current workspace's client list.
+    workspaces_[current_]->Remove(event_.xdestroywindow.window);
 }
 
 void WindowManager::OnMapRequest() {
@@ -119,13 +127,16 @@ void WindowManager::OnMapRequest() {
         return;
     }
     
-    // Regular applications should be added to workspace window list,
+    // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) {
-        // XSelectInput(), Borders, RaiseWindow and XSetInputFocus
-        // are automatically done in the constructor of Client class.
+        // XSelectInput() and Borders are automatically done 
+        // in the constructor of Client class.
         workspaces_[current_]->Add(new Client(dpy_, w));
     }
+
+    // Set the newly mapped client as the focused one.
+    workspaces_[current_]->SetFocusClient(w);
 }
 
 void WindowManager::OnKeyPress() {
@@ -175,27 +186,25 @@ void WindowManager::OnButtonPress() {
     // Clicking on a window raises that window to the top.
     XRaiseWindow(dpy_, event_.xbutton.subwindow);
     XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
-    
-    //for (auto const w : workspaces_[current_workspace_]->windows) {
-    //    XSetWindowBorder(dpy_, w, (w == event_.xbutton.subwindow) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
-    //}
+    workspaces_[current_]->SetFocusClient(event_.xbutton.subwindow);
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
         // and store the result in attr_
         XGetWindowAttributes(dpy_, event_.xbutton.subwindow, &attr_);
         start_ = event_.xbutton;
+
+        SetCursor(DefaultRootWindow(dpy_), cursors_[event_.xbutton.button]);
     }
 }
 
 void WindowManager::OnButtonRelease() {
     start_.subwindow = None;
+    SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
 }
 
 void WindowManager::OnMotionNotify() {
-    if (start_.subwindow == None) {
-        return;
-    }
+    if (start_.subwindow == None) return;
 
     // Dragging a window around also raises it to the top.
     int xdiff = event_.xbutton.x - start_.x;
@@ -219,12 +228,27 @@ void WindowManager::OnFocusOut() {
     XSetWindowBorder(dpy_, event_.xfocus.window, UNFOCUSED_COLOR);
 }
 
-void WindowManager::GotoWorkspace(short next) {
-    if (current_ == next) {
-        return;
-    }
+int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
+    const int MAX_ERROR_TEXT_LENGTH = 1024;
+    char error_text[MAX_ERROR_TEXT_LENGTH];
+    XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
+    LOG(ERROR) << "Received X error:\n"
+        << "    Request: " << int(e->request_code)
+        << "    Error code: " << int(e->error_code)
+        << " - " << error_text << "\n"
+        << "    Resource ID: " << e->resourceid;
+    // The return value is ignored.
+    return 0;
+}
 
-    workspaces_[current_]->UnmapAllWindows();
-    workspaces_[next]->MapAllWindows();
+void WindowManager::SetCursor(Window w, Cursor c) {
+    XDefineCursor(dpy_, w, c);
+}
+
+void WindowManager::GotoWorkspace(short next) {
+    if (current_ == next) return;
+    
+    workspaces_[current_]->UnmapAllClients();
+    workspaces_[next]->MapAllClients();
     current_ = next;
 }
