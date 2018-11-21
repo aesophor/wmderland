@@ -1,5 +1,5 @@
-#ifndef PROPERTY_MANAGER_HPP_
-#define PROPERTY_MANAGER_HPP_
+#ifndef PROPERTIES_HPP_
+#define PROPERTIES_HPP_
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -30,9 +30,9 @@ enum {
 };
 
 
-class PropertyManager {
+class Properties {
 public:
-    PropertyManager(Display* dpy);
+    Properties(Display* dpy);
     
     void Set(Window w, Atom property, Atom type, int format, int mode, unsigned char* data, int n_elements);
     void Delete(Window w, Atom property);

@@ -28,17 +28,17 @@ WindowManager::WindowManager(Display* dpy) {
     fullscreen_ = false;
 
     // Initialize property manager and set _NET_WM_NAME.
-    property_mgr_ = new PropertyManager(dpy_);
-    property_mgr_->Set(
+    properties_ = new Properties(dpy_);
+    properties_->Set(
             DefaultRootWindow(dpy_), 
-            property_mgr_->net_atoms_[NET_WM_NAME],
-            property_mgr_->utf8string_,
+            properties_->net_atoms_[NET_WM_NAME],
+            properties_->utf8string_,
             8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
     );
-    property_mgr_->Set(
+    properties_->Set(
             DefaultRootWindow(dpy_),
-            property_mgr_->net_atoms_[NET_SUPPORTED],
-            XA_ATOM, 32, PropModeReplace, (unsigned char*) property_mgr_->net_atoms_,
+            properties_->net_atoms_[NET_SUPPORTED],
+            XA_ATOM, 32, PropModeReplace, (unsigned char*) properties_->net_atoms_,
             NET_ATOM_SIZE
     );
 
@@ -72,7 +72,7 @@ WindowManager::~WindowManager() {
         delete w;
     }
 
-    delete property_mgr_;
+    delete properties_;
     XCloseDisplay(dpy_);
 }
 
@@ -242,16 +242,13 @@ void WindowManager::OnFocusOut() {
 
 void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->Get(focused_window);
-    property_mgr_->Set(
-            DefaultRootWindow(dpy_),
-            property_mgr_->net_atoms_[NET_ACTIVE_WINDOW],
-            XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1
-    );
+    properties_->Set(DefaultRootWindow(dpy_), properties_->net_atoms_[NET_ACTIVE_WINDOW],
+            XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
 
 void WindowManager::ClearNetActiveWindow() {
-    Atom net_active_window_atom = property_mgr_->net_atoms_[NET_ACTIVE_WINDOW];
-    property_mgr_->Delete(DefaultRootWindow(dpy_), net_active_window_atom);
+    Atom net_active_window_atom = properties_->net_atoms_[NET_ACTIVE_WINDOW];
+    properties_->Delete(DefaultRootWindow(dpy_), net_active_window_atom);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {

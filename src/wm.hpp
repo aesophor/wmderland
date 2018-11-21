@@ -1,7 +1,7 @@
 #ifndef WM_HPP_
 #define WM_HPP_
 
-#include "property_manager.hpp"
+#include "properties.hpp"
 #include "workspace.hpp"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -51,7 +51,7 @@ private:
     void SetCursor(Window w, Cursor c);
 
     /* Properties */
-    PropertyManager* property_mgr_;
+    Properties* properties_;
 
     /* Cursors */
     Cursor cursors_[4];

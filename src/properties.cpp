@@ -1,6 +1,6 @@
-#include "property_manager.hpp"
+#include "properties.hpp"
 
-PropertyManager::PropertyManager(Display* dpy) {
+Properties::Properties(Display* dpy) {
     dpy_ = dpy;
 
     utf8string_ = XInternAtom(dpy_, "UTF8_STRING", false); 
@@ -22,23 +22,23 @@ PropertyManager::PropertyManager(Display* dpy) {
     net_atoms_[NET_CLIENT_LIST] = XInternAtom(dpy_, "_NET_CLIENT_LIST", false);
 };
 
-void PropertyManager::Set(Window w, Atom property, Atom type,
+void Properties::Set(Window w, Atom property, Atom type,
         int format, int mode, unsigned char* data, int n_elements) {
     XChangeProperty(dpy_, w, property, type, format, mode, data, n_elements);
 }
 
-void PropertyManager::Delete(Window w, Atom property) {
+void Properties::Delete(Window w, Atom property) {
     XDeleteProperty(dpy_, w, property);
 }
 
-Atom PropertyManager::utf8string() const {
+Atom Properties::utf8string() const {
     return utf8string_;
 }
 
-Atom PropertyManager::GetWmAtom(short index) const {
+Atom Properties::GetWmAtom(short index) const {
     return wm_atoms_[index];
 }
 
-Atom PropertyManager::GetNetAtom(short index) const {
+Atom Properties::GetNetAtom(short index) const {
     return net_atoms_[index];
 }
