@@ -5,21 +5,19 @@
 </div>
 
 ## Overview
-A lightweight ~~tiling~~ [window manager](https://en.wikipedia.org/wiki/Window_manager) written in C++ over Xlib.
-
-Caution: it is NOT YET ready for daily use!
+A lightweight ~~tiling~~ [window manager](https://en.wikipedia.org/wiki/Window_manager) written in C++ over Xlib. (Currently it's only a floating wm)
 
 ## Build Requirements
 * g++
 * make
 * Xlib headers
-* [glog](https://github.com/google/glog) (will be removed later, debugging purpose only)
+* [glog](https://github.com/google/glog) (Google's c++ logging library)
 
 ## Windows Version
 Just fook off
 
 ## What's not working yet
-* Dynamic Tiling
+* Dynamic Tiling with gaps
 * User Configuration for defining keybinds, startup applications, colors... etc.
 
 
