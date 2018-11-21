@@ -133,6 +133,7 @@ void WindowManager::OnMapRequest() {
         // XSelectInput() and Borders are automatically done 
         // in the constructor of Client class.
         workspaces_[current_]->Add(new Client(dpy_, w));
+        Center(w);
     }
 
     // Set the newly mapped client as the focused one.
@@ -251,4 +252,11 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
     current_ = next;
+}
+
+void WindowManager::Center(Window w) {
+    XWindowAttributes w_attr = wm_utils::QueryWindowAttributes(dpy_, w);
+    int new_x = SCREEN_WIDTH / 2 - w_attr.width / 2;
+    int new_y = SCREEN_HEIGHT / 2 - w_attr.height / 2;
+    XMoveWindow(dpy_, w, new_x, new_y);
 }

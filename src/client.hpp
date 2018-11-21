@@ -15,6 +15,7 @@ public:
 
     void SetBorderWidth(unsigned int width);
     void SetBorderColor(unsigned long color);
+    XWindowAttributes GetXWindowAttributes();
 
     Window window();
     std::string& wm_class();

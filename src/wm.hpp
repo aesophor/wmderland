@@ -31,11 +31,11 @@ private:
 
     /* X Property shit */
 
-    /* Workspace related */
+    /* Workspace manipulation */
     void GotoWorkspace(short n);
 
-    /* Client related */
-    void Decorate(Window w);
+    /* Client window manipulation */
+    void Center(Window w);
     
     Display* dpy_;
     XEvent event_;
@@ -48,6 +48,9 @@ private:
 
     /* Cursors */
     Cursor cursors_[4];
+
+    /* Bar */
+    short bar_height_;
 
     /* Workspaces */
     std::vector<Workspace*> workspaces_;

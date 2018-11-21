@@ -2,6 +2,12 @@
 
 namespace wm_utils {
 
+    XWindowAttributes QueryWindowAttributes(Display* dpy, Window w) {
+        XWindowAttributes ret;
+        XGetWindowAttributes(dpy, w, &ret);
+        return ret;
+    }
+
     std::string QueryWmClass(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);

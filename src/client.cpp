@@ -26,6 +26,10 @@ void Client::SetBorderColor(unsigned long color) {
     XSetWindowBorder(dpy_, window_, color);
 }
 
+XWindowAttributes Client::GetXWindowAttributes() {
+    return wm_utils::QueryWindowAttributes(dpy_, window_);
+}
+
 
 Window Client::window() {
     return window_;

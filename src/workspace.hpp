@@ -11,17 +11,18 @@ class Workspace {
 public:
     Workspace(Display* dpy, short id);
 
-    /* clients_ manipulation */
+    /* clients_ vector manipulation */
     void Add(Client* c);
     void Remove(Window w);
     bool Has(Window w);
     Client* Get(Window w);
     std::string ToString();
 
-    /* windows manipulation */
+    /* client window manipulation */
     void MapAllClients();
     void UnmapAllClients();
     void SetFocusClient(Window focused_window);
+    void Center(Window w);
     
     short id();
     Client* active_client();
