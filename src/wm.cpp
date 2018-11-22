@@ -26,6 +26,7 @@ WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
     current_ = 0;
     fullscreen_ = false;
+    //config_ = new Config(CONFIG_FILE);
     properties_ = new Properties(dpy_);
 
     InitWorkspaces(WORKSPACE_COUNT);
@@ -85,6 +86,10 @@ void WindowManager::InitCursors() {
     cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
     cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
     SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
+}
+
+void WindowManager::LoadConfig() {
+
 }
 
 
@@ -185,6 +190,7 @@ void WindowManager::OnKeyPress() {
     // Mod4 + q -> Kill window.
     if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
         XKillClient(dpy_, event_.xkey.subwindow);
+//        workspaces_[current_]->active_client()
     } else if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
         XRaiseWindow(dpy_, event_.xkey.subwindow);
 
@@ -251,6 +257,7 @@ void WindowManager::OnFocusOut() {
     ClearNetActiveWindow();
 }
 
+
 void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->Get(focused_window);
     properties_->Set(DefaultRootWindow(dpy_), properties_->net_atoms_[atom::NET_ACTIVE_WINDOW],
@@ -275,6 +282,10 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     return 0;
 }
 
+void WindowManager::Execute(const std::string& cmd) {
+    system(cmd.c_str());
+}
+
 void WindowManager::SetCursor(Window w, Cursor c) {
     XDefineCursor(dpy_, w, c);
 }
@@ -285,6 +296,12 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
     current_ = next;
+}
+
+void WindowManager::MoveWindowToWorkspace(Window window, short next) {    
+    XUnmapWindow(dpy_, window);
+    workspaces_[current_]->Remove(window);
+    workspaces_[next]->Add(window);
 }
 
 

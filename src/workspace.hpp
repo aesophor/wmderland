@@ -12,7 +12,7 @@ public:
     Workspace(Display* dpy, short id);
     ~Workspace();
 
-    /* clients_ unordered_map manipulation */
+    /* clients_ vector manipulation */
     void Add(Window w);
     void Remove(Window w);
     bool Has(Window w);
@@ -25,13 +25,13 @@ public:
     void SetFocusClient(Window focused_window);
     
     short id();
-    Client* active_client();
+    short active_client();
 
 private:
     Display* dpy_;
     short id_;
     
-    Client* active_client_;
+    short active_client_;
     std::vector<Client*> clients_;
 };
 

@@ -3,6 +3,7 @@
 
 #define WM_NAME "Wmderland"
 #define VERSION 0.1
+#define CONFIG_FILE "~/.config/Wmderland/config"
 
 #define MOUSE_LEFT_BTN 1
 #define MOUSE_RIGHT_BTN 3

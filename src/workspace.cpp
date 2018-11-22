@@ -9,7 +9,7 @@ Workspace::Workspace(Display* dpy, short id) {
 }
 
 Workspace::~Workspace() {
-    for (auto const c : clients_) {
+    for (auto c : clients_) {
         delete c;
     }
 }
@@ -30,7 +30,7 @@ bool Workspace::Has(Window w) {
 }
 
 Client* Workspace::Get(Window w) {
-    for (auto const c : clients_) {
+    for (auto c : clients_) {
         if (c->window() == w) {
             return c;
         }
@@ -41,7 +41,7 @@ Client* Workspace::Get(Window w) {
 std::string Workspace::ToString() {
     bool has_previous_item = false;
     std::string output = "[";
-    for (auto const c : clients_) {
+    for (auto c : clients_) {
         if (has_previous_item) {
             output += ", ";
         }
@@ -55,13 +55,13 @@ std::string Workspace::ToString() {
 
 
 void Workspace::MapAllClients() {
-    for (auto const c : clients_) {
+    for (auto c : clients_) {
         XMapWindow(dpy_, c->window());
     }
 }
 
 void Workspace::UnmapAllClients() {
-    for (auto const c : clients_) {
+    for (auto c : clients_) {
         XUnmapWindow(dpy_, c->window());
     }
 }
@@ -73,9 +73,13 @@ void Workspace::SetFocusClient(Window focused_window) {
 
     // For all clients (i.e., windows we've decided to manage) in this workspace,
     // set all of their border colors to UNFOCUSED_COLOR except focused_window.
-    for (auto const c : clients_) {
+    for (size_t i = 0; i < clients_.size(); i++) {
+        Client* c = clients_[i];
         c->SetBorderColor((c->window() == focused_window) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
-        if (c->window() == focused_window) active_client_ = c;
+
+        if (c->window() == focused_window) {
+            active_client_ = i;
+        }
     }
 }
 
@@ -84,6 +88,6 @@ short Workspace::id() {
     return id_;
 }
 
-Client* Workspace::active_client() {
+short Workspace::active_client() {
     return active_client_;
 }

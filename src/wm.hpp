@@ -24,8 +24,9 @@ private:
     void InitProperties();
     void InitXEvents();
     void InitCursors();
+    void LoadConfig();
     
-    /* XEvent handlers. */
+    /* XEvent handlers */
     static int OnXError(Display* dpy, XErrorEvent* e);
     void OnCreateNotify();
     void OnDestroyNotify();
@@ -42,22 +43,25 @@ private:
     void ClearNetActiveWindow();
 
     /* Workspace manipulation */
-    void GotoWorkspace(short n);
+    void GotoWorkspace(short next);
+    void MoveWindowToWorkspace(Window window, short next);
 
     /* Client window placement */
     void Center(Window w);
-    
+
+    void Execute(const std::string& cmd);
+    void SetCursor(Window w, Cursor c);
+
     Display* dpy_;
     XEvent event_;
     XWindowAttributes attr_;
     XButtonEvent start_;
     Cursor cursor_;
     bool fullscreen_;
-
-    void SetCursor(Window w, Cursor c);
-
+    
     /* Properties */
     Properties* properties_;
+    //Config* config_;
 
     /* Cursors */
     Cursor cursors_[4];
