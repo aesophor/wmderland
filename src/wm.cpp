@@ -26,33 +26,46 @@ WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
     current_ = 0;
     fullscreen_ = false;
-
-    // Initialize property manager and set _NET_WM_NAME.
     properties_ = new Properties(dpy_);
+
+    InitWorkspaces(WORKSPACE_COUNT);
+    InitProperties();
+    InitXEvents();
+    InitCursors();
+}
+
+WindowManager::~WindowManager() {
+    for (auto const w : workspaces_) {
+        delete w;
+    }
+    delete properties_;
+    XCloseDisplay(dpy_);
+}
+
+
+void WindowManager::InitWorkspaces(short count) {
+    for (short i = 0; i < count - 1; i++) {
+        workspaces_.push_back(new Workspace(dpy_, i));
+    }
+}
+
+void WindowManager::InitProperties() {
+    // Initialize property manager and set _NET_WM_NAME.
     properties_->Set(
             DefaultRootWindow(dpy_), 
-            properties_->net_atoms_[NET_WM_NAME],
+            properties_->net_atoms_[atom::NET_WM_NAME],
             properties_->utf8string_,
             8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
     );
     properties_->Set(
             DefaultRootWindow(dpy_),
-            properties_->net_atoms_[NET_SUPPORTED],
+            properties_->net_atoms_[atom::NET_SUPPORTED],
             XA_ATOM, 32, PropModeReplace, (unsigned char*) properties_->net_atoms_,
-            NET_ATOM_SIZE
+            atom::NET_ATOM_SIZE
     );
+}
 
-    // Initialize 10 workspaces.
-    for (int i = 0; i < WORKSPACE_COUNT - 1; i++) {
-        workspaces_.push_back(new Workspace(dpy_, i));
-    }
-
-    // Initializes cursor.
-    cursors_[LEFT_PTR_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
-    cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
-    cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
-    SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
-
+void WindowManager::InitXEvents() {
     // Define which key combinations will send us X events.
     XGrabKey(dpy_, AnyKey, Mod4Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
 
@@ -67,13 +80,11 @@ WindowManager::WindowManager(Display* dpy) {
     XSetErrorHandler(&WindowManager::OnXError);
 }
 
-WindowManager::~WindowManager() {
-    for (auto const w : workspaces_) {
-        delete w;
-    }
-
-    delete properties_;
-    XCloseDisplay(dpy_);
+void WindowManager::InitCursors() {
+    cursors_[LEFT_PTR_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
+    cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
+    cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
+    SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
 }
 
 
@@ -242,12 +253,12 @@ void WindowManager::OnFocusOut() {
 
 void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->Get(focused_window);
-    properties_->Set(DefaultRootWindow(dpy_), properties_->net_atoms_[NET_ACTIVE_WINDOW],
+    properties_->Set(DefaultRootWindow(dpy_), properties_->net_atoms_[atom::NET_ACTIVE_WINDOW],
             XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
 
 void WindowManager::ClearNetActiveWindow() {
-    Atom net_active_window_atom = properties_->net_atoms_[NET_ACTIVE_WINDOW];
+    Atom net_active_window_atom = properties_->net_atoms_[atom::NET_ACTIVE_WINDOW];
     properties_->Delete(DefaultRootWindow(dpy_), net_active_window_atom);
 }
 

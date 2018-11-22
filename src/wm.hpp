@@ -18,6 +18,12 @@ public:
 private:
     static WindowManager* instance_;
     WindowManager(Display* dpy);
+
+    /* Setup */
+    void InitWorkspaces(short count);
+    void InitProperties();
+    void InitXEvents();
+    void InitCursors();
     
     /* XEvent handlers. */
     static int OnXError(Display* dpy, XErrorEvent* e);

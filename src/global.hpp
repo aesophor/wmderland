@@ -20,6 +20,6 @@
 #define FOCUSED_COLOR 0xffffff
 #define UNFOCUSED_COLOR 0x41485f
 
-#define WORKSPACE_COUNT 8
+#define WORKSPACE_COUNT 9
 
 #endif
