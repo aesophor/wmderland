@@ -2,7 +2,6 @@
 #include "global.hpp"
 #include <algorithm>
 #include <string>
-#include <glog/logging.h>
 
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
@@ -40,10 +39,14 @@ void Workspace::AddHorizontal(Window w) {
 
     active_client_.first++;
     active_client_.second = 0;
-    LOG(INFO) << "AddHorizontal(): (" << active_client_.first << ", " << active_client_.second << ")";
 }
 
 void Workspace::AddVertical(Window w) {
+    if (clients_.size() == 0) {
+        AddHorizontal(w);
+        return;
+    }
+
     Client* c = new Client(dpy_, w);
 
     std::vector<Client*>& active_client_col = clients_[active_client_.first];
@@ -56,7 +59,6 @@ void Workspace::AddVertical(Window w) {
     }
 
     active_client_.second++;
-    LOG(INFO) << "AddVertical(): (" << active_client_.first << ", " << active_client_.second << ")";
 }
 
 
@@ -73,6 +75,8 @@ void Workspace::Remove(Window w) {
             }
         }
     }
+
+    if (c == nullptr) return;
 
     // If that column contains only one client, wipe out that column and delete the client.
     // Otherwise, simply remove the client from that column.
@@ -96,8 +100,6 @@ void Workspace::Remove(Window w) {
     if (active_client_.second >= (short) clients_[active_client_.first].size()) {
         active_client_.second--;
     }
-
-    LOG(INFO) << "Remove(): (" << active_client_.first << ", " << active_client_.second << ")";
 }
 
 /*

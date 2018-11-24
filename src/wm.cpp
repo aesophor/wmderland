@@ -174,7 +174,7 @@ void WindowManager::OnDestroyNotify() {
     // manually set focus to another window.
     std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
 
-    if (active_client_pos.second >= 0 || active_client_pos.first >= 0) {
+    if (active_client_pos.second >= 0 && active_client_pos.first >= 0) {
         Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
         workspaces_[current_]->SetFocusClient(c->window());
     }
