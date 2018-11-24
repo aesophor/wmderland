@@ -1,11 +1,12 @@
 <div align="center">
 <h3>Wmderland</h3>
 <img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.jpg">
-
 </div>
 
 ## Overview
-A lightweight ~~tiling~~ [window manager](https://en.wikipedia.org/wiki/Window_manager) written in C++ over Xlib. (Currently it's only a floating wm)
+Heavily Inspired by [i3wm](https://github.com/i3/i3). Wmderland aims to simplify the core functionalities of i3wm, and bundle in the essential features required for a modern and minimal Tiling Window Manager.
+
+Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib).
 
 ## Build Requirements
 * g++
@@ -23,7 +24,8 @@ Just fook off
 
 ## What's working
 Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
-* Workspaces `Super + 1~9` 
+* Switch between workspaces `Super + 1~9`
+* Move applications between workspaces `Alt + 1~9`
 * Window border (focused color / unfocused color)
 * Move windows with `Super + MouseLeftBtn`
 * Resize windows with `Super + MouseRightBtn`
