@@ -45,7 +45,7 @@ WindowManager::~WindowManager() {
 
 
 void WindowManager::InitWorkspaces(short count) {
-    for (short i = 0; i < count - 1; i++) {
+    for (short i = 0; i < count; i++) {
         workspaces_.push_back(new Workspace(dpy_, i));
     }
 }
@@ -68,6 +68,7 @@ void WindowManager::InitProperties() {
 
 void WindowManager::InitXEvents() {
     // Define which key combinations will send us X events.
+    XGrabKey(dpy_, AnyKey, Mod1Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
     XGrabKey(dpy_, AnyKey, Mod4Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
 
     // Define which mouse clicks will send us X events.
@@ -168,42 +169,59 @@ void WindowManager::OnMapRequest() {
 }
 
 void WindowManager::OnKeyPress() {
-    // Key pressed but does NOT require any window to be focused.
-    // Mod4 + Return -> Spawn urxvt.
-    if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("Return"))) {
-        system("urxvt &");
-        return;
-    } else if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("d"))) {
-        system("rofi -show drun");
-        return;
-    } else if (event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-            && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-        GotoWorkspace(event_.xkey.keycode - 10);
-        return;
-    }
+    auto modifier = event_.xkey.state;
+    auto key = event_.xkey.keycode;
+    auto w = event_.xkey.subwindow;
 
-    if (event_.xkey.subwindow == None) {
-        return;
-    }
+    switch (modifier) {
+        case Mod1Mask:
+            if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+                    && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+                MoveWindowToWorkspace(w, key - 10);
+            }
+            break;
 
+        case Mod4Mask:
+            // Key pressed but does NOT require any window to be focused.
+            // Mod4 + Return -> Spawn urxvt.
+            if (key == XKeysymToKeycode(dpy_, XStringToKeysym("Return"))) {
+                system("urxvt &");
+                return;
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("d"))) {
+                system("rofi -show drun");
+                return;
+            } else if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+                    && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+                GotoWorkspace(key - 10);
+                return;
+            }
 
-    // Mod4 + q -> Kill window.
-    if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
-        XKillClient(dpy_, event_.xkey.subwindow);
-//        workspaces_[current_]->active_client()
-    } else if (event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
-        XRaiseWindow(dpy_, event_.xkey.subwindow);
+            if (w == None) {
+                return;
+            }
 
-        if (!fullscreen_) {
-            // Record the current window's position and size before making it fullscreen.
-            XGetWindowAttributes(dpy_, event_.xkey.subwindow, &attr_);
-            XMoveResizeWindow(dpy_, event_.xkey.subwindow, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-            fullscreen_ = true;
-        } else {
-            // Restore the window to its original position and size.
-            XMoveResizeWindow(dpy_, event_.xkey.subwindow, attr_.x, attr_.y, attr_.width, attr_.height);
-            fullscreen_ = false;
-        }
+            // Mod4 + q -> Kill window.
+            if (key == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
+                XKillClient(dpy_, w);
+                //        workspaces_[current_]->active_client()
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
+                XRaiseWindow(dpy_, w);
+
+                if (!fullscreen_) {
+                    // Record the current window's position and size before making it fullscreen.
+                    XGetWindowAttributes(dpy_, w, &attr_);
+                    XMoveResizeWindow(dpy_, w, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+                    fullscreen_ = true;
+                } else {
+                    // Restore the window to its original position and size.
+                    XMoveResizeWindow(dpy_, w, attr_.x, attr_.y, attr_.width, attr_.height);
+                    fullscreen_ = false;
+                }
+            }
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -299,9 +317,14 @@ void WindowManager::GotoWorkspace(short next) {
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, short next) {    
+    if (current_ == next) return;
+
     XUnmapWindow(dpy_, window);
-    workspaces_[current_]->Remove(window);
-    workspaces_[next]->Add(window);
+    workspaces_[current_]->Move(window, workspaces_[next]);
+
+    LOG(INFO) << "Moved applications between workspaces:\n"
+        << workspaces_[current_]->ToString()
+        << workspaces_[next]->ToString();
 }
 
 

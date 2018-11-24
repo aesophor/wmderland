@@ -15,6 +15,7 @@ public:
     /* clients_ vector manipulation */
     void Add(Window w);
     void Remove(Window w);
+    void Move(Window w, Workspace* workspace);
     bool Has(Window w);
     Client* Get(Window w);
     std::string ToString();
