@@ -2,6 +2,7 @@
 #include "global.hpp"
 #include <algorithm>
 #include <string>
+#include <glog/logging.h>
 
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
@@ -37,8 +38,9 @@ void Workspace::AddHorizontal(Window w) {
         clients_[active_client_.first + 1].push_back(c);
     }
 
-    active_client_.second = 0;
     active_client_.first++;
+    active_client_.second = 0;
+    LOG(INFO) << "AddHorizontal(): (" << active_client_.first << ", " << active_client_.second << ")";
 }
 
 void Workspace::AddVertical(Window w) {
@@ -54,6 +56,7 @@ void Workspace::AddVertical(Window w) {
     }
 
     active_client_.second++;
+    LOG(INFO) << "AddVertical(): (" << active_client_.first << ", " << active_client_.second << ")";
 }
 
 
@@ -61,17 +64,18 @@ void Workspace::Remove(Window w) {
     std::vector<Client*>* client_col;
     Client* c;
 
-    for (auto column : clients_) {
-        for (auto client : column) {
-            if (client->window() == w) {
-                client_col = &column;
-                c = client;
+    for (short col = 0; col < ColSize(); col++) {
+        short row_count = RowSize(col);
+        for (short row = 0; row < row_count; row++) {
+            if (clients_[col][row]->window() == w) {
+                client_col = &clients_[col];
+                c = clients_[col][row];
             }
         }
     }
 
-    // If that row contains only one client, wipe out that row and delete the client.
-    // Otherwise, simply remove the client from that row.
+    // If that column contains only one client, wipe out that column and delete the client.
+    // Otherwise, simply remove the client from that column.
     if ((*client_col).size() == 1) {
         clients_.erase(std::remove(clients_.begin(), clients_.end(), *client_col), clients_.end());
     } else {
@@ -83,13 +87,17 @@ void Workspace::Remove(Window w) {
     if (active_client_.first >= (short) clients_.size()) {
         active_client_.first--;
         active_client_.second = 0;
-    } else if (clients_.size() == 0) {
+    }
+    
+    if (clients_.size() == 0) {
         active_client_ = {-1, -1};
     }
 
     if (active_client_.second >= (short) clients_[active_client_.first].size()) {
         active_client_.second--;
     }
+
+    LOG(INFO) << "Remove(): (" << active_client_.first << ", " << active_client_.second << ")";
 }
 
 /*
@@ -118,10 +126,11 @@ short Workspace::RowSize(short col_idx) {
 
 
 Client* Workspace::Get(Window w) {
-    for (auto column : clients_) {
-        for (auto client : column) {
-            if (client->window() == w) {
-                return client;
+    for (short col = 0; col < ColSize(); col++) {
+        short row_count = RowSize(col);
+        for (short row = 0; row < row_count; row++) {
+            if (clients_[col][row]->window() == w) {
+                return clients_[col][row];
             }
         }
     }

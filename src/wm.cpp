@@ -227,13 +227,15 @@ void WindowManager::OnKeyPress() {
                 tiling_direction_ = Direction::HORIZONTAL;
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("h"))) {
                 if (active_client_pos.first == 0) return;
-                std::pair<short, short> next_pos_left = {active_client_pos.first - 1, active_client_pos.second};
-                Client* c = workspaces_[current_]->GetByIndex(next_pos_left);
+                active_client_pos.first--;
+                active_client_pos.second = 0;
+                Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
                 workspaces_[current_]->SetFocusClient(c->window());
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("l"))) { 
-                if (active_client_pos.first == 0) return;
-                std::pair<short, short> next_pos_right = {active_client_pos.first - 1, active_client_pos.second};
-                Client* c = workspaces_[current_]->GetByIndex(next_pos_right);
+                if (active_client_pos.first == workspaces_[current_]->ColSize() - 1) return;
+                active_client_pos.first++;
+                active_client_pos.second = 0;
+                Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
                 workspaces_[current_]->SetFocusClient(c->window());
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("j"))) {
 
@@ -373,10 +375,11 @@ void WindowManager::Tile(Workspace* workspace) {
     if (col_count == 0) return;
 
     short window_width = SCREEN_WIDTH / col_count;
+    
     for (short col = 0; col < col_count; col++) {
         short row_count = workspaces_[current_]->RowSize(col);
-
         short window_height = (SCREEN_HEIGHT - bar_height_) / row_count;
+        
         for (short row = 0; row < row_count; row++) {
             Client* c = workspace->GetByIndex(std::pair<short, short>(col, row));
             short new_x = col * window_width;
