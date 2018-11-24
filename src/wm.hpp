@@ -28,9 +28,8 @@ private:
     
     /* XEvent handlers */
     static int OnXError(Display* dpy, XErrorEvent* e);
-    void OnCreateNotify();
-    void OnDestroyNotify();
     void OnMapRequest();
+    void OnDestroyNotify();
     void OnKeyPress();
     void OnButtonPress();
     void OnButtonRelease();
@@ -46,6 +45,12 @@ private:
     void GotoWorkspace(short next);
     void MoveWindowToWorkspace(Window window, short next);
 
+    enum Direction {
+        HORIZONTAL,
+        VERTICAL
+    };
+
+
     /* Client window placement */
     void Center(Window w);
     void Tile(Workspace* workspace);
@@ -59,6 +64,7 @@ private:
     XButtonEvent start_;
     Cursor cursor_;
     bool fullscreen_;
+    Direction tiling_direction_;
 
     /* Properties */
     Properties* properties_;

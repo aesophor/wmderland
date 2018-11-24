@@ -5,9 +5,10 @@
 #include <X11/Xutil.h>
 #include <string>
 
-// A Client is any window that we have decided to manage.
-// It is a wrapper class of Window which provides some 
-// useful information and methods.
+/* A Client is any window that we have decided to manage.
+ * It is a wrapper class of Window which provides some 
+ * useful information and methods.
+ */
 class Client {
 public:
     Client(Display* dpy, Window window);
@@ -26,6 +27,11 @@ private:
     Window window_;
     std::string wm_class_;
     bool is_bar_;
+
+    Client* left_;
+    Client* right_;
+    Client* up_;
+    Client* down_;
 };
 
 #endif

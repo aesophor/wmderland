@@ -5,39 +5,44 @@
 #include <X11/Xlib.h>
 #include <vector>
  
-// A Workspace contains its id, the active window in this workspace
-// and a list of windows.
+/* A Workspace contains its id, the active window in this workspace
+ * and a list of windows.
+ */
 class Workspace {
 public:
     Workspace(Display* dpy, short id);
     ~Workspace();
 
     /* clients_ vector manipulation */
-    void Add(Window w);
-    void Insert(Window w, short index);
+    void AddHorizontal(Window w);
+    void AddVertical(Window w);
+    
     void Remove(Window w);
     void Move(Window w, Workspace* workspace);
     bool Has(Window w);
+    
     bool IsEmpty();
-    short Size();
-    Client* Get(Window w);
-    Client* GetByIndex(short index);
+    short ColSize();
+    short RowSize(short col_idx);
     std::string ToString();
-
+    
+    Client* Get(Window w);
+    Client* GetByIndex(std::pair<short, short> pos);
+    
     /* client window manipulation */
     void MapAllClients();
     void UnmapAllClients();
     void SetFocusClient(Window focused_window);
     
     short id();
-    short active_client();
+    std::pair<short, short> active_client();
 
 private:
     Display* dpy_;
     short id_;
     
-    short active_client_;
-    std::vector<Client*> clients_;
+    std::pair<short, short> active_client_;
+    std::vector<std::vector<Client*> > clients_;
 };
 
 #endif

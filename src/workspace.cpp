@@ -6,47 +6,99 @@
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
     id_ = id;
-    active_client_ = -1;
+    active_client_ = {-1, -1};
 }
 
 Workspace::~Workspace() {
-    for (auto c : clients_) {
-        delete c;
+    for (auto column : clients_) {
+        for (auto client : column) {
+            delete client;
+        }
     }
 }
 
 
-void Workspace::Add(Window w) {
+void Workspace::AddHorizontal(Window w) {
     Client* c = new Client(dpy_, w);
 
-    // If active_client_ is the last item in the vector, use push_back().
-    // Otherwise, insert the new item at the next position of active_client_.
-    if (active_client_ == (short) clients_.size() - 1) {
-        clients_.push_back(c);
+    // If active_client_.first (i.e., active client's column) == last column in that row,
+    // we push_back() a vector of Client* to create a new column at the end of that row,
+    // and then push_back() the window to that newly created column.
+    //
+    // Otherwise, insert a new column at the next position of active_client_.first,
+    // and then push_back() the window to that newly created column.
+    short last_col = (short) clients_.size() - 1;
+
+    if (active_client_.first == last_col) {
+        clients_.push_back(std::vector<Client*>());
+        clients_[last_col + 1].push_back(c);
     } else {
-        clients_.insert(clients_.begin() + active_client_ + 1, c);
+        clients_.insert(clients_.begin() + active_client_.first + 1, std::vector<Client*>());
+        clients_[active_client_.first + 1].push_back(c);
     }
 
-    active_client_++;
+    active_client_.second = 0;
+    active_client_.first++;
 }
+
+void Workspace::AddVertical(Window w) {
+    Client* c = new Client(dpy_, w);
+
+    std::vector<Client*>& active_client_col = clients_[active_client_.first];
+    short last_row = (short) active_client_col.size() - 1;
+
+    if (active_client_.second == last_row) {
+        active_client_col.push_back(c);
+    } else {
+        active_client_col.insert(active_client_col.begin() + active_client_.second + 1, c);
+    }
+
+    active_client_.second++;
+}
+
 
 void Workspace::Remove(Window w) {
-    Client* c = Get(w);
-    clients_.erase(std::remove(clients_.begin(), clients_.end(), c), clients_.end());
+    std::vector<Client*>* client_col;
+    Client* c;
+
+    for (auto column : clients_) {
+        for (auto client : column) {
+            if (client->window() == w) {
+                client_col = &column;
+                c = client;
+            }
+        }
+    }
+
+    // If that row contains only one client, wipe out that row and delete the client.
+    // Otherwise, simply remove the client from that row.
+    if ((*client_col).size() == 1) {
+        clients_.erase(std::remove(clients_.begin(), clients_.end(), *client_col), clients_.end());
+    } else {
+        (*client_col).erase(std::remove((*client_col).begin(), (*client_col).end(), c), (*client_col).end());
+    }
+
     delete c;
 
-    if (active_client_ >= (short) clients_.size()) {
-        active_client_--;
+    if (active_client_.first >= (short) clients_.size()) {
+        active_client_.first--;
+        active_client_.second = 0;
     } else if (clients_.size() == 0) {
-        active_client_ = -1;
+        active_client_ = {-1, -1};
+    }
+
+    if (active_client_.second >= (short) clients_[active_client_.first].size()) {
+        active_client_.second--;
     }
 }
 
+/*
 void Workspace::Move(Window w, Workspace* workspace) {
     Client* c = Get(w);
     clients_.erase(std::remove(clients_.begin(), clients_.end(), c), clients_.end());
-    workspace->clients_.push_back(c);
+    //workspace->clients_.push_back(c);
 }
+*/
 
 bool Workspace::Has(Window w) {
     return Get(w) != nullptr;
@@ -56,23 +108,31 @@ bool Workspace::IsEmpty() {
     return clients_.size() == 0;
 }
 
-short Workspace::Size() {
+short Workspace::ColSize() {
     return clients_.size();
 }
 
+short Workspace::RowSize(short col_idx) {
+    return clients_[col_idx].size();
+}
+
+
 Client* Workspace::Get(Window w) {
-    for (auto c : clients_) {
-        if (c->window() == w) {
-            return c;
+    for (auto column : clients_) {
+        for (auto client : column) {
+            if (client->window() == w) {
+                return client;
+            }
         }
     }
     return nullptr;
 }
 
-Client* Workspace::GetByIndex(short index) {
-    return clients_[index];
+Client* Workspace::GetByIndex(std::pair<short, short> pos) {
+    return clients_[pos.first][pos.second];
 }
 
+/*
 std::string Workspace::ToString() {
     bool has_previous_item = false;
     std::string output = "[";
@@ -87,17 +147,22 @@ std::string Workspace::ToString() {
     }
     return output + "]";
 }
+*/
 
 
 void Workspace::MapAllClients() {
-    for (auto c : clients_) {
-        XMapWindow(dpy_, c->window());
+    for (auto column : clients_) {
+        for (auto client : column) {
+            XMapWindow(dpy_, client->window());
+        }
     }
 }
 
 void Workspace::UnmapAllClients() {
-    for (auto c : clients_) {
-        XUnmapWindow(dpy_, c->window());
+    for (auto column : clients_) {
+        for (auto client : column) {
+            XUnmapWindow(dpy_, client->window());
+        }
     }
 }
 
@@ -108,12 +173,14 @@ void Workspace::SetFocusClient(Window focused_window) {
 
     // For all clients (i.e., windows we've decided to manage) in this workspace,
     // set all of their border colors to UNFOCUSED_COLOR except focused_window.
-    for (size_t i = 0; i < clients_.size(); i++) {
-        Client* c = clients_[i];
-        c->SetBorderColor((c->window() == focused_window) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
+    for (size_t col = 0; col < clients_.size(); col++) {
+        for (size_t row = 0; row < clients_[col].size(); row++) {
+            Client* c = clients_[col][row];
+            c->SetBorderColor((c->window() == focused_window) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
 
-        if (c->window() == focused_window) {
-            active_client_ = i;
+            if (c->window() == focused_window) {
+                active_client_ = {col, row};
+            }
         }
     }
 }
@@ -123,6 +190,6 @@ short Workspace::id() {
     return id_;
 }
 
-short Workspace::active_client() {
+std::pair<short, short> Workspace::active_client() {
     return active_client_;
 }

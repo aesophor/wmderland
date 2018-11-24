@@ -26,6 +26,7 @@ WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
     current_ = 0;
     fullscreen_ = false;
+    tiling_direction_ = Direction::HORIZONTAL;
     //config_ = new Config(CONFIG_FILE);
     properties_ = new Properties(dpy_);
 
@@ -102,14 +103,11 @@ void WindowManager::Run() {
         XNextEvent(dpy_, &event_);
 
         switch (event_.type) {
-            case CreateNotify:
-                OnCreateNotify();
+            case MapRequest:
+                OnMapRequest();
                 break;
             case DestroyNotify:
                 OnDestroyNotify();
-                break;
-            case MapRequest:
-                OnMapRequest();
                 break;
             case KeyPress:
                 OnKeyPress();
@@ -135,26 +133,6 @@ void WindowManager::Run() {
     }
 }
 
-void WindowManager::OnCreateNotify() {
-
-}
-
-void WindowManager::OnDestroyNotify() {
-    // When a window is destroyed, remove it from the current workspace's client list.
-    Window w = event_.xdestroywindow.window;
-    workspaces_[current_]->Remove(w);
-    Tile(workspaces_[current_]);
-
-    // Since the previously active window has been killed, we should
-    // decide which one is the next active window.
-    short active_client_idx = workspaces_[current_]->active_client();
-    if (active_client_idx >= 0) {
-        Client* c = workspaces_[current_]->GetByIndex(active_client_idx);
-        workspaces_[current_]->SetFocusClient(c->window());
-    }
-
-    ClearNetActiveWindow();
-}
 
 void WindowManager::OnMapRequest() {
     // Just map the window now. We'll discuss other things later.
@@ -174,7 +152,11 @@ void WindowManager::OnMapRequest() {
     if (!workspaces_[current_]->Has(w)) {
         // XSelectInput() and Borders are automatically done 
         // in the constructor of Client class.
-        workspaces_[current_]->Add(w);
+        if (tiling_direction_ == Direction::HORIZONTAL) {
+            workspaces_[current_]->AddHorizontal(w);
+        } else {
+            workspaces_[current_]->AddVertical(w);
+        }
     }
 
     // Set the newly mapped client as the focused one.
@@ -182,14 +164,31 @@ void WindowManager::OnMapRequest() {
     Tile(workspaces_[current_]);
 }
 
+void WindowManager::OnDestroyNotify() {
+    // When a window is destroyed, remove it from the current workspace's client list.
+    Window w = event_.xdestroywindow.window;
+    workspaces_[current_]->Remove(w);
+    Tile(workspaces_[current_]);
+
+    // Since the previously active window has been killed, we should
+    // manually set focus to another window.
+    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
+
+    if (active_client_pos.second >= 0 || active_client_pos.first >= 0) {
+        Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
+        workspaces_[current_]->SetFocusClient(c->window());
+    }
+
+    ClearNetActiveWindow();
+}
 
 void WindowManager::OnKeyPress() {
     auto modifier = event_.xkey.state;
     auto key = event_.xkey.keycode;
-    short active_client_idx = workspaces_[current_]->active_client();
+    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
     Window w;
-    if (active_client_idx >= 0) {
-        w = workspaces_[current_]->GetByIndex(active_client_idx)->window();
+    if (active_client_pos.first >= 0) {
+        w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
     }
 
     switch (modifier) {
@@ -198,7 +197,7 @@ void WindowManager::OnKeyPress() {
 
             if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
                     && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-                MoveWindowToWorkspace(w, key - 10);
+                //MoveWindowToWorkspace(w, key - 10);
             }
             break;
 
@@ -222,16 +221,23 @@ void WindowManager::OnKeyPress() {
             // Mod4 + q -> Kill window.
             if (key == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
                 XKillClient(dpy_, w);
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("v"))) {
+                tiling_direction_ = Direction::VERTICAL;
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("g"))) {
+                tiling_direction_ = Direction::HORIZONTAL;
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("h"))) {
-                short active_client_idx = workspaces_[current_]->active_client();
-                if (active_client_idx - 1 < 0) return;
-                Client* c = workspaces_[current_]->GetByIndex(active_client_idx - 1);
+                if (active_client_pos.first == 0) return;
+                std::pair<short, short> next_pos_left = {active_client_pos.first - 1, active_client_pos.second};
+                Client* c = workspaces_[current_]->GetByIndex(next_pos_left);
                 workspaces_[current_]->SetFocusClient(c->window());
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("l"))) { 
-                short active_client_idx = workspaces_[current_]->active_client();
-                if (active_client_idx + 1 >= workspaces_[current_]->Size()) return;
-                Client* c = workspaces_[current_]->GetByIndex(active_client_idx + 1);
+                if (active_client_pos.first == 0) return;
+                std::pair<short, short> next_pos_right = {active_client_pos.first - 1, active_client_pos.second};
+                Client* c = workspaces_[current_]->GetByIndex(next_pos_right);
                 workspaces_[current_]->SetFocusClient(c->window());
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("j"))) {
+
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("k"))) {
 
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
                 XRaiseWindow(dpy_, w);
@@ -343,21 +349,15 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
     current_ = next;
-
-    if (!workspaces_[current_]->IsEmpty()) {
-//        workspaces_[current_]->SetFocusClient();
-    }
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, short next) {    
     if (current_ == next) return;
 
-    XUnmapWindow(dpy_, window);
-    workspaces_[current_]->Move(window, workspaces_[next]);
-
-    LOG(INFO) << "Moved applications between workspaces:\n"
-        << workspaces_[current_]->ToString()
-        << workspaces_[next]->ToString();
+    //XUnmapWindow(dpy_, window);
+    //workspaces_[current_]->Move(window, workspaces_[next]);
+    //Tile(workspaces_[current_]);
+    //Tile(workspaces_[next]);
 }
 
 
@@ -369,17 +369,19 @@ void WindowManager::Center(Window w) {
 }
 
 void WindowManager::Tile(Workspace* workspace) {
-    short window_count = workspace->Size();
-    if (window_count == 0) return;
+    short col_count = workspaces_[current_]->ColSize();
+    if (col_count == 0) return;
 
-    short window_width = SCREEN_WIDTH / window_count;
-    short window_height = SCREEN_HEIGHT - bar_height_;
+    short window_width = SCREEN_WIDTH / col_count;
+    for (short col = 0; col < col_count; col++) {
+        short row_count = workspaces_[current_]->RowSize(col);
 
-    for (short i = 0; i < window_count; i++) {
-        Client* c = workspace->GetByIndex(i);
-
-        short new_x = i * window_width;
-        short new_y = bar_height_;
-        XMoveResizeWindow(dpy_, c->window(), new_x, new_y, window_width - BORDER_WIDTH * 2, window_height - BORDER_WIDTH * 2);
+        short window_height = (SCREEN_HEIGHT - bar_height_) / row_count;
+        for (short row = 0; row < row_count; row++) {
+            Client* c = workspace->GetByIndex(std::pair<short, short>(col, row));
+            short new_x = col * window_width;
+            short new_y = bar_height_ + row * window_height;
+            XMoveResizeWindow(dpy_, c->window(), new_x, new_y, window_width - BORDER_WIDTH * 2, window_height - BORDER_WIDTH * 2);
+        }
     }
 }
