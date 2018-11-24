@@ -143,6 +143,13 @@ void WindowManager::OnDestroyNotify() {
     // When a window is destroyed, remove it from the current workspace's client list.
     Window w = event_.xdestroywindow.window;
     workspaces_[current_]->Remove(w);
+
+    short active_client_idx = workspaces_[current_]->active_client();
+    if (active_client_idx >= 0) {
+        Client* c = workspaces_[current_]->GetByIndex(active_client_idx);
+        workspaces_[current_]->SetFocusClient(c->window());
+    }
+
     ClearNetActiveWindow();
 }
 
@@ -171,10 +178,16 @@ void WindowManager::OnMapRequest() {
 void WindowManager::OnKeyPress() {
     auto modifier = event_.xkey.state;
     auto key = event_.xkey.keycode;
-    auto w = event_.xkey.subwindow;
+    short active_client_idx = workspaces_[current_]->active_client();
+    Window w;
+    if (active_client_idx >= 0) {
+        w = workspaces_[current_]->GetByIndex(active_client_idx)->window();
+    }
 
     switch (modifier) {
         case Mod1Mask:
+            if (w == None) return;
+
             if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
                     && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
                 MoveWindowToWorkspace(w, key - 10);
@@ -196,14 +209,11 @@ void WindowManager::OnKeyPress() {
                 return;
             }
 
-            if (w == None) {
-                return;
-            }
+            if (w == None) return;
 
             // Mod4 + q -> Kill window.
             if (key == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
                 XKillClient(dpy_, w);
-                //        workspaces_[current_]->active_client()
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
                 XRaiseWindow(dpy_, w);
 
@@ -314,6 +324,10 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
     current_ = next;
+
+    if (!workspaces_[current_]->IsEmpty()) {
+//        workspaces_[current_]->SetFocusClient();
+    }
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, short next) {    

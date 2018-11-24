@@ -14,10 +14,13 @@ public:
 
     /* clients_ vector manipulation */
     void Add(Window w);
+    void Insert(Window w, short index);
     void Remove(Window w);
     void Move(Window w, Workspace* workspace);
     bool Has(Window w);
+    bool IsEmpty();
     Client* Get(Window w);
+    Client* GetByIndex(short index);
     std::string ToString();
 
     /* client window manipulation */

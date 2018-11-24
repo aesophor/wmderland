@@ -6,6 +6,7 @@
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
     id_ = id;
+    active_client_ = -1;
 }
 
 Workspace::~Workspace() {
@@ -16,13 +17,29 @@ Workspace::~Workspace() {
 
 
 void Workspace::Add(Window w) {
-    clients_.push_back(new Client(dpy_, w));
+    Client* c = new Client(dpy_, w);
+
+    // If active_client_ is the last item in the vector, use push_back().
+    // Otherwise, insert the new item at the next position of active_client_.
+    if (active_client_ == (short) clients_.size() - 1) {
+        clients_.push_back(c);
+    } else {
+        clients_.insert(clients_.begin() + active_client_ + 1, c);
+    }
+
+    active_client_++;
 }
 
 void Workspace::Remove(Window w) {
     Client* c = Get(w);
     clients_.erase(std::remove(clients_.begin(), clients_.end(), c), clients_.end());
     delete c;
+
+    if (active_client_ >= (short) clients_.size()) {
+        active_client_--;
+    } else if (clients_.size() == 0) {
+        active_client_ = -1;
+    }
 }
 
 void Workspace::Move(Window w, Workspace* workspace) {
@@ -35,6 +52,10 @@ bool Workspace::Has(Window w) {
     return Get(w) != nullptr;
 }
 
+bool Workspace::IsEmpty() {
+    return clients_.size() == 0;
+}
+
 Client* Workspace::Get(Window w) {
     for (auto c : clients_) {
         if (c->window() == w) {
@@ -42,6 +63,10 @@ Client* Workspace::Get(Window w) {
         }
     }
     return nullptr;
+}
+
+Client* Workspace::GetByIndex(short index) {
+    return clients_[index];
 }
 
 std::string Workspace::ToString() {
