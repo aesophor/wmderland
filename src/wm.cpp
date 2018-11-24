@@ -143,7 +143,10 @@ void WindowManager::OnDestroyNotify() {
     // When a window is destroyed, remove it from the current workspace's client list.
     Window w = event_.xdestroywindow.window;
     workspaces_[current_]->Remove(w);
+    Tile(workspaces_[current_]);
 
+    // Since the previously active window has been killed, we should
+    // decide which one is the next active window.
     short active_client_idx = workspaces_[current_]->active_client();
     if (active_client_idx >= 0) {
         Client* c = workspaces_[current_]->GetByIndex(active_client_idx);
@@ -160,7 +163,11 @@ void WindowManager::OnMapRequest() {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
-    if (wm_utils::IsBar(dpy_, w)) return;
+    if (wm_utils::IsBar(dpy_, w)) {
+        XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, w);
+        bar_height_ = attr.height;
+        return;
+    }
     
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
@@ -168,12 +175,13 @@ void WindowManager::OnMapRequest() {
         // XSelectInput() and Borders are automatically done 
         // in the constructor of Client class.
         workspaces_[current_]->Add(w);
-        Center(w);
     }
 
     // Set the newly mapped client as the focused one.
     workspaces_[current_]->SetFocusClient(w);
+    Tile(workspaces_[current_]);
 }
+
 
 void WindowManager::OnKeyPress() {
     auto modifier = event_.xkey.state;
@@ -214,13 +222,24 @@ void WindowManager::OnKeyPress() {
             // Mod4 + q -> Kill window.
             if (key == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
                 XKillClient(dpy_, w);
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("h"))) {
+                short active_client_idx = workspaces_[current_]->active_client();
+                if (active_client_idx - 1 < 0) return;
+                Client* c = workspaces_[current_]->GetByIndex(active_client_idx - 1);
+                workspaces_[current_]->SetFocusClient(c->window());
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("l"))) { 
+                short active_client_idx = workspaces_[current_]->active_client();
+                if (active_client_idx + 1 >= workspaces_[current_]->Size()) return;
+                Client* c = workspaces_[current_]->GetByIndex(active_client_idx + 1);
+                workspaces_[current_]->SetFocusClient(c->window());
+
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
                 XRaiseWindow(dpy_, w);
 
                 if (!fullscreen_) {
                     // Record the current window's position and size before making it fullscreen.
                     XGetWindowAttributes(dpy_, w, &attr_);
-                    XMoveResizeWindow(dpy_, w, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+                    XMoveResizeWindow(dpy_, w, 0, 0, SCREEN_WIDTH - BORDER_WIDTH * 2, SCREEN_HEIGHT - BORDER_WIDTH * 2);
                     fullscreen_ = true;
                 } else {
                     // Restore the window to its original position and size.
@@ -347,4 +366,20 @@ void WindowManager::Center(Window w) {
     int new_x = SCREEN_WIDTH / 2 - w_attr.width / 2;
     int new_y = SCREEN_HEIGHT / 2 - w_attr.height / 2;
     XMoveWindow(dpy_, w, new_x, new_y);
+}
+
+void WindowManager::Tile(Workspace* workspace) {
+    short window_count = workspace->Size();
+    if (window_count == 0) return;
+
+    short window_width = SCREEN_WIDTH / window_count;
+    short window_height = SCREEN_HEIGHT - bar_height_;
+
+    for (short i = 0; i < window_count; i++) {
+        Client* c = workspace->GetByIndex(i);
+
+        short new_x = i * window_width;
+        short new_y = bar_height_;
+        XMoveResizeWindow(dpy_, c->window(), new_x, new_y, window_width - BORDER_WIDTH * 2, window_height - BORDER_WIDTH * 2);
+    }
 }

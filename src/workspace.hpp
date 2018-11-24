@@ -19,6 +19,7 @@ public:
     void Move(Window w, Workspace* workspace);
     bool Has(Window w);
     bool IsEmpty();
+    short Size();
     Client* Get(Window w);
     Client* GetByIndex(short index);
     std::string ToString();

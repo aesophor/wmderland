@@ -56,6 +56,10 @@ bool Workspace::IsEmpty() {
     return clients_.size() == 0;
 }
 
+short Workspace::Size() {
+    return clients_.size();
+}
+
 Client* Workspace::Get(Window w) {
     for (auto c : clients_) {
         if (c->window() == w) {

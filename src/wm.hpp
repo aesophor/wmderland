@@ -48,6 +48,7 @@ private:
 
     /* Client window placement */
     void Center(Window w);
+    void Tile(Workspace* workspace);
 
     void Execute(const std::string& cmd);
     void SetCursor(Window w, Cursor c);
@@ -58,7 +59,7 @@ private:
     XButtonEvent start_;
     Cursor cursor_;
     bool fullscreen_;
-    
+
     /* Properties */
     Properties* properties_;
     //Config* config_;
