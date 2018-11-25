@@ -97,8 +97,13 @@ void WindowManager::LoadConfig() {
 
 void WindowManager::Run() {
     system("wmctrl -c Plasma");
-    system("displayctl && ~/.config/polybar/launch.sh");
-    //system("compton --config ~/.config/compton/compton.conf &");
+    system("displayctl");
+    system("dispad");
+    system("compton --config ~/.config/compton/compton.conf &");
+    system("dunst -config ~/.config/dunst/dunstrc");
+    system("pulseaudio --start --log-target=syslog");
+    system("mpd");
+    system("~/.config/polybar/launch.sh");
 
     for(;;) {
         // Retrieve and dispatch next X event.

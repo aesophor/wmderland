@@ -1,4 +1,3 @@
-
 <div align="center">
 <h3>Wmderland</h3>
 <img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.jpg">
@@ -20,8 +19,10 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib). This project is
 Just fook off
 
 ## What's not working yet
+* Smart floating like in i3wm
+* Switch between tiling and floating
 * User Configuration for defining keybinds, startup applications, colors... etc.
-* Terminate client peacefully using ICCCM.
+* Terminate client peacefully via ICCCM.
 
 ## What's working
 Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
