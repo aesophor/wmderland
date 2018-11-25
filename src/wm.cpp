@@ -165,8 +165,9 @@ void WindowManager::OnMapRequest() {
 }
 
 void WindowManager::OnDestroyNotify() {
-    // When a window is destroyed, remove it from the current workspace's client list.
+    // When a window is destroyed, remove it from the current workspace's client list.    
     Window w = event_.xdestroywindow.window;
+    if (!workspaces_[current_]->Has(w)) return;
     workspaces_[current_]->Remove(w);
     Tile(workspaces_[current_]);
 
@@ -174,7 +175,7 @@ void WindowManager::OnDestroyNotify() {
     // manually set focus to another window.
     std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
 
-    if (active_client_pos.second >= 0 && active_client_pos.first >= 0) {
+    if (active_client_pos.second >= 0 || active_client_pos.first >= 0) {
         Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
         workspaces_[current_]->SetFocusClient(c->window());
     }

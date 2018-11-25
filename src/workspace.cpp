@@ -2,6 +2,7 @@
 #include "global.hpp"
 #include <algorithm>
 #include <string>
+#include <glog/logging.h>
 
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
@@ -70,7 +71,7 @@ void Workspace::Remove(Window w) {
         short row_count = RowSize(col);
         for (short row = 0; row < row_count; row++) {
             if (clients_[col][row]->window() == w) {
-                client_col = &clients_[col];
+                client_col = &(clients_[col]);
                 c = clients_[col][row];
             }
         }
@@ -87,14 +88,15 @@ void Workspace::Remove(Window w) {
     }
 
     delete c;
+    
+    if (clients_.size() == 0) {
+        active_client_ = {-1, -1};
+        return;
+    }
 
     if (active_client_.first >= (short) clients_.size()) {
         active_client_.first--;
         active_client_.second = 0;
-    }
-    
-    if (clients_.size() == 0) {
-        active_client_ = {-1, -1};
     }
 
     if (active_client_.second >= (short) clients_[active_client_.first].size()) {
