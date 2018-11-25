@@ -34,6 +34,11 @@ public:
     void UnmapAllClients();
     void SetFocusClient(Window focused_window);
     
+    void FocusLeft();
+    void FocusRight();
+    void FocusUp();
+    void FocusDown();
+    
     short id();
     std::pair<short, short> active_client();
 

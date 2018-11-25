@@ -88,20 +88,16 @@ void Workspace::Remove(Window w) {
     }
 
     delete c;
-    
-    if (clients_.size() == 0) {
-        active_client_ = {-1, -1};
-        return;
-    }
 
+    // If active_client_'s column is out of range, set it to the last column.
     if (active_client_.first >= (short) clients_.size()) {
-        active_client_.first--;
-        active_client_.second = 0;
+        active_client_.first = (short) clients_.size() - 1;
     }
 
+    // If active_client_'s row is out of range, set it to the last row in current column.
     if (active_client_.second >= (short) clients_[active_client_.first].size()) {
-        active_client_.second--;
-    }
+        active_client_.second = (short) clients_[active_client_.first].size() - 1;
+    } 
 }
 
 /*
@@ -142,6 +138,10 @@ Client* Workspace::Get(Window w) {
 }
 
 Client* Workspace::GetByIndex(std::pair<short, short> pos) {
+    if (pos.first < 0 || pos.second < 0) return nullptr;
+
+    if (pos.first >= (short) clients_.size()) return nullptr;
+    if (pos.second >= (short) clients_[pos.first].size()) return nullptr;
     return clients_[pos.first][pos.second];
 }
 
@@ -196,6 +196,38 @@ void Workspace::SetFocusClient(Window focused_window) {
             }
         }
     }
+}
+
+void Workspace::FocusLeft() {
+    if (active_client_.first <= 0) return;
+    active_client_.first--;
+
+    if (active_client_.second >= (short) clients_[active_client_.first].size()) {
+        active_client_.second = clients_[active_client_.first].size() - 1;
+    }
+    SetFocusClient(GetByIndex(active_client_)->window());
+}
+
+void Workspace::FocusRight() {
+    if (active_client_.first >= (short) clients_.size() - 1) return;
+    active_client_.first++;
+
+    if (active_client_.second >= (short) clients_[active_client_.first].size()) {
+        active_client_.second = clients_[active_client_.first].size() - 1;
+    }
+    SetFocusClient(GetByIndex(active_client_)->window());
+}
+
+void Workspace::FocusUp() {
+    if (active_client_.second <= 0) return;
+    active_client_.second--;
+    SetFocusClient(GetByIndex(active_client_)->window());
+}
+
+void Workspace::FocusDown() {
+    if (active_client_.second >= (short) clients_[active_client_.first].size() - 1) return;
+    active_client_.second++;
+    SetFocusClient(GetByIndex(active_client_)->window());
 }
 
 

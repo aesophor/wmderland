@@ -174,11 +174,8 @@ void WindowManager::OnDestroyNotify() {
     // Since the previously active window has been killed, we should
     // manually set focus to another window.
     std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
-
-    if (active_client_pos.second >= 0 || active_client_pos.first >= 0) {
-        Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
-        workspaces_[current_]->SetFocusClient(c->window());
-    }
+    Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
+    if (c != nullptr) workspaces_[current_]->SetFocusClient(c->window());
 
     ClearNetActiveWindow();
 }
@@ -227,21 +224,13 @@ void WindowManager::OnKeyPress() {
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("g"))) {
                 tiling_direction_ = Direction::HORIZONTAL;
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("h"))) {
-                if (active_client_pos.first == 0) return;
-                active_client_pos.first--;
-                active_client_pos.second = 0;
-                Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
-                workspaces_[current_]->SetFocusClient(c->window());
+                workspaces_[current_]->FocusLeft();
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("l"))) { 
-                if (active_client_pos.first == workspaces_[current_]->ColSize() - 1) return;
-                active_client_pos.first++;
-                active_client_pos.second = 0;
-                Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
-                workspaces_[current_]->SetFocusClient(c->window());
+                workspaces_[current_]->FocusRight();
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("j"))) {
-
+                workspaces_[current_]->FocusDown();
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("k"))) {
-
+                workspaces_[current_]->FocusUp();
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
                 XRaiseWindow(dpy_, w);
 
