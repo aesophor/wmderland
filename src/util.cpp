@@ -14,6 +14,12 @@ namespace wm_utils {
         return std::string(hint.res_class);
     }
 
+    std::string QueryWmName(Display* dpy, Window w) {
+        XClassHint hint;
+        XGetClassHint(dpy, w, &hint);
+        return std::string(hint.res_name);
+    }
+
     bool IsBar(const std::string& wm_class) {
         return wm_class == "Polybar";
     }

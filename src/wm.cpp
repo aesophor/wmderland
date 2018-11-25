@@ -96,6 +96,7 @@ void WindowManager::LoadConfig() {
 
 
 void WindowManager::Run() {
+    system("wmctrl -c Plasma");
     system("displayctl && ~/.config/polybar/launch.sh");
     //system("compton --config ~/.config/compton/compton.conf &");
 
@@ -138,6 +139,12 @@ void WindowManager::Run() {
 void WindowManager::OnMapRequest() {
     // Just map the window now. We'll discuss other things later.
     Window w = event_.xmaprequest.window;
+    
+    // KDE Plasma Integration.
+    if (wm_utils::QueryWmName(dpy_, w) == "Desktop — Plasma") {
+        return;
+    }
+    
     XMapWindow(dpy_, w);
 
     // Bars should not have border or be added to a workspace.
