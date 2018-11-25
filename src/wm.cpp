@@ -378,9 +378,14 @@ void WindowManager::Tile(Workspace* workspace) {
         
         for (short row = 0; row < row_count; row++) {
             Client* c = workspace->GetByIndex(std::pair<short, short>(col, row));
-            short new_x = col * window_width;
-            short new_y = bar_height_ + row * window_height;
-            XMoveResizeWindow(dpy_, c->window(), new_x, new_y, window_width - BORDER_WIDTH * 2, window_height - BORDER_WIDTH * 2);
+            short new_x = col * window_width + GAP_WIDTH;
+            short new_y = bar_height_ + row * window_height + GAP_WIDTH;
+            short new_width = window_width - BORDER_WIDTH * 2 - GAP_WIDTH;
+            short new_height = window_height - BORDER_WIDTH * 2 - GAP_WIDTH;
+
+            if (col == col_count - 1) new_width -= GAP_WIDTH;
+            if (row == row_count - 1) new_height -= GAP_WIDTH;
+            XMoveResizeWindow(dpy_, c->window(), new_x, new_y, new_width, new_height);
         }
     }
 }
