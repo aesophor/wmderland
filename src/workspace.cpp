@@ -196,6 +196,7 @@ void Workspace::SetFocusClient(Window focused_window) {
     }
 }
 
+
 void Workspace::FocusLeft() {
     if (active_client_.first <= 0) return;
     active_client_.first--;

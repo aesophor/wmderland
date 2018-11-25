@@ -351,11 +351,13 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
     workspaces_[current_]->Remove(window);
     workspaces_[next]->AddHorizontal(window);
 
+    if (workspaces_[current_]->ColSize() == 0) return;
+
     std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
     Window w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
+
     workspaces_[current_]->SetFocusClient(w);
     workspaces_[next]->SetFocusClient(window);
-
     Tile(workspaces_[current_]);
 }
 
