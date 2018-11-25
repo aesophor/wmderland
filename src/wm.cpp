@@ -97,6 +97,7 @@ void WindowManager::LoadConfig() {
 
 void WindowManager::Run() {
     system("displayctl && ~/.config/polybar/launch.sh");
+    //system("compton --config ~/.config/compton/compton.conf &");
 
     for(;;) {
         // Retrieve and dispatch next X event.
