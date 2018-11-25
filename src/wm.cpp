@@ -195,7 +195,7 @@ void WindowManager::OnKeyPress() {
 
             if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
                     && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-                //MoveWindowToWorkspace(w, key - 10);
+                MoveWindowToWorkspace(w, key - 10);
             }
             break;
 
@@ -293,9 +293,7 @@ void WindowManager::OnMotionNotify() {
 }
 
 void WindowManager::OnFocusIn() {
-    Window w = event_.xfocus.window;
-    //XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
-    SetNetActiveWindow(w);
+    SetNetActiveWindow(event_.xfocus.window);
 }
 
 void WindowManager::OnFocusOut() {
@@ -341,15 +339,23 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
     current_ = next;
+
+    Tile(workspaces_[current_]);
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, short next) {    
     if (current_ == next) return;
 
-    //XUnmapWindow(dpy_, window);
-    //workspaces_[current_]->Move(window, workspaces_[next]);
-    //Tile(workspaces_[current_]);
-    //Tile(workspaces_[next]);
+    XUnmapWindow(dpy_, window);
+    workspaces_[current_]->Remove(window);
+    workspaces_[next]->AddHorizontal(window);
+
+    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
+    Window w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
+    workspaces_[current_]->SetFocusClient(w);
+    workspaces_[next]->SetFocusClient(window);
+
+    Tile(workspaces_[current_]);
 }
 
 
@@ -365,7 +371,7 @@ void WindowManager::Tile(Workspace* workspace) {
     if (col_count == 0) return;
 
     short window_width = SCREEN_WIDTH / col_count;
-    
+
     for (short col = 0; col < col_count; col++) {
         short row_count = workspaces_[current_]->RowSize(col);
         short window_height = (SCREEN_HEIGHT - bar_height_) / row_count;

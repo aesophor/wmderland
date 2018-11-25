@@ -100,13 +100,11 @@ void Workspace::Remove(Window w) {
     } 
 }
 
-/*
+
 void Workspace::Move(Window w, Workspace* workspace) {
-    Client* c = Get(w);
-    clients_.erase(std::remove(clients_.begin(), clients_.end(), c), clients_.end());
-    //workspace->clients_.push_back(c);
+    Remove(w);
+    workspace->AddHorizontal(w);
 }
-*/
 
 bool Workspace::Has(Window w) {
     return Get(w) != nullptr;

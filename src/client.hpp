@@ -27,11 +27,6 @@ private:
     Window window_;
     std::string wm_class_;
     bool is_bar_;
-
-    Client* left_;
-    Client* right_;
-    Client* up_;
-    Client* down_;
 };
 
 #endif
