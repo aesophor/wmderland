@@ -2,7 +2,7 @@
 <div align="center">
 <h3>Wmderland</h3>
 <img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.jpg">
-Made during <a href="https://www.w3schools.com">NTUOSC Hackathon 2018</a>
+Made during <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a>
 </div>
 
 ## Overview
