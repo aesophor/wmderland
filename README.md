@@ -1,12 +1,14 @@
+
 <div align="center">
 <h3>Wmderland</h3>
 <img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.jpg">
+Made during NTUOSC Hackathon 2018
 </div>
 
 ## Overview
-Heavily Inspired by [i3wm](https://github.com/i3/i3). Wmderland aims to simplify the core functionalities of i3wm, and bundle in the essential features required for a modern and minimal Tiling Window Manager.
+Heavily Inspired by [i3wm](https://github.com/i3/i3). Wmderland aims to simplify the core functionalities of i3wm, and bundle in the essential features required for a modern but minimal Tiling Window Manager.
 
-Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib).
+Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib). This project is still in very early stage of development, so there are lots of bugs.
 
 ## Build Requirements
 * g++
@@ -18,12 +20,13 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib).
 Just fook off
 
 ## What's not working yet
-* Dynamic Tiling with gaps
+* Gaps between tiled windows.
 * User Configuration for defining keybinds, startup applications, colors... etc.
-
+* Terminate client peacefully using ICCCM.
 
 ## What's working
 Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
+* Simple window tiling. `Super+v` vertical mode; `Super+g` horizontal mode.
 * Switch between workspaces `Super + 1~9`
 * Move applications between workspaces `Alt + 1~9`
 * Window border (focused color / unfocused color)
