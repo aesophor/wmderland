@@ -20,7 +20,6 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib). This project is
 Just fook off
 
 ## What's not working yet
-* Gaps between tiled windows.
 * User Configuration for defining keybinds, startup applications, colors... etc.
 * Terminate client peacefully using ICCCM.
 
@@ -30,6 +29,7 @@ Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
 * Switch between workspaces `Super + 1~9`
 * Move applications between workspaces `Alt + 1~9`
 * Window border (focused color / unfocused color)
+* Gaps between tiled windows
 * Move windows with `Super + MouseLeftBtn`
 * Resize windows with `Super + MouseRightBtn`
 * Launch urxvt with `Super + Return`
@@ -42,4 +42,3 @@ Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
-
