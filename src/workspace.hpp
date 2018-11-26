@@ -1,13 +1,15 @@
 #ifndef WORKSPACE_HPP_
 #define WORKSPACE_HPP_
 
-#include "client.hpp"
 #include <X11/Xlib.h>
 #include <vector>
- 
+#include "client.hpp"
+
 /* A Workspace contains its id, the active window in this workspace
  * and a list of windows.
  */
+class Client;
+
 class Workspace {
 public:
     Workspace(Display* dpy, short id);

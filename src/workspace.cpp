@@ -20,7 +20,7 @@ Workspace::~Workspace() {
 
 
 void Workspace::AddHorizontal(Window w) {
-    Client* c = new Client(dpy_, w);
+    Client* c = new Client(dpy_, w, this);
 
     // If active_client_.first (i.e., active client's column) == last column in that row,
     // we push_back() a vector of Client* to create a new column at the end of that row,
@@ -48,7 +48,7 @@ void Workspace::AddVertical(Window w) {
         return;
     }
 
-    Client* c = new Client(dpy_, w);
+    Client* c = new Client(dpy_, w, this);
 
     std::vector<Client*>& active_client_col = clients_[active_client_.first];
     short last_row = (short) active_client_col.size() - 1;
@@ -136,6 +136,7 @@ Client* Workspace::Get(Window w) {
 }
 
 Client* Workspace::GetByIndex(std::pair<short, short> pos) {
+    if (ColSize() == 0) return nullptr;
     if (pos.first < 0 || pos.second < 0) return nullptr;
 
     if (pos.first >= (short) clients_.size()) return nullptr;

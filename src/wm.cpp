@@ -182,17 +182,26 @@ void WindowManager::OnMapRequest() {
 void WindowManager::OnDestroyNotify() {
     // When a window is destroyed, remove it from the current workspace's client list.    
     Window w = event_.xdestroywindow.window;
-    if (!workspaces_[current_]->Has(w)) return;
-    workspaces_[current_]->Remove(w);
-    Tile(workspaces_[current_]);
 
-    // Since the previously active window has been killed, we should
-    // manually set focus to another window.
-    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
-    Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
-    if (c != nullptr) workspaces_[current_]->SetFocusClient(c->window());
+    // If the client being destroyed is within current workspace,
+    // remove it from current workspace's client list.
+    if (workspaces_[current_]->Has(w)) {
+        workspaces_[current_]->Remove(w);
+        Tile(workspaces_[current_]);
 
-    ClearNetActiveWindow();
+        // Since the previously active window has been killed, we should
+        // manually set focus to another window.
+        std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
+        Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
+        if (c != nullptr) workspaces_[current_]->SetFocusClient(c->window());
+
+        ClearNetActiveWindow();
+    } else {
+        Client* c = client_mapper::mapper[w];
+        if (c) {
+            c->workspace()->Remove(w);
+        }    
+    }
 }
 
 void WindowManager::OnKeyPress() {
@@ -362,8 +371,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
     if (current_ == next) return;
 
     XUnmapWindow(dpy_, window);
-    workspaces_[current_]->Remove(window);
-    workspaces_[next]->AddHorizontal(window);
+    workspaces_[current_]->Move(window, workspaces_[next]);
 
     if (workspaces_[current_]->ColSize() == 0) return;
 

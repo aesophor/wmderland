@@ -2,11 +2,14 @@
 #include "global.hpp"
 #include "util.hpp"
 
-Client::Client(Display* dpy, Window window) {
+Client::Client(Display* dpy, Window window, Workspace* workspace) {
     dpy_ = dpy;
     window_ = window;
+    workspace_ = workspace;
     wm_class_ = wm_utils::QueryWmClass(dpy, window);
     is_bar_ = wm_utils::IsBar(wm_class_);
+
+    client_mapper::mapper[window_] = this;
 
     XSelectInput(dpy, window, FocusChangeMask);
     SetBorderWidth(BORDER_WIDTH);
@@ -14,7 +17,7 @@ Client::Client(Display* dpy, Window window) {
 }
 
 Client::~Client() {
-
+    client_mapper::mapper.erase(window_);
 }
 
 
@@ -34,6 +37,15 @@ XWindowAttributes Client::GetXWindowAttributes() {
 Window& Client::window() {
     return window_;
 }
+
+Workspace* Client::workspace() {
+    return workspace_;
+}
+
+void Client::set_workspace(Workspace* workspace) {
+    workspace_ = workspace;
+}
+
 
 std::string& Client::wm_class() {
     return wm_class_;
