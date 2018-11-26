@@ -8,3 +8,7 @@ all:
 
 clean:
 	rm $(BIN)
+
+install:
+	sudo cp $(BIN) /usr/local/bin/.
+	sudo chmod +x /usr/local/bin/$(BIN)

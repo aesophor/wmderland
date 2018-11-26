@@ -19,8 +19,8 @@
 
 #define GAP_WIDTH 12
 #define BORDER_WIDTH 3
-#define FOCUSED_COLOR 0xffffff
-#define UNFOCUSED_COLOR 0x41485f
+#define FOCUSED_COLOR 0xffffffff
+#define UNFOCUSED_COLOR 0xff41485f
 
 #define WORKSPACE_COUNT 9
 
