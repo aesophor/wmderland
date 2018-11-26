@@ -19,6 +19,7 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib). This project is
 Just fook off
 
 ## What's not working yet
+* Applications spawning rules
 * Smart floating like in i3wm
 * Switch between tiling and floating
 * User Configuration for defining keybinds, startup applications, colors... etc.

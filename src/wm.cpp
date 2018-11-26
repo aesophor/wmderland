@@ -96,6 +96,8 @@ void WindowManager::LoadConfig() {
 
 
 void WindowManager::Run() {
+    // This part should be replaced by user configuration instead.
+    // But since i'm too busy currently, I'm just going to hardcode them for now.
     system("wmctrl -c Plasma");
     system("displayctl");
     system("dispad");
