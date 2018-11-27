@@ -2,7 +2,7 @@
 #define GLOBAL_HPP_
 
 #define WM_NAME "Wmderland"
-#define VERSION 0.1
+#define VERSION "0.5 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 
 #define MOUSE_LEFT_BTN 1
