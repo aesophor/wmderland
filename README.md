@@ -43,4 +43,4 @@ Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
 * Recognizes polybar (because I use polybar lol)
 
 ## License
-Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
+Available under the [Apache License 2.0](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
