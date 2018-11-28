@@ -306,7 +306,7 @@ void WindowManager::OnButtonRelease() {
 
 void WindowManager::OnMotionNotify() {
     if (start_.subwindow == None) return;
-
+    
     // Dragging a window around also raises it to the top.
     int xdiff = event_.xbutton.x - start_.x;
     int ydiff = event_.xbutton.y - start_.y;
@@ -373,6 +373,7 @@ void WindowManager::GotoWorkspace(short next) {
     if (active_client) {
         workspaces_[current_]->SetFocusClient(active_client->window());
     }
+
     Tile(workspaces_[current_]);
 }
 
