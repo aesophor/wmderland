@@ -369,6 +369,7 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[next]->MapAllClients();
     current_ = next;
 
+    workspaces_[current_]->SetFocusClient(workspaces_[current_]->active_client()->window());
     Tile(workspaces_[current_]);
 }
 
