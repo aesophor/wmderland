@@ -29,8 +29,3 @@ namespace wm_utils {
     }
 
 }
-
-
-namespace client_mapper {
-    std::unordered_map<Window, Client*> mapper;
-}

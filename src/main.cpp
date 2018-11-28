@@ -2,6 +2,7 @@
 #include <glog/logging.h>
 
 int main(int argc, char** args) {
+    // Initialize google's c++ logging library.
     google::InitGoogleLogging(args[0]);
 
     // WindowManager is a singleton class. If XOpenDisplay() fails during 

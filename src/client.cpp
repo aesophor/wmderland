@@ -2,14 +2,17 @@
 #include "global.hpp"
 #include "util.hpp"
 
+std::unordered_map<Window, Client*> Client::mapper_;
+
 Client::Client(Display* dpy, Window window, Workspace* workspace) {
     dpy_ = dpy;
     window_ = window;
     workspace_ = workspace;
-    wm_class_ = wm_utils::QueryWmClass(dpy, window);
+    position_ = {-1, -1};
     is_bar_ = wm_utils::IsBar(wm_class_);
-
-    client_mapper::mapper[window_] = this;
+    wm_class_ = wm_utils::QueryWmClass(dpy, window);
+    
+    mapper_[window_] = this;
 
     XSelectInput(dpy, window, FocusChangeMask);
     SetBorderWidth(BORDER_WIDTH);
@@ -17,7 +20,7 @@ Client::Client(Display* dpy, Window window, Workspace* workspace) {
 }
 
 Client::~Client() {
-    client_mapper::mapper.erase(window_);
+    mapper_.erase(window_);
 }
 
 
@@ -47,10 +50,18 @@ void Client::set_workspace(Workspace* workspace) {
 }
 
 
-std::string& Client::wm_class() {
+bool Client::is_bar() {
+    return is_bar_;
+}
+
+std::string Client::wm_class() {
     return wm_class_;
 }
 
-bool Client::is_bar() {
-    return is_bar_;
+std::pair<short, short> Client::position() {
+    return position_;
+}
+
+void Client::set_position(std::pair<short, short> position) {
+    position_ = position;
 }

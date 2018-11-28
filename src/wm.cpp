@@ -164,10 +164,15 @@ void WindowManager::OnMapRequest() {
     
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
-    if (!workspaces_[current_]->Has(w)) {
+    if (!workspaces_[current_]->Has(w)) { 
+        Client* previous_active_c = workspaces_[current_]->active_client();
+        if (previous_active_c) {
+            previous_active_c->SetBorderColor(UNFOCUSED_COLOR);
+        }
+
         // XSelectInput() and Borders are automatically done 
         // in the constructor of Client class.
-        if (tiling_direction_ == Direction::HORIZONTAL) {
+        if (tiling_direction_ == Direction::HORIZONTAL) { 
             workspaces_[current_]->AddHorizontal(w);
         } else {
             workspaces_[current_]->AddVertical(w);
@@ -191,13 +196,13 @@ void WindowManager::OnDestroyNotify() {
 
         // Since the previously active window has been killed, we should
         // manually set focus to another window.
-        std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
+        std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
         Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
         if (c != nullptr) workspaces_[current_]->SetFocusClient(c->window());
 
         ClearNetActiveWindow();
     } else {
-        Client* c = client_mapper::mapper[w];
+        Client* c = Client::mapper_[w];
         if (c) {
             c->workspace()->Remove(w);
         }    
@@ -207,7 +212,7 @@ void WindowManager::OnDestroyNotify() {
 void WindowManager::OnKeyPress() {
     auto modifier = event_.xkey.state;
     auto key = event_.xkey.keycode;
-    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
+    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
     Window w;
     if (active_client_pos.first >= 0) {
         w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
@@ -375,7 +380,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
 
     if (workspaces_[current_]->ColSize() == 0) return;
 
-    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client();
+    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
     Window w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
 
     workspaces_[current_]->SetFocusClient(w);

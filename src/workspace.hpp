@@ -1,9 +1,10 @@
 #ifndef WORKSPACE_HPP_
 #define WORKSPACE_HPP_
 
+#include "client.hpp"
 #include <X11/Xlib.h>
 #include <vector>
-#include "client.hpp"
+#include <string>
 
 /* A Workspace contains its id, the active window in this workspace
  * and a list of windows.
@@ -42,13 +43,14 @@ public:
     void FocusDown();
     
     short id();
-    std::pair<short, short> active_client();
+    Client* active_client();
+    std::pair<short, short> active_client_pos();
 
 private:
     Display* dpy_;
     short id_;
     
-    std::pair<short, short> active_client_;
+    std::pair<short, short> active_client_pos_;
     std::vector<std::vector<Client*> > clients_;
 };
 

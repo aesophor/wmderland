@@ -7,7 +7,7 @@
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
     id_ = id;
-    active_client_ = {-1, -1};
+    active_client_pos_ = {-1, -1};
 }
 
 Workspace::~Workspace() {
@@ -22,24 +22,24 @@ Workspace::~Workspace() {
 void Workspace::AddHorizontal(Window w) {
     Client* c = new Client(dpy_, w, this);
 
-    // If active_client_.first (i.e., active client's column) == last column in that row,
+    // If active_client_pos_.first (i.e., active client's column) == last column in that row,
     // we push_back() a vector of Client* to create a new column at the end of that row,
     // and then push_back() the window to that newly created column.
     //
-    // Otherwise, insert a new column at the next position of active_client_.first,
+    // Otherwise, insert a new column at the next position of active_client_pos_.first,
     // and then push_back() the window to that newly created column.
     short last_col = (short) clients_.size() - 1;
 
-    if (active_client_.first == last_col) {
+    if (active_client_pos_.first == last_col) {
         clients_.push_back(std::vector<Client*>());
         clients_[last_col + 1].push_back(c);
     } else {
-        clients_.insert(clients_.begin() + active_client_.first + 1, std::vector<Client*>());
-        clients_[active_client_.first + 1].push_back(c);
+        clients_.insert(clients_.begin() + active_client_pos_.first + 1, std::vector<Client*>());
+        clients_[active_client_pos_.first + 1].push_back(c);
     }
 
-    active_client_.first++;
-    active_client_.second = 0;
+    active_client_pos_.first++;
+    active_client_pos_.second = 0;
 }
 
 void Workspace::AddVertical(Window w) {
@@ -50,16 +50,16 @@ void Workspace::AddVertical(Window w) {
 
     Client* c = new Client(dpy_, w, this);
 
-    std::vector<Client*>& active_client_col = clients_[active_client_.first];
-    short last_row = (short) active_client_col.size() - 1;
+    std::vector<Client*>& active_client_pos_col = clients_[active_client_pos_.first];
+    short last_row = (short) active_client_pos_col.size() - 1;
 
-    if (active_client_.second == last_row) {
-        active_client_col.push_back(c);
+    if (active_client_pos_.second == last_row) {
+        active_client_pos_col.push_back(c);
     } else {
-        active_client_col.insert(active_client_col.begin() + active_client_.second + 1, c);
+        active_client_pos_col.insert(active_client_pos_col.begin() + active_client_pos_.second + 1, c);
     }
 
-    active_client_.second++;
+    active_client_pos_.second++;
 }
 
 
@@ -89,14 +89,14 @@ void Workspace::Remove(Window w) {
 
     delete c;
 
-    // If active_client_'s column is out of range, set it to the last column.
-    if (active_client_.first >= (short) clients_.size()) {
-        active_client_.first = (short) clients_.size() - 1;
+    // If active_client_pos_'s column is out of range, set it to the last column.
+    if (active_client_pos_.first >= (short) clients_.size()) {
+        active_client_pos_.first = (short) clients_.size() - 1;
     }
 
-    // If active_client_'s row is out of range, set it to the last row in current column.
-    if (active_client_.second >= (short) clients_[active_client_.first].size()) {
-        active_client_.second = (short) clients_[active_client_.first].size() - 1;
+    // If active_client_pos_'s row is out of range, set it to the last row in current column.
+    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
+        active_client_pos_.second = (short) clients_[active_client_pos_.first].size() - 1;
     } 
 }
 
@@ -124,14 +124,16 @@ short Workspace::RowSize(short col_idx) {
 
 
 Client* Workspace::Get(Window w) {
-    for (short col = 0; col < ColSize(); col++) {
-        short row_count = RowSize(col);
-        for (short row = 0; row < row_count; row++) {
-            if (clients_[col][row]->window() == w) {
-                return clients_[col][row];
-            }
-        }
+    // We'll get the corresponding client using the lightning fast
+    // client mapper which has bigO(1), so we don't have to iterate
+    // through the two dimensional clients_ vector!
+    Client* c = Client::mapper_[w];
+
+    // But we have to check if it belongs to current workspace!
+    if (c && c->workspace() == this) {
+        return c;
     }
+
     return nullptr;
 }
 
@@ -178,56 +180,58 @@ void Workspace::UnmapAllClients() {
     }
 }
 
-void Workspace::SetFocusClient(Window focused_window) {
+void Workspace::SetFocusClient(Window w) {
+    Client* c = Client::mapper_[w];
+
     // Raise the window to the top and set input focus to it.
-    XRaiseWindow(dpy_, focused_window);
-    XSetInputFocus(dpy_, focused_window, RevertToParent, CurrentTime);
+    if (c) {
+        XRaiseWindow(dpy_, w);
+        XSetInputFocus(dpy_, w, RevertToParent, CurrentTime);
 
-    // For all clients (i.e., windows we've decided to manage) in this workspace,
-    // set all of their border colors to UNFOCUSED_COLOR except focused_window.
-    for (size_t col = 0; col < clients_.size(); col++) {
-        for (size_t row = 0; row < clients_[col].size(); row++) {
-            Client* c = clients_[col][row];
-            c->SetBorderColor((c->window() == focused_window) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
-
-            if (c->window() == focused_window) {
-                active_client_ = {col, row};
-            }
-        }
+        c->SetBorderColor(FOCUSED_COLOR);
+        c->set_position(active_client_pos_);
     }
 }
 
 
 void Workspace::FocusLeft() {
-    if (active_client_.first <= 0) return;
-    active_client_.first--;
+    if (active_client_pos_.first <= 0) return;
 
-    if (active_client_.second >= (short) clients_[active_client_.first].size()) {
-        active_client_.second = clients_[active_client_.first].size() - 1;
+    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    active_client_pos_.first--;
+
+    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
+        active_client_pos_.second = clients_[active_client_pos_.first].size() - 1;
     }
-    SetFocusClient(GetByIndex(active_client_)->window());
+
+    SetFocusClient(GetByIndex(active_client_pos_)->window());
 }
 
 void Workspace::FocusRight() {
-    if (active_client_.first >= (short) clients_.size() - 1) return;
-    active_client_.first++;
+    if (active_client_pos_.first >= (short) clients_.size() - 1) return;
 
-    if (active_client_.second >= (short) clients_[active_client_.first].size()) {
-        active_client_.second = clients_[active_client_.first].size() - 1;
+    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    active_client_pos_.first++;
+
+    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
+        active_client_pos_.second = clients_[active_client_pos_.first].size() - 1;
     }
-    SetFocusClient(GetByIndex(active_client_)->window());
+
+    SetFocusClient(GetByIndex(active_client_pos_)->window());
 }
 
 void Workspace::FocusUp() {
-    if (active_client_.second <= 0) return;
-    active_client_.second--;
-    SetFocusClient(GetByIndex(active_client_)->window());
+    if (active_client_pos_.second <= 0) return;
+    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    active_client_pos_.second--;
+    SetFocusClient(GetByIndex(active_client_pos_)->window());
 }
 
 void Workspace::FocusDown() {
-    if (active_client_.second >= (short) clients_[active_client_.first].size() - 1) return;
-    active_client_.second++;
-    SetFocusClient(GetByIndex(active_client_)->window());
+    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size() - 1) return;
+    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    active_client_pos_.second++;
+    SetFocusClient(GetByIndex(active_client_pos_)->window());
 }
 
 
@@ -235,6 +239,10 @@ short Workspace::id() {
     return id_;
 }
 
-std::pair<short, short> Workspace::active_client() {
-    return active_client_;
+Client* Workspace::active_client() {
+    return GetByIndex(active_client_pos_);
+}
+
+std::pair<short, short> Workspace::active_client_pos() {
+    return active_client_pos_;
 }
