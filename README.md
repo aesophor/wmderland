@@ -10,7 +10,7 @@ Heavily Inspired by [i3wm](https://github.com/i3/i3). Wmderland aims to simplify
 Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib). This project is still in very early stage of development, so there are lots of bugs.
 
 ## Performance
-Wmderland uses an `unoredered_map` to map Window to Client*, which is O(1). 
+Wmderland uses an `unordered_map` to map Window to Client*, which is O(1). 
 
 I try to eliminate sequential search as much as possible. 
 
