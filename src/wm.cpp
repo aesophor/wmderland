@@ -131,10 +131,10 @@ void WindowManager::Run() {
                 OnMotionNotify();
                 break;
             case FocusIn:
-                OnFocusIn();
+                //OnFocusIn();
                 break;
             case FocusOut:
-                OnFocusOut();
+                //OnFocusOut();
                 break;
             default:
                 break;
@@ -148,7 +148,8 @@ void WindowManager::OnMapRequest() {
     Window w = event_.xmaprequest.window;
     
     // KDE Plasma Integration.
-    if (wm_utils::QueryWmName(dpy_, w) == "Desktop — Plasma") {
+    if (wm_utils::QueryWmClass(dpy_, w) == "plasmashell") {
+        XKillClient(dpy_, w);
         return;
     }
     
@@ -182,6 +183,7 @@ void WindowManager::OnMapRequest() {
     // Set the newly mapped client as the focused one.
     workspaces_[current_]->SetFocusClient(w);
     Tile(workspaces_[current_]);
+    SetNetActiveWindow(w);
 }
 
 void WindowManager::OnDestroyNotify() {
@@ -193,14 +195,16 @@ void WindowManager::OnDestroyNotify() {
     if (workspaces_[current_]->Has(w)) {
         workspaces_[current_]->Remove(w);
         Tile(workspaces_[current_]);
+        ClearNetActiveWindow();
 
         // Since the previously active window has been killed, we should
         // manually set focus to another window.
         std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
         Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
-        if (c != nullptr) workspaces_[current_]->SetFocusClient(c->window());
-
-        ClearNetActiveWindow();
+        if (c != nullptr) {
+            workspaces_[current_]->SetFocusClient(c->window());
+            SetNetActiveWindow(c->window());
+        }           
     } else {
         Client* c = Client::mapper_[w];
         if (c) {
@@ -322,11 +326,11 @@ void WindowManager::OnMotionNotify() {
 }
 
 void WindowManager::OnFocusIn() {
-    SetNetActiveWindow(event_.xfocus.window);
+    //SetNetActiveWindow(event_.xfocus.window);
 }
 
 void WindowManager::OnFocusOut() {
-    ClearNetActiveWindow();
+    //ClearNetActiveWindow();
 }
 
 
@@ -364,7 +368,9 @@ void WindowManager::SetCursor(Window w, Cursor c) {
 
 void WindowManager::GotoWorkspace(short next) {
     if (current_ == next) return;
-    
+
+    ClearNetActiveWindow();
+
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
     current_ = next;
@@ -372,6 +378,7 @@ void WindowManager::GotoWorkspace(short next) {
     Client* active_client = workspaces_[current_]->active_client();
     if (active_client) {
         workspaces_[current_]->SetFocusClient(active_client->window());
+        SetNetActiveWindow(active_client->window());
     }
 
     Tile(workspaces_[current_]);
