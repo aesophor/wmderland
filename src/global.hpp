@@ -17,7 +17,7 @@
 #define MOVE_CURSOR 1
 #define RESIZE_CURSOR 3
 
-#define GAP_WIDTH 12
+#define GAP_WIDTH 15
 #define BORDER_WIDTH 3
 #define FOCUSED_COLOR 0xffffffff
 #define UNFOCUSED_COLOR 0xff41485f
