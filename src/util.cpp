@@ -1,4 +1,8 @@
 #include "util.hpp"
+#include "sstream"
+
+using std::string;
+using std::vector;
 
 namespace wm_utils {
 
@@ -8,24 +12,58 @@ namespace wm_utils {
         return ret;
     }
 
-    std::string QueryWmClass(Display* dpy, Window w) {
+    string QueryWmClass(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
-        return std::string(hint.res_class);
+        return string(hint.res_class);
     }
 
-    std::string QueryWmName(Display* dpy, Window w) {
+    string QueryWmName(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
-        return std::string(hint.res_name);
+        return string(hint.res_name);
     }
 
-    bool IsBar(const std::string& wm_class) {
-        return wm_class == "Polybar";
+    bool IsBar(const string& wm_class) {
+        return wm_class.find("Polybar") != string::npos;
     }
 
     bool IsBar(Display* dpy, Window w) {
         return IsBar(QueryWmClass(dpy, w));
+    }
+
+}
+
+
+namespace string_utils {
+
+    vector<string> split(const string& s, const char delimiter) {
+        std::stringstream ss(s);
+        string t;
+        vector<string> tokens;
+
+        while (std::getline(ss, t, delimiter)) {
+            tokens.push_back(t);
+        }
+        return tokens;
+    }
+
+    vector<string> split(const string& s, const char delimiter, short count) {
+        vector<string> tokens;
+        string::size_type head = 0;
+        string::size_type tail = s.find(delimiter, head);
+
+        for (short i = 0; i < count; i++) {
+            tokens.push_back(s.substr(head, tail - head));
+            head = tail + 1;
+            tail = s.find(delimiter, tail + 1);
+        }
+        tokens.push_back(s.substr(head, string::npos));
+        return tokens;
+    }
+
+    void trim(string& s) {
+        s.erase(s.find_last_not_of(" \n\r\t") + 1);
     }
 
 }

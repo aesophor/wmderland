@@ -3,6 +3,7 @@
 
 #include "properties.hpp"
 #include "workspace.hpp"
+#include "config.hpp"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -24,7 +25,6 @@ private:
     void InitProperties();
     void InitXEvents();
     void InitCursors();
-    void LoadConfig();
     
     /* XEvent handlers */
     static int OnXError(Display* dpy, XErrorEvent* e);
@@ -68,7 +68,7 @@ private:
 
     /* Properties */
     Properties* properties_;
-    //Config* config_;
+    Config* config_;
 
     /* Cursors */
     Cursor cursors_[4];

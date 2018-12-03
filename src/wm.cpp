@@ -27,8 +27,8 @@ WindowManager::WindowManager(Display* dpy) {
     current_ = 0;
     fullscreen_ = false;
     tiling_direction_ = Direction::HORIZONTAL;
-    //config_ = new Config(CONFIG_FILE);
     properties_ = new Properties(dpy_);
+    config_ = new Config(CONFIG_FILE);
 
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
@@ -90,22 +90,12 @@ void WindowManager::InitCursors() {
     SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
 }
 
-void WindowManager::LoadConfig() {
-
-}
-
 
 void WindowManager::Run() {
-    // This part should be replaced by user configuration instead.
-    // But since i'm too busy currently, I'm just going to hardcode them for now.
-    system("wmctrl -c Plasma");
-    system("displayctl");
-    system("dispad");
-    system("compton --config ~/.config/compton/compton.conf &");
-    system("dunst -config ~/.config/dunst/dunstrc");
-    system("pulseaudio --start --log-target=syslog");
-    system("mpd");
-    system("~/.config/polybar/launch.sh");
+    // Autostart applications specified in config.
+    for (auto s : config_->autostart_rules()) {
+        system(s.c_str());
+    }
 
     for(;;) {
         // Retrieve and dispatch next X event.
@@ -148,10 +138,12 @@ void WindowManager::OnMapRequest() {
     Window w = event_.xmaprequest.window;
     
     // KDE Plasma Integration.
+    /*
     if (wm_utils::QueryWmClass(dpy_, w) == "plasmashell") {
         XKillClient(dpy_, w);
         return;
     }
+    */
     
     XMapWindow(dpy_, w);
 
@@ -161,6 +153,36 @@ void WindowManager::OnMapRequest() {
         XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, w);
         bar_height_ = attr.height;
         return;
+    }
+
+    // If this window is dialog / notification, don't manage it.
+    /*
+    Atom prop, da;
+    unsigned char *prop_ret = NULL;
+    int di;
+    unsigned long dl;
+    if (XGetWindowProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_WINDOW_TYPE], 0,
+            sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
+        if (prop_ret) {
+            prop = ((Atom *)prop_ret)[0];
+            if (prop == properties_->net_atoms_[atom::NET_WM_WINDOW_TYPE_DIALOG] ||
+                prop == properties_->net_atoms_[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]) {
+                    // Center it.
+                    XSetWindowBorderWidth(dpy_, w, BORDER_WIDTH);
+                    XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
+                    Center(w);
+                    return;
+            }
+        }
+    }
+    */
+
+    // Apply rule test
+    std::string window_class = wm_utils::QueryWmClass(dpy_, w);
+    if (window_class == "URxvt") {
+        GotoWorkspace(0);
+    } else if (window_class == "Firefox") {
+        GotoWorkspace(2);
     }
     
     // Regular applications should be added to workspace client list,
@@ -379,9 +401,8 @@ void WindowManager::GotoWorkspace(short next) {
     if (active_client) {
         workspaces_[current_]->SetFocusClient(active_client->window());
         SetNetActiveWindow(active_client->window());
+        Tile(workspaces_[current_]);
     }
-
-    Tile(workspaces_[current_]);
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, short next) {    

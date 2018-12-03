@@ -40,8 +40,6 @@ public:
     
     void Set(Window w, Atom property, Atom type, int format, int mode, unsigned char* data, int n_elements);
     void Delete(Window w, Atom property);
-    Atom GetWmAtom(short index) const;
-    Atom GetNetAtom(short index) const;
     Atom utf8string() const;
     
     friend class WindowManager;

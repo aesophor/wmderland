@@ -1,12 +1,12 @@
-; WM
+; Global
 ; ---------------------------------------------
-; tiling = true
-border_width = 3
-border_color = #ffffff
-
-; Keybinds
-; ---------------------------------------------
+set tiling = true
+set border_width = 3
+set border_color = #ffffff
 set $mod = Mod4
+
+; Keybind
+; ---------------------------------------------
 map $mod+d rofi -show drun
 map $mod+Return urxvt
 
@@ -14,5 +14,5 @@ map $mod+Return urxvt
 ; ---------------------------------------------
 exec displayctl
 exec compton --config ~/.config/compton/compton.conf
-exec dunst -config ~?.config/dunst/dunstrc
+exec dunst -config ~/.config/dunst/dunstrc
 exec ~/.config/polybar/launch.sh

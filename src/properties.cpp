@@ -22,6 +22,7 @@ Properties::Properties(Display* dpy) {
     net_atoms_[atom::NET_CLIENT_LIST] = XInternAtom(dpy_, "_NET_CLIENT_LIST", false);
 };
 
+
 void Properties::Set(Window w, Atom property, Atom type,
         int format, int mode, unsigned char* data, int n_elements) {
     XChangeProperty(dpy_, w, property, type, format, mode, data, n_elements);
@@ -33,12 +34,4 @@ void Properties::Delete(Window w, Atom property) {
 
 Atom Properties::utf8string() const {
     return utf8string_;
-}
-
-Atom Properties::GetWmAtom(short index) const {
-    return wm_atoms_[index];
-}
-
-Atom Properties::GetNetAtom(short index) const {
-    return net_atoms_[index];
 }

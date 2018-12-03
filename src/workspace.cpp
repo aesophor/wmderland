@@ -133,7 +133,6 @@ Client* Workspace::Get(Window w) {
     if (c && c->workspace() == this) {
         return c;
     }
-
     return nullptr;
 }
 
