@@ -9,6 +9,9 @@ Heavily Inspired by [i3wm](https://github.com/i3/i3). Wmderland aims to simplify
 
 Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib) with :heart:
 
+## Why Another WM
+I started this project because I want experience with OOP in C++ and Xlib. I know there's already [lots of WM out there](https://wiki.archlinux.org/index.php/Window_manager), but I'm writing this for my personal use and study.
+
 ## Build Requirements
 * g++
 * make
@@ -33,6 +36,12 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib) with :heart:
 
 ## Windows Version
 Just fook off
+
+## Special Thanks
+* suckless.org's dwm
+* jichu4n's [basic_wm](https://github.com/jichu4n/basic_wm)
+* mil's [simple_wm](https://github.com/mil/simple-wm)
+* JLErvin's [berry](https://github.com/JLErvin/berry)
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
