@@ -28,7 +28,7 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib) with :heart:
 * Terminate client peacefully via ICCCM instead of XKillClient().
 * A better configuration system that supports
   * keybinds
-  * floating rules
+  * floating rules with wm_name
   * application spawning rules with wm_name
 
 ## Windows Version
