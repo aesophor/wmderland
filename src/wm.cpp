@@ -153,26 +153,33 @@ void WindowManager::OnMapRequest() {
         return;
     }
 
+    // If this window is a dialog, resize it to floating window width / height and center it.
+    bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
+
     // Apply application spawning rules (if exists).
     string wm_class = wm_utils::QueryWmClass(dpy_, w);    
     if (config_->spawn_rules().find(wm_class) != config_->spawn_rules().end()) {
         short target_workspace_id = config_->spawn_rules()[wm_class] - 1;
         GotoWorkspace(target_workspace_id);
     }
-    
-    bool is_dialog = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
-    if (is_dialog) {
-        Center(w);
+
+    // Apply application floating rules (if exists).
+    if (config_->float_rules().find(wm_class) != config_->float_rules().end()) {
+        should_float = config_->float_rules()[wm_class];
     }
 
-
+    if (should_float) {
+        XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+        Center(w);
+    }
+    
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) { 
         workspaces_[current_]->UnsetFocusClient();
 
         // XSelectInput() and Borders are automatically done in the constructor of Client class.
-        workspaces_[current_]->Add(w, tiling_direction_, is_dialog);
+        workspaces_[current_]->Add(w, tiling_direction_, should_float);
     }
 
     // Set the newly mapped client as the focused one.

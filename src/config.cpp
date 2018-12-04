@@ -45,6 +45,12 @@ Config::Config(string filename) {
                 short workspace_id_short;
                 stringstream(workspace_id) >> workspace_id_short;
                 spawn_rules_[wm_class_name] = workspace_id_short;
+            } else if (first_token == "floating") {
+                string wm_class_name = tokens[1];
+                string should_float = tokens[2];
+                bool should_float_bool;
+                stringstream(should_float) >> std::boolalpha >> should_float_bool;
+                float_rules_[wm_class_name] = should_float_bool;
             } else if (first_token == "bindsym") {
                 vector<string> keybind = string_utils::split(tokens[1], '+');
                 string modifier = keybind[0];
@@ -114,6 +120,10 @@ unordered_map<string, string>& Config::global_vars() {
 
 unordered_map<string, short>& Config::spawn_rules() {
     return spawn_rules_;
+}
+
+unordered_map<string, bool>& Config::float_rules() {
+    return float_rules_;
 }
 
 vector<string>& Config::autostart_rules() {
