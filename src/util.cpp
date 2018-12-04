@@ -1,3 +1,4 @@
+#include "properties.hpp"
 #include "util.hpp"
 #include "sstream"
 
@@ -22,6 +23,27 @@ namespace wm_utils {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
         return string(hint.res_name);
+    }
+
+
+    bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms) {
+        Atom prop, da;
+        unsigned char *prop_ret = nullptr;
+        int di;
+        unsigned long dl;
+
+        if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_WINDOW_TYPE], 0,
+                    sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
+            if (prop_ret) {
+                prop = ((Atom *)prop_ret)[0];
+                if (prop == atoms[atom::NET_WM_WINDOW_TYPE_DIALOG] ||
+                        prop == atoms[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     bool IsBar(const string& wm_class) {

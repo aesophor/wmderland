@@ -28,6 +28,9 @@ public:
     void set_workspace(Workspace* workspace);
 
     bool is_bar();
+    bool is_floating();
+    void set_floating(bool is_floating);
+
     std::string wm_class();
     std::pair<short, short> position();
     void set_position(std::pair<short, short> position);
@@ -38,6 +41,8 @@ private:
     Workspace* workspace_;
 
     bool is_bar_;
+    bool is_floating_;
+
     std::string wm_class_;
     std::pair<short, short> position_;
 };

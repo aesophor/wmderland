@@ -4,6 +4,9 @@
 #include <string>
 #include <glog/logging.h>
 
+using std::pair;
+using std::vector;
+
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
     id_ = id;
@@ -19,8 +22,24 @@ Workspace::~Workspace() {
 }
 
 
-void Workspace::AddHorizontal(Window w) {
+void Workspace::Add(Window w, Direction tiling_direction, bool is_floating) {
+    switch (tiling_direction) {
+        case HORIZONTAL:
+            AddHorizontal(w, is_floating);
+            break;
+
+        case VERTICAL:
+            AddVertical(w, is_floating);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void Workspace::AddHorizontal(Window w, bool is_floating) {
     Client* c = new Client(dpy_, w, this);
+    c->set_floating(is_floating);
 
     // If active_client_pos_.first (i.e., active client's column) == last column in that row,
     // we push_back() a vector of Client* to create a new column at the end of that row,
@@ -31,10 +50,10 @@ void Workspace::AddHorizontal(Window w) {
     short last_col = (short) clients_.size() - 1;
 
     if (active_client_pos_.first == last_col) {
-        clients_.push_back(std::vector<Client*>());
+        clients_.push_back(vector<Client*>());
         clients_[last_col + 1].push_back(c);
     } else {
-        clients_.insert(clients_.begin() + active_client_pos_.first + 1, std::vector<Client*>());
+        clients_.insert(clients_.begin() + active_client_pos_.first + 1, vector<Client*>());
         clients_[active_client_pos_.first + 1].push_back(c);
     }
 
@@ -42,15 +61,16 @@ void Workspace::AddHorizontal(Window w) {
     active_client_pos_.second = 0;
 }
 
-void Workspace::AddVertical(Window w) {
+void Workspace::AddVertical(Window w, bool is_floating) {
     if (clients_.size() == 0) {
-        AddHorizontal(w);
+        AddHorizontal(w, is_floating);
         return;
     }
 
     Client* c = new Client(dpy_, w, this);
+    c->set_floating(is_floating);
 
-    std::vector<Client*>& active_client_pos_col = clients_[active_client_pos_.first];
+    vector<Client*>& active_client_pos_col = clients_[active_client_pos_.first];
     short last_row = (short) active_client_pos_col.size() - 1;
 
     if (active_client_pos_.second == last_row) {
@@ -64,7 +84,7 @@ void Workspace::AddVertical(Window w) {
 
 
 void Workspace::Remove(Window w) {
-    std::vector<Client*>* client_col;
+    vector<Client*>* client_col;
     Client* c;
 
     for (short col = 0; col < ColSize(); col++) {
@@ -102,8 +122,9 @@ void Workspace::Remove(Window w) {
 
 
 void Workspace::Move(Window w, Workspace* workspace) {
+    bool is_floating = Client::mapper_[w]->is_floating();
     Remove(w);
-    workspace->AddHorizontal(w);
+    workspace->AddHorizontal(w, is_floating);
 }
 
 bool Workspace::Has(Window w) {
@@ -114,11 +135,11 @@ bool Workspace::IsEmpty() {
     return clients_.size() == 0;
 }
 
-short Workspace::ColSize() {
+short Workspace::ColSize() const {
     return clients_.size();
 }
 
-short Workspace::RowSize(short col_idx) {
+short Workspace::RowSize(short col_idx) const {
     return clients_[col_idx].size();
 }
 
@@ -136,13 +157,34 @@ Client* Workspace::Get(Window w) {
     return nullptr;
 }
 
-Client* Workspace::GetByIndex(std::pair<short, short> pos) {
-    if (ColSize() == 0) return nullptr;
+Client* Workspace::GetByIndex(pair<short, short> pos) {
+    if (clients_.size() == 0) return nullptr;
     if (pos.first < 0 || pos.second < 0) return nullptr;
 
     if (pos.first >= (short) clients_.size()) return nullptr;
     if (pos.second >= (short) clients_[pos.first].size()) return nullptr;
     return clients_[pos.first][pos.second];
+}
+
+vector<vector<Client*> > Workspace::GetTilingClients() {
+    vector<vector<Client*> > tiling_clients;
+
+    for (size_t col = 0; col < clients_.size(); col++) {
+        vector<Client*> tiling_col;
+        
+        for (size_t row = 0; row < clients_[col].size(); row++) {
+            Client* c = clients_[col][row];
+            if (!c->is_floating()) {
+                tiling_col.push_back(c);
+            }
+        }
+
+        if (!tiling_col.empty()) {
+            tiling_clients.push_back(tiling_col);
+        }
+    }
+    
+    return tiling_clients;
 }
 
 /*
@@ -242,6 +284,6 @@ Client* Workspace::active_client() {
     return GetByIndex(active_client_pos_);
 }
 
-std::pair<short, short> Workspace::active_client_pos() {
+pair<short, short> Workspace::active_client_pos() {
     return active_client_pos_;
 }

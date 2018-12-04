@@ -6,11 +6,17 @@
 #include <string>
 #include <vector>
 
+enum Direction {
+    HORIZONTAL,
+    VERTICAL
+};
+
 namespace wm_utils {
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
     std::string QueryWmClass(Display* dpy, Window w);
     std::string QueryWmName(Display* dpy, Window w);
     
+    bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms);
     bool IsBar(const std::string& wm_class);
     bool IsBar(Display* dpy, Window w);
 }

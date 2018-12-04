@@ -10,6 +10,8 @@
 #include <glog/logging.h>
 
 using std::hex;
+using std::pair;
+using std::vector;
 using std::stringstream;
 
 WindowManager* WindowManager::instance_;
@@ -141,12 +143,10 @@ void WindowManager::OnMapRequest() {
     Window w = event_.xmaprequest.window;
     
     // KDE Plasma Integration.
-    /*
     if (wm_utils::QueryWmClass(dpy_, w) == "plasmashell") {
         XKillClient(dpy_, w);
         return;
     }
-    */
     
     XMapWindow(dpy_, w);
 
@@ -157,28 +157,6 @@ void WindowManager::OnMapRequest() {
         bar_height_ = attr.height;
         return;
     }
-
-    // If this window is dialog / notification, don't manage it.
-    /*
-    Atom prop, da;
-    unsigned char *prop_ret = NULL;
-    int di;
-    unsigned long dl;
-    if (XGetWindowProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_WINDOW_TYPE], 0,
-            sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
-        if (prop_ret) {
-            prop = ((Atom *)prop_ret)[0];
-            if (prop == properties_->net_atoms_[atom::NET_WM_WINDOW_TYPE_DIALOG] ||
-                prop == properties_->net_atoms_[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]) {
-                    // Center it.
-                    XSetWindowBorderWidth(dpy_, w, BORDER_WIDTH);
-                    XSetWindowBorder(dpy_, w, FOCUSED_COLOR);
-                    Center(w);
-                    return;
-            }
-        }
-    }
-    */
 
     // Apply rule test
     std::string window_class = wm_utils::QueryWmClass(dpy_, w);
@@ -192,16 +170,18 @@ void WindowManager::OnMapRequest() {
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) { 
         Client* previous_active_c = workspaces_[current_]->active_client();
+
         if (previous_active_c) {
             previous_active_c->SetBorderColor(config_->unfocused_color());
         }
 
         // XSelectInput() and Borders are automatically done 
         // in the constructor of Client class.
-        if (tiling_direction_ == Direction::HORIZONTAL) { 
-            workspaces_[current_]->AddHorizontal(w);
-        } else {
-            workspaces_[current_]->AddVertical(w);
+        bool is_dialog = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
+        workspaces_[current_]->Add(w, tiling_direction_, is_dialog);
+
+        if (is_dialog) {
+            Center(w);
         }
     }
 
@@ -224,7 +204,7 @@ void WindowManager::OnDestroyNotify() {
 
         // Since the previously active window has been killed, we should
         // manually set focus to another window.
-        std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
+        pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
         Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
         if (c != nullptr) {
             workspaces_[current_]->SetFocusClient(c->window());
@@ -241,7 +221,7 @@ void WindowManager::OnDestroyNotify() {
 void WindowManager::OnKeyPress() {
     auto modifier = event_.xkey.state;
     auto key = event_.xkey.keycode;
-    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
+    pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
     Window w;
     if (active_client_pos.first >= 0) {
         w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
@@ -383,10 +363,6 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     return 0;
 }
 
-void WindowManager::Execute(const std::string& cmd) {
-    system(cmd.c_str());
-}
-
 void WindowManager::SetCursor(Window w, Cursor c) {
     XDefineCursor(dpy_, w, c);
 }
@@ -416,7 +392,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
 
     if (workspaces_[current_]->ColSize() == 0) return;
 
-    std::pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
+    pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
     Window w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
 
     workspaces_[current_]->SetFocusClient(w);
@@ -433,19 +409,26 @@ void WindowManager::Center(Window w) {
 }
 
 void WindowManager::Tile(Workspace* workspace) {
-    short col_count = workspaces_[current_]->ColSize();
-    if (col_count == 0) return;
+    // Retrieve all clients that we should tile.
+    vector<vector<Client*> > tiling_clients = workspaces_[current_]->GetTilingClients();
+
+    // If there's no clients to tile, return immediately.
+    if (tiling_clients.empty()) {
+        return;
+    }
 
     short gap_width = config_->gap_width();
     short border_width = config_->border_width();
+
+    size_t col_count = tiling_clients.size();
     short window_width = SCREEN_WIDTH / col_count;
 
-    for (short col = 0; col < col_count; col++) {
-        short row_count = workspaces_[current_]->RowSize(col);
-        short window_height = (SCREEN_HEIGHT - bar_height_) / row_count;
-        
-        for (short row = 0; row < row_count; row++) {
-            Client* c = workspace->GetByIndex(std::pair<short, short>(col, row));
+    for (size_t col = 0; col < col_count; col++) {
+        size_t row_count = tiling_clients[col].size();
+        short window_height = (SCREEN_HEIGHT - bar_height_) / row_count; 
+
+        for (size_t row = 0; row < row_count; row++) {
+            Client* c = workspace->GetByIndex(pair<short, short>(col, row));
             short new_x = col * window_width + gap_width / 2;
             short new_y = bar_height_ + row * window_height + gap_width / 2;
             short new_width = window_width - border_width * 2 - gap_width;

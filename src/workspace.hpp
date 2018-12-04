@@ -2,6 +2,7 @@
 #define WORKSPACE_HPP_
 
 #include "client.hpp"
+#include "util.hpp"
 #include <X11/Xlib.h>
 #include <vector>
 #include <string>
@@ -16,21 +17,20 @@ public:
     Workspace(Display* dpy, short id);
     ~Workspace();
 
-    /* clients_ vector manipulation */
-    void AddHorizontal(Window w);
-    void AddVertical(Window w);
-    
+    /* clients_ vector manipulation */    
+    void Add(Window w, Direction tiling_direction, bool is_floating);
     void Remove(Window w);
     void Move(Window w, Workspace* workspace);
     bool Has(Window w);
     
     bool IsEmpty();
-    short ColSize();
-    short RowSize(short col_idx);
+    short ColSize() const;
+    short RowSize(short col_idx) const;
     std::string ToString();
     
     Client* Get(Window w);
     Client* GetByIndex(std::pair<short, short> pos);
+    std::vector<std::vector<Client*> > GetTilingClients();
     
     /* client window manipulation */
     void MapAllClients();
@@ -47,6 +47,9 @@ public:
     std::pair<short, short> active_client_pos();
 
 private:
+    void AddHorizontal(Window w, bool is_floating);
+    void AddVertical(Window w, bool is_floating);
+
     Display* dpy_;
     short id_;
     

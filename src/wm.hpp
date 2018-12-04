@@ -4,6 +4,7 @@
 #include "properties.hpp"
 #include "workspace.hpp"
 #include "config.hpp"
+#include "util.hpp"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -43,19 +44,12 @@ private:
 
     /* Workspace manipulation */
     void GotoWorkspace(short next);
-    void MoveWindowToWorkspace(Window window, short next);
-
-    enum Direction {
-        HORIZONTAL,
-        VERTICAL
-    };
-
+    void MoveWindowToWorkspace(Window window, short next); 
 
     /* Client window placement */
     void Center(Window w);
     void Tile(Workspace* workspace);
 
-    void Execute(const std::string& cmd);
     void SetCursor(Window w, Cursor c);
 
     Display* dpy_;
