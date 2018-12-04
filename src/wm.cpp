@@ -160,18 +160,19 @@ void WindowManager::OnMapRequest() {
         GotoWorkspace(target_workspace_id);
     }
     
+    bool is_dialog = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
+    if (is_dialog) {
+        Center(w);
+    }
+
+
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) { 
         workspaces_[current_]->UnsetFocusClient();
 
         // XSelectInput() and Borders are automatically done in the constructor of Client class.
-        bool is_dialog = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
         workspaces_[current_]->Add(w, tiling_direction_, is_dialog);
-
-        if (is_dialog) {
-            Center(w);
-        }
     }
 
     // Set the newly mapped client as the focused one.
@@ -253,6 +254,7 @@ void WindowManager::OnKeyPress() {
                 if (c) {
                     c->set_floating(!c->is_floating());
                     if (c->is_floating()) {
+                        XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
                         Center(c->window());
                     }
                     Tile(workspaces_[current_]);

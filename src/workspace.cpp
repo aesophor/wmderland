@@ -222,9 +222,9 @@ void Workspace::UnmapAllClients() {
 void Workspace::RaiseAllFloatingClients() {
     vector<Client*> floating_clients = GetFloatingClients();
 
-    if (!floating_clients.empty()) {
+    for (auto c : floating_clients) {
         UnsetFocusClient();
-        SetFocusClient(floating_clients.back()->window());
+        SetFocusClient(c->window());
     }
 }
 
