@@ -17,9 +17,6 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib) with :heart:
 * Xlib headers
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
-## Windows Version
-Just fook off
-
 ## Features
 * Horizontal and vertical tiling (with gaps!)
 * Toggle windows between tiled / floating.
@@ -32,6 +29,9 @@ Just fook off
 ## What's not working yet
 * A better configuration system that supports `keybinds`, `floating rules`, `application spawning rules with wm_name`... etc.
 * Terminate client peacefully via ICCCM instead of XKillClient().
+
+## Windows Version
+Just fook off
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
