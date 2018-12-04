@@ -246,21 +246,30 @@ void WindowManager::OnKeyPress() {
             if (w == None) return;
 
             // Mod4 + q -> Kill window.
-            if (key == XKeysymToKeycode(dpy_, XStringToKeysym("q"))) {
+            if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
                 XKillClient(dpy_, w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("v"))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TOGGLE_CLIENT_FLOAT_KEY))) {
+                Client* c = workspaces_[current_]->active_client();
+                if (c) {
+                    c->set_floating(!c->is_floating());
+                    if (c->is_floating()) {
+                        Center(c->window());
+                    }
+                    Tile(workspaces_[current_]);
+                }
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
                 tiling_direction_ = Direction::VERTICAL;
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("g"))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_H_KEY))) {
                 tiling_direction_ = Direction::HORIZONTAL;
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("h"))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_LEFT_KEY))) {
                 workspaces_[current_]->FocusLeft();
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("l"))) { 
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_RIGHT_KEY))) { 
                 workspaces_[current_]->FocusRight();
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("j"))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_DOWN_KEY))) {
                 workspaces_[current_]->FocusDown();
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("k"))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_UP_KEY))) {
                 workspaces_[current_]->FocusUp();
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("f"))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FULLSCREEN_KEY))) {
                 XRaiseWindow(dpy_, w);
 
                 if (!fullscreen_) {

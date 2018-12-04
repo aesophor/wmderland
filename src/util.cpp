@@ -27,6 +27,10 @@ namespace wm_utils {
         return string(hint.res_name);
     }
 
+    unsigned int QueryKeycode(Display* dpy, const string& key_name) {
+        return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
+    }
+
 
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms) {
         Atom prop, da;

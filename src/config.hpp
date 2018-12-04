@@ -28,6 +28,16 @@
 #define DEFAULT_FOCUSED_COLOR 0xffffffff
 #define DEFAULT_UNFOCUSED_COLOR 0xff41485f
 
+#define DEFAULT_TILE_H_KEY "g"
+#define DEFAULT_TILE_V_KEY "v"
+#define DEFAULT_FOCUS_LEFT_KEY "h"
+#define DEFAULT_FOCUS_RIGHT_KEY "l"
+#define DEFAULT_FOCUS_DOWN_KEY "j"
+#define DEFAULT_FOCUS_UP_KEY "k"
+#define DEFAULT_FULLSCREEN_KEY "f"
+#define DEFAULT_KILL_CLIENT_KEY "q"
+#define DEFAULT_TOGGLE_CLIENT_FLOAT_KEY "o"
+
 
 class Config {
 public:

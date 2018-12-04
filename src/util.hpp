@@ -15,6 +15,7 @@ namespace wm_utils {
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
     std::string QueryWmClass(Display* dpy, Window w);
     std::string QueryWmName(Display* dpy, Window w);
+    unsigned int QueryKeycode(Display* dpy, const std::string& key_name);
     
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms);
     bool IsBar(const std::string& wm_class);

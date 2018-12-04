@@ -1,18 +1,50 @@
-; Global
-; ---------------------------------------------
-set tiling = true
+; Global Variables
+; syntax: set <key> = <value>
+; ----------------------------------------------------
+set gap_width = 15
 set border_width = 3
-set border_color = #ffffff
-set $mod = Mod4
+set min_window_width = 50
+set min_window_height = 50
+set focused_color = ffffffff
+set unfocused_color = ff41485f
 
-; Keybind
-; ---------------------------------------------
-map $mod+d rofi -show drun
-map $mod+Return urxvt
+
+; Spawning Rules (wm_name not implemented)
+; syntax: assign <wm_class>{,<wm_name>} -> <workspace_id>
+; ----------------------------------------------------
+assign URxvt -> 1
+assign Firefox -> 3
+
+
+; Floating Rules (Not implemented)
+; syntax: floating <wm_class>{,<wm_name>} enable
+; ----------------------------------------------------
+
+
+; Keybind (Not implemented)
+; syntax: bindsym <Modifier+Key> 
+; ----------------------------------------------------
+bindsym Mod4+g tile_horizontally
+bindsym Mod4+v tile_vertically
+bindsym Mod4+h focus_left
+bindsym Mod4+l focus_right
+bindsym Mod4+j focus_down
+bindsym Mod4+k focus_up
+bindsym Mod4+q kill
+bindsym Mod4+f fullscreen
+
+bindsym Mod4+Return exec urxvt &
+bindsym Mod4+d exec rofi -show drun
+
 
 ; Autostart
-; ---------------------------------------------
+; syntax: exec <command>
+; ----------------------------------------------------
+exec wmctrl -c Plasma
 exec displayctl
-exec compton --config ~/.config/compton/compton.conf
+exec dispad
+exec compton --config ~/.config/compton/compton.conf &
 exec dunst -config ~/.config/dunst/dunstrc
+exec pulseaudio --start --log-target=syslog
+exec mpd
 exec ~/.config/polybar/launch.sh

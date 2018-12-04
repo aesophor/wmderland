@@ -45,7 +45,10 @@ Config::Config(string filename) {
                 short workspace_id_short;
                 stringstream(workspace_id) >> workspace_id_short;
                 spawn_rules_[wm_class_name] = workspace_id_short;
-            } else if (first_token == "map") {
+            } else if (first_token == "bindsym") {
+                vector<string> keybind = string_utils::split(tokens[1], '+');
+                string modifier = keybind[0];
+                string key = keybind[1];
 
             } else if (first_token == "exec") {
                 string cmd = string_utils::split(line, ' ', 1)[1];
