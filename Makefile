@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -std=c++14 -Wall -lpthread -lX11 -lglog
+CXXFLAGS=-g -std=c++14 -flto -Os -Wall -lpthread -lX11 -lglog
 BIN=Wmderland
 SRC=$(wildcard src/*.cpp)
 
