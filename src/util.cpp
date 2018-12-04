@@ -2,6 +2,8 @@
 #include "util.hpp"
 #include "sstream"
 
+using std::size_t;
+using std::hash;
 using std::string;
 using std::vector;
 

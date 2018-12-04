@@ -44,6 +44,7 @@ public:
     unsigned long unfocused_color();
 
     std::unordered_map<std::string, std::string>& global_vars();
+    std::unordered_map<std::string, short>& spawn_rules();
     std::vector<std::string>& autostart_rules();
 
 private:
@@ -58,6 +59,7 @@ private:
     unsigned long unfocused_color_;
 
     std::unordered_map<std::string, std::string> global_vars_;
+    std::unordered_map<std::string, short> spawn_rules_;
     std::vector<std::string> autostart_rules_;
 };
 

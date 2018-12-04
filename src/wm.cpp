@@ -11,6 +11,7 @@
 
 using std::hex;
 using std::pair;
+using std::string;
 using std::vector;
 using std::stringstream;
 
@@ -152,15 +153,12 @@ void WindowManager::OnMapRequest() {
         return;
     }
 
-    // Apply rule test
-    /*
-    std::string window_class = wm_utils::QueryWmClass(dpy_, w);
-    if (window_class == "URxvt") {
-        GotoWorkspace(0);
-    } else if (window_class == "Firefox") {
-        GotoWorkspace(2);
+    // Apply application spawning rules (if exists).
+    string wm_class = wm_utils::QueryWmClass(dpy_, w);    
+    if (config_->spawn_rules().find(wm_class) != config_->spawn_rules().end()) {
+        short target_workspace_id = config_->spawn_rules()[wm_class] - 1;
+        GotoWorkspace(target_workspace_id);
     }
-    */
     
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!

@@ -8,6 +8,7 @@ using std::stringstream;
 using std::unordered_map;
 using std::string;
 using std::vector;
+using std::pair;
 
 Config* Config::instance_;
 
@@ -32,14 +33,21 @@ Config::Config(string filename) {
 
         if (!line.empty() && line.at(0) != ';') {
             vector<string> tokens = string_utils::split(line, ' ');
+            string& first_token = tokens[0];
 
-            if (tokens[0] == "set") {
+            if (first_token == "set") {
                 string key = tokens[1];
                 string value = tokens[3];
                 global_vars_[key] = value;
-            } else if (tokens[0] == "map") {
+            } else if (first_token == "assign") {
+                string wm_class_name = tokens[1];
+                string workspace_id = tokens[3];
+                short workspace_id_short;
+                stringstream(workspace_id) >> workspace_id_short;
+                spawn_rules_[wm_class_name] = workspace_id_short;
+            } else if (first_token == "map") {
 
-            } else if (tokens[0] == "exec") {
+            } else if (first_token == "exec") {
                 string cmd = string_utils::split(line, ' ', 1)[1];
                 autostart_rules_.push_back(cmd);
             } else {
@@ -99,6 +107,10 @@ bool Config::Has(const string& key) const {
 
 unordered_map<string, string>& Config::global_vars() {
     return global_vars_;
+}
+
+unordered_map<string, short>& Config::spawn_rules() {
+    return spawn_rules_;
 }
 
 vector<string>& Config::autostart_rules() {
