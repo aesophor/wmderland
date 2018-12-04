@@ -1,5 +1,5 @@
 #include "workspace.hpp"
-#include "global.hpp"
+#include "config.hpp"
 #include <algorithm>
 #include <string>
 #include <glog/logging.h>
@@ -187,7 +187,7 @@ void Workspace::SetFocusClient(Window w) {
         XRaiseWindow(dpy_, w);
         XSetInputFocus(dpy_, w, RevertToParent, CurrentTime);
 
-        c->SetBorderColor(FOCUSED_COLOR);
+        c->SetBorderColor(Config::GetInstance()->focused_color());
         c->set_position(active_client_pos_);
     }
 }
@@ -196,7 +196,7 @@ void Workspace::SetFocusClient(Window w) {
 void Workspace::FocusLeft() {
     if (active_client_pos_.first <= 0) return;
 
-    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
     active_client_pos_.first--;
 
     if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
@@ -209,7 +209,7 @@ void Workspace::FocusLeft() {
 void Workspace::FocusRight() {
     if (active_client_pos_.first >= (short) clients_.size() - 1) return;
 
-    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
     active_client_pos_.first++;
 
     if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
@@ -221,14 +221,14 @@ void Workspace::FocusRight() {
 
 void Workspace::FocusUp() {
     if (active_client_pos_.second <= 0) return;
-    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
     active_client_pos_.second--;
     SetFocusClient(GetByIndex(active_client_pos_)->window());
 }
 
 void Workspace::FocusDown() {
     if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size() - 1) return;
-    GetByIndex(active_client_pos_)->SetBorderColor(UNFOCUSED_COLOR);
+    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
     active_client_pos_.second++;
     SetFocusClient(GetByIndex(active_client_pos_)->window());
 }

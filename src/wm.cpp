@@ -1,13 +1,16 @@
 #include "wm.hpp"
-#include "global.hpp"
 #include "client.hpp"
 #include "util.hpp"
 #include <string>
+#include <sstream>
 #include <algorithm>
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
 #include <glog/logging.h>
+
+using std::hex;
+using std::stringstream;
 
 WindowManager* WindowManager::instance_;
 
@@ -28,7 +31,7 @@ WindowManager::WindowManager(Display* dpy) {
     fullscreen_ = false;
     tiling_direction_ = Direction::HORIZONTAL;
     properties_ = new Properties(dpy_);
-    config_ = new Config(CONFIG_FILE);
+    config_ = Config::GetInstance();
 
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
@@ -190,7 +193,7 @@ void WindowManager::OnMapRequest() {
     if (!workspaces_[current_]->Has(w)) { 
         Client* previous_active_c = workspaces_[current_]->active_client();
         if (previous_active_c) {
-            previous_active_c->SetBorderColor(UNFOCUSED_COLOR);
+            previous_active_c->SetBorderColor(config_->unfocused_color());
         }
 
         // XSelectInput() and Borders are automatically done 
@@ -292,7 +295,7 @@ void WindowManager::OnKeyPress() {
                 if (!fullscreen_) {
                     // Record the current window's position and size before making it fullscreen.
                     XGetWindowAttributes(dpy_, w, &attr_);
-                    XMoveResizeWindow(dpy_, w, 0, 0, SCREEN_WIDTH - BORDER_WIDTH * 2, SCREEN_HEIGHT - BORDER_WIDTH * 2);
+                    XMoveResizeWindow(dpy_, w, 0, 0, SCREEN_WIDTH - config_->border_width() * 2, SCREEN_HEIGHT - config_->border_width() * 2);
                     fullscreen_ = true;
                 } else {
                     // Restore the window to its original position and size.
@@ -433,6 +436,8 @@ void WindowManager::Tile(Workspace* workspace) {
     short col_count = workspaces_[current_]->ColSize();
     if (col_count == 0) return;
 
+    short gap_width = config_->gap_width();
+    short border_width = config_->border_width();
     short window_width = SCREEN_WIDTH / col_count;
 
     for (short col = 0; col < col_count; col++) {
@@ -441,27 +446,27 @@ void WindowManager::Tile(Workspace* workspace) {
         
         for (short row = 0; row < row_count; row++) {
             Client* c = workspace->GetByIndex(std::pair<short, short>(col, row));
-            short new_x = col * window_width + GAP_WIDTH / 2;
-            short new_y = bar_height_ + row * window_height + GAP_WIDTH / 2;
-            short new_width = window_width - BORDER_WIDTH * 2 - GAP_WIDTH;
-            short new_height = window_height - BORDER_WIDTH * 2 - GAP_WIDTH;
+            short new_x = col * window_width + gap_width / 2;
+            short new_y = bar_height_ + row * window_height + gap_width / 2;
+            short new_width = window_width - border_width * 2 - gap_width;
+            short new_height = window_height - border_width * 2 - gap_width;
 
             if (col == 0) {
-                new_x += GAP_WIDTH / 2;
-                new_width -= GAP_WIDTH / 2;
+                new_x += gap_width / 2;
+                new_width -= gap_width / 2;
             }
 
             if (row == 0) {
-                new_y += GAP_WIDTH / 2;
-                new_height -= GAP_WIDTH / 2;
+                new_y += gap_width / 2;
+                new_height -= gap_width / 2;
             }
 
             if (col == col_count - 1) {
-                new_width -= GAP_WIDTH / 2;
+                new_width -= gap_width / 2;
             }            
 
             if (row == row_count - 1) {
-                new_height -= GAP_WIDTH / 2;
+                new_height -= gap_width / 2;
             }
             
             XMoveResizeWindow(dpy_, c->window(), new_x, new_y, new_width, new_height);

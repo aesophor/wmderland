@@ -1,5 +1,5 @@
 #include "client.hpp"
-#include "global.hpp"
+#include "config.hpp"
 #include "util.hpp"
 
 std::unordered_map<Window, Client*> Client::mapper_;
@@ -15,8 +15,8 @@ Client::Client(Display* dpy, Window window, Workspace* workspace) {
     mapper_[window_] = this;
 
     XSelectInput(dpy, window, FocusChangeMask);
-    SetBorderWidth(BORDER_WIDTH);
-    SetBorderColor(FOCUSED_COLOR);
+    SetBorderWidth(Config::GetInstance()->border_width());
+    SetBorderColor(Config::GetInstance()->focused_color());
 }
 
 Client::~Client() {
