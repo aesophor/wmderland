@@ -5,8 +5,8 @@ set gap_width = 15
 set border_width = 3
 set min_window_width = 50
 set min_window_height = 50
-set focused_color = ffffffff
-set unfocused_color = ff41485f
+set focused_color = ff565679
+set unfocused_color = ff393f52
 
 
 ; Spawning Rules (wm_name not implemented)
@@ -16,9 +16,10 @@ assign URxvt -> 1
 assign Firefox -> 3
 
 
-; Floating Rules (Not implemented)
-; syntax: floating <wm_class>{,<wm_name>} enable
+; Floating Rules (wm_name not implemented)
+; syntax: floating <wm_class>{,<wm_name>} true
 ; ----------------------------------------------------
+floating Gcolor2 true
 
 
 ; Keybind (Not implemented)
@@ -44,7 +45,7 @@ exec wmctrl -c Plasma
 exec displayctl
 exec dispad
 exec compton --config ~/.config/compton/compton.conf &
-exec dunst -config ~/.config/dunst/dunstrc
 exec pulseaudio --start --log-target=syslog
 exec mpd
+exec dunst -config ~/.config/dunst/dunstrc
 exec ~/.config/polybar/launch.sh
