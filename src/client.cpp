@@ -8,7 +8,6 @@ Client::Client(Display* dpy, Window window, Workspace* workspace) {
     dpy_ = dpy;
     window_ = window;
     workspace_ = workspace;
-    position_ = {-1, -1}; // is this even needed?
 
     is_bar_ = wm_utils::IsBar(wm_class_);
     is_floating_ = false;
@@ -16,7 +15,6 @@ Client::Client(Display* dpy, Window window, Workspace* workspace) {
     
     mapper_[window_] = this;
 
-    XSelectInput(dpy, window, FocusChangeMask); // is this even needed?
     SetBorderWidth(Config::GetInstance()->border_width());
     SetBorderColor(Config::GetInstance()->focused_color());
 }
@@ -66,12 +64,4 @@ void Client::set_floating(bool is_floating) {
 
 std::string Client::wm_class() {
     return wm_class_;
-}
-
-std::pair<short, short> Client::position() {
-    return position_;
-}
-
-void Client::set_position(std::pair<short, short> position) {
-    position_ = position;
 }

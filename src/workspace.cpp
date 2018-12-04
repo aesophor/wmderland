@@ -166,6 +166,21 @@ Client* Workspace::GetByIndex(pair<short, short> pos) {
     return clients_[pos.first][pos.second];
 }
 
+vector<Client*> Workspace::GetFloatingClients() {
+    vector<Client*> floating_clients;
+
+    for (size_t col = 0; col < clients_.size(); col++) {
+        for (size_t row = 0; row < clients_[col].size(); row++) {
+            Client* c = clients_[col][row];
+            if (c->is_floating()) {
+                floating_clients.push_back(c);
+            }
+        }
+    }
+
+    return floating_clients;
+}
+
 vector<vector<Client*> > Workspace::GetTilingClients() {
     vector<vector<Client*> > tiling_clients;
 
@@ -187,23 +202,6 @@ vector<vector<Client*> > Workspace::GetTilingClients() {
     return tiling_clients;
 }
 
-/*
-std::string Workspace::ToString() {
-    bool has_previous_item = false;
-    std::string output = "[";
-    for (auto c : clients_) {
-        if (has_previous_item) {
-            output += ", ";
-        }
-        output += c->wm_class();
-        if (!has_previous_item) {
-            has_previous_item = true;
-        }
-    }
-    return output + "]";
-}
-*/
-
 
 void Workspace::MapAllClients() {
     for (auto column : clients_) {
@@ -221,6 +219,15 @@ void Workspace::UnmapAllClients() {
     }
 }
 
+void Workspace::RaiseAllFloatingClients() {
+    vector<Client*> floating_clients = GetFloatingClients();
+
+    if (!floating_clients.empty()) {
+        UnsetFocusClient();
+        SetFocusClient(floating_clients.back()->window());
+    }
+}
+
 void Workspace::SetFocusClient(Window w) {
     Client* c = Client::mapper_[w];
 
@@ -230,7 +237,13 @@ void Workspace::SetFocusClient(Window w) {
         XSetInputFocus(dpy_, w, RevertToParent, CurrentTime);
 
         c->SetBorderColor(Config::GetInstance()->focused_color());
-        c->set_position(active_client_pos_);
+    }
+}
+
+void Workspace::UnsetFocusClient() {
+    Client* c = active_client();
+    if (c) {
+        c->SetBorderColor(Config::GetInstance()->unfocused_color());
     }
 }
 

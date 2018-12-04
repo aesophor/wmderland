@@ -125,12 +125,6 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify();
                 break;
-            case FocusIn:
-                //OnFocusIn();
-                break;
-            case FocusOut:
-                //OnFocusOut();
-                break;
             default:
                 break;
         }
@@ -159,24 +153,21 @@ void WindowManager::OnMapRequest() {
     }
 
     // Apply rule test
+    /*
     std::string window_class = wm_utils::QueryWmClass(dpy_, w);
     if (window_class == "URxvt") {
         GotoWorkspace(0);
     } else if (window_class == "Firefox") {
         GotoWorkspace(2);
     }
+    */
     
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) { 
-        Client* previous_active_c = workspaces_[current_]->active_client();
+        workspaces_[current_]->UnsetFocusClient();
 
-        if (previous_active_c) {
-            previous_active_c->SetBorderColor(config_->unfocused_color());
-        }
-
-        // XSelectInput() and Borders are automatically done 
-        // in the constructor of Client class.
+        // XSelectInput() and Borders are automatically done in the constructor of Client class.
         bool is_dialog = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
         workspaces_[current_]->Add(w, tiling_direction_, is_dialog);
 
@@ -209,12 +200,14 @@ void WindowManager::OnDestroyNotify() {
         if (c != nullptr) {
             workspaces_[current_]->SetFocusClient(c->window());
             SetNetActiveWindow(c->window());
-        }           
+        }
+        workspaces_[current_]->RaiseAllFloatingClients();
     } else {
         Client* c = Client::mapper_[w];
         if (c) {
             c->workspace()->Remove(w);
-        }    
+            c->workspace()->RaiseAllFloatingClients();
+        }
     }
 }
 
@@ -291,17 +284,18 @@ void WindowManager::OnKeyPress() {
 }
 
 void WindowManager::OnButtonPress() {
-    if (event_.xbutton.subwindow == None) return;
+    Window w = event_.xbutton.subwindow;
+    if (w == None) return;
 
-    // Clicking on a window raises that window to the top.
-    XRaiseWindow(dpy_, event_.xbutton.subwindow);
-    XSetInputFocus(dpy_, event_.xbutton.subwindow, RevertToParent, CurrentTime);
-    workspaces_[current_]->SetFocusClient(event_.xbutton.subwindow);
+    Client* c = Client::mapper_[w];
+    if (!c || !c->is_floating()) {
+        return;
+    } 
 
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
         // and store the result in attr_
-        XGetWindowAttributes(dpy_, event_.xbutton.subwindow, &attr_);
+        XGetWindowAttributes(dpy_, w, &attr_);
         start_ = event_.xbutton;
 
         SetCursor(DefaultRootWindow(dpy_), cursors_[event_.xbutton.button]);
@@ -328,14 +322,6 @@ void WindowManager::OnMotionNotify() {
     if (new_width < MIN_WINDOW_WIDTH) new_width = MIN_WINDOW_WIDTH;
     if (new_height < MIN_WINDOW_HEIGHT) new_height = MIN_WINDOW_HEIGHT;
     XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
-}
-
-void WindowManager::OnFocusIn() {
-    //SetNetActiveWindow(event_.xfocus.window);
-}
-
-void WindowManager::OnFocusOut() {
-    //ClearNetActiveWindow();
 }
 
 
@@ -410,13 +396,14 @@ void WindowManager::Center(Window w) {
 
 void WindowManager::Tile(Workspace* workspace) {
     // Retrieve all clients that we should tile.
-    vector<vector<Client*> > tiling_clients = workspaces_[current_]->GetTilingClients();
+    vector<vector<Client*> > tiling_clients = workspace->GetTilingClients();
 
     // If there's no clients to tile, return immediately.
     if (tiling_clients.empty()) {
         return;
     }
 
+    // Tile the clients that we should tile.
     short gap_width = config_->gap_width();
     short border_width = config_->border_width();
 
@@ -428,7 +415,7 @@ void WindowManager::Tile(Workspace* workspace) {
         short window_height = (SCREEN_HEIGHT - bar_height_) / row_count; 
 
         for (size_t row = 0; row < row_count; row++) {
-            Client* c = workspace->GetByIndex(pair<short, short>(col, row));
+            Client* c = tiling_clients[col][row];
             short new_x = col * window_width + gap_width / 2;
             short new_y = bar_height_ + row * window_height + gap_width / 2;
             short new_width = window_width - border_width * 2 - gap_width;
@@ -454,5 +441,13 @@ void WindowManager::Tile(Workspace* workspace) {
             
             XMoveResizeWindow(dpy_, c->window(), new_x, new_y, new_width, new_height);
         }
+    }
+
+
+    // Make sure floating clients are at the top.
+    vector<Client*> floating_clients = workspace->GetFloatingClients();
+    if (!floating_clients.empty()) {
+        workspace->UnsetFocusClient();
+        workspace->SetFocusClient(floating_clients.back()->window());
     }
 }

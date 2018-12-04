@@ -35,8 +35,6 @@ private:
     void OnButtonPress();
     void OnButtonRelease();
     void OnMotionNotify();
-    void OnFocusIn();
-    void OnFocusOut();
 
     /* Properties manipulation */
     void SetNetActiveWindow(Window focused_window);

@@ -30,12 +30,16 @@ public:
     
     Client* Get(Window w);
     Client* GetByIndex(std::pair<short, short> pos);
+
+    std::vector<Client*> GetFloatingClients();
     std::vector<std::vector<Client*> > GetTilingClients();
     
     /* client window manipulation */
     void MapAllClients();
     void UnmapAllClients();
+    void RaiseAllFloatingClients();
     void SetFocusClient(Window focused_window);
+    void UnsetFocusClient();
     
     void FocusLeft();
     void FocusRight();

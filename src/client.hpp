@@ -32,8 +32,6 @@ public:
     void set_floating(bool is_floating);
 
     std::string wm_class();
-    std::pair<short, short> position();
-    void set_position(std::pair<short, short> position);
     
 private:
     Display* dpy_;
@@ -44,7 +42,6 @@ private:
     bool is_floating_;
 
     std::string wm_class_;
-    std::pair<short, short> position_;
 };
 
 #endif
