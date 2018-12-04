@@ -30,7 +30,7 @@ Config::Config(string filename) {
     while (std::getline(file, line)) {
         string_utils::trim(line);
 
-        if (line.empty() || line.at(0) != ';') {
+        if (!line.empty() && line.at(0) != ';') {
             vector<string> tokens = string_utils::split(line, ' ');
 
             if (tokens[0] == "set") {
