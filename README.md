@@ -5,14 +5,11 @@ Made during <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Ha
 </div>
 
 ## Overview
-Heavily Inspired by [i3wm](https://github.com/i3/i3). Wmderland aims to simplify the core functionalities of i3wm, and bundle in the essential features required for a modern but minimal Tiling Window Manager.
+Heavily Inspired by [i3wm](https://github.com/i3/i3). ~~Wmderland aims to simplify the core functionalities of i3wm, and bundle in the essential features required for a modern but minimal Tiling Window Manager.~~
 
-Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib). This project is still in very early stage of development, so there are lots of bugs.
+Okay I failed. It turns out Wmderland's binary is fat (~1.1 MB). But there's no noticeable performance penalties, so as long as you don't mind its size, I guess it's fine.
 
-## Performance
-Wmderland uses an `unordered_map` to map Window to Client* (a client is any window that we have decided to manage), which is O(1). 
-
-I try to eliminate sequential search as much as possible. 
+Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib) with :heart:
 
 ## Build Requirements
 * g++
@@ -23,30 +20,18 @@ I try to eliminate sequential search as much as possible.
 ## Windows Version
 Just fook off
 
-## What's not working yet
-* Applications spawning rules
-* Smart floating like in i3wm
-* Switch between tiling and floating
-* Show workspace number in polybar.
-* User Configuration for defining keybinds, startup applications, colors... etc.
-* Terminate client peacefully via ICCCM.
+## Features
+* Horizontal and vertical tiling (with gaps!)
+* Toggle windows between tiled / floating.
+* Smart floating (dialog windows will be floating by default).
+* Workspaces `Super + {1~9}`: switch; `Alt + {1~9}`: move application to...
+* Window border.
+* A very basic configuration system. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* Compatible with Polybar's `xwindow` module.
 
-## What's working
-Super is hardcoded to `Mod4` (Win/Cmd) for now. This will be improved later.
-* Simple window tiling. `Super+v` vertical mode; `Super+g` horizontal mode.
-* Switch between workspaces `Super + 1~9`
-* Move applications between workspaces `Alt + 1~9`
-* Window border (focused color / unfocused color)
-* Gaps between tiled windows
-* Move windows with `Super + MouseLeftBtn`
-* Resize windows with `Super + MouseRightBtn`
-* Launch urxvt with `Super + Return`
-* Launch rofi with `Super + d`
-* Kill applications with `Super + q`
-* Fullscreen applications with `Super + f` 
-* _NET_WM_NAME set to "Wmderland"
-* Compatible with Polybar's `xwindow` module (_NET_ACTIVE_WINDOW)
-* Recognizes polybar (because I use polybar lol)
+## What's not working yet
+* A better configuration system that supports `keybinds`, `floating rules`, `application spawning rules with wm_name`... etc.
+* Terminate client peacefully via ICCCM instead of XKillClient().
 
 ## License
-Available under the [Apache License 2.0](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
+Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
