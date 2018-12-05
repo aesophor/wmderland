@@ -29,7 +29,6 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 
 ## Todo List
 * Smart floating like in i3wm.
-* Terminate client peacefully via ICCCM instead of XKillClient().
 * A better configuration system that supports
   * keybinds
   * floating rules with wm_name
