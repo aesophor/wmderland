@@ -18,17 +18,39 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 * Xlib headers
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
+## Installation
+1. From source
+```
+$ git clone https://github.com/aesophor/Wmderland
+$ cd Wmderland && make && sudo make install
+```
+
+2. Put the following lines at the END of your ~/.xinitrc, make sure you have only one exec statement (don't invoke other wm!)
+```
+# Fix Non-reparenting window managers / Grey window /
+# Programs not drawing properly
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+# Startup Wmderland
+exec Wmderland
+```
+
+3. Start xorg
+```
+$ startx
+```
+
 ## Features
 * Horizontal and vertical tiling (with gaps!)
-* Toggle windows between tiled / floating. `Super + o`
-* Dialog windows will be floating by default.
+* Toggle windows between tiled / floating.
+* Smart floating (dialog windows will be floating by default).
 * Workspaces `Super + {1~9}`: switch; `Alt + {1~9}`: move application to...
 * Window border.
 * A very basic configuration system. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
-* Smart floating like in i3wm.
+* Terminate client peacefully via ICCCM instead of XKillClient().
 * A better configuration system that supports
   * keybinds
   * floating rules with wm_name
@@ -45,3 +67,4 @@ Just fook off
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
+
