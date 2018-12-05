@@ -153,23 +153,32 @@ void WindowManager::OnMapRequest() {
         return;
     }
 
+
     // If this window is a dialog, resize it to floating window width / height and center it.
     bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
 
+    string wm_class = wm_utils::QueryWmClass(dpy_, w);
+    string wm_class_and_name = wm_class + "," + wm_utils::QueryWmName(dpy_, w);
+
     // Apply application spawning rules (if exists).
-    string wm_class = wm_utils::QueryWmClass(dpy_, w);    
     if (config_->spawn_rules().find(wm_class) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules()[wm_class] - 1;
+        short target_workspace_id = config_->spawn_rules()[wm_class]- 1;
+        GotoWorkspace(target_workspace_id);
+    } else if (config_->spawn_rules().find(wm_class_and_name) != config_->spawn_rules().end()) {
+        short target_workspace_id = config_->spawn_rules()[wm_class_and_name] - 1;
         GotoWorkspace(target_workspace_id);
     }
 
     // Apply application floating rules (if exists).
     if (config_->float_rules().find(wm_class) != config_->float_rules().end()) {
         should_float = config_->float_rules()[wm_class];
+    } else if (config_->float_rules().find(wm_class_and_name) != config_->float_rules().end()) {
+        should_float = config_->float_rules()[wm_class_and_name];
     }
 
+
     if (should_float) {
-        XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+        //XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
         Center(w);
     }
     
@@ -255,7 +264,29 @@ void WindowManager::OnKeyPress() {
 
             // Mod4 + q -> Kill window.
             if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
-                XKillClient(dpy_, w);
+                Atom* supported_protocols;
+                int num_supported_protocols;
+                if (XGetWMProtocols(dpy_,
+                            event_.xkey.subwindow,
+                            &supported_protocols,
+                            &num_supported_protocols) &&
+                        (::std::find(supported_protocols,
+                                     supported_protocols + num_supported_protocols,
+                                     properties_->wm_atoms_[atom::WM_DELETE]) !=
+                         supported_protocols + num_supported_protocols)) {
+                    // 1. Construct message.
+                    XEvent msg;
+                    memset(&msg, 0, sizeof(msg));
+                    msg.xclient.type = ClientMessage;
+                    msg.xclient.message_type = properties_->wm_atoms_[atom::WM_PROTOCOLS];
+                    msg.xclient.window = event_.xkey.subwindow;
+                    msg.xclient.format = 32;
+                    msg.xclient.data.l[0] = properties_->wm_atoms_[atom::WM_DELETE];
+                    // 2. Send message to window to be closed.
+                    CHECK(XSendEvent(dpy_, event_.xkey.subwindow, false, 0, &msg));
+                } else {
+                    XKillClient(dpy_, event_.xkey.subwindow);
+                }
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TOGGLE_CLIENT_FLOAT_KEY))) {
                 Client* c = workspaces_[current_]->active_client();
                 if (c) {
@@ -266,7 +297,7 @@ void WindowManager::OnKeyPress() {
                     }
                     Tile(workspaces_[current_]);
                 }
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
+            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_V_KEY))) {
                 tiling_direction_ = Direction::VERTICAL;
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_H_KEY))) {
                 tiling_direction_ = Direction::HORIZONTAL;

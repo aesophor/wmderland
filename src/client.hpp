@@ -10,7 +10,7 @@
 /* A Client is any window that we have decided to manage.
  * It is a wrapper class of Window which provides some 
  * useful information and methods.
- */
+ */ 
 class Workspace;
 
 class Client {
