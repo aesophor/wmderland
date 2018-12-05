@@ -267,7 +267,7 @@ void WindowManager::OnKeyPress() {
                 Atom* supported_protocols;
                 int num_supported_protocols;
                 if (XGetWMProtocols(dpy_,
-                            event_.xkey.subwindow,
+                            w,
                             &supported_protocols,
                             &num_supported_protocols) &&
                         (::std::find(supported_protocols,
@@ -279,13 +279,13 @@ void WindowManager::OnKeyPress() {
                     memset(&msg, 0, sizeof(msg));
                     msg.xclient.type = ClientMessage;
                     msg.xclient.message_type = properties_->wm_atoms_[atom::WM_PROTOCOLS];
-                    msg.xclient.window = event_.xkey.subwindow;
+                    msg.xclient.window = w;
                     msg.xclient.format = 32;
                     msg.xclient.data.l[0] = properties_->wm_atoms_[atom::WM_DELETE];
                     // 2. Send message to window to be closed.
-                    CHECK(XSendEvent(dpy_, event_.xkey.subwindow, false, 0, &msg));
+                    CHECK(XSendEvent(dpy_, w, false, 0, &msg));
                 } else {
-                    XKillClient(dpy_, event_.xkey.subwindow);
+                    XKillClient(dpy_, w);
                 }
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TOGGLE_CLIENT_FLOAT_KEY))) {
                 Client* c = workspaces_[current_]->active_client();

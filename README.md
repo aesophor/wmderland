@@ -20,14 +20,15 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 
 ## Features
 * Horizontal and vertical tiling (with gaps!)
-* Toggle windows between tiled / floating.
-* Smart floating (dialog windows will be floating by default).
+* Toggle windows between tiled / floating. `Super + o`
+* Dialog windows will be floating by default.
 * Workspaces `Super + {1~9}`: switch; `Alt + {1~9}`: move application to...
 * Window border.
 * A very basic configuration system. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
+* Smart floating like in i3wm.
 * Terminate client peacefully via ICCCM instead of XKillClient().
 * A better configuration system that supports
   * keybinds
