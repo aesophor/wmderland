@@ -2,12 +2,17 @@
 #include "util.hpp"
 #include "sstream"
 
+using std::pair;
 using std::size_t;
-using std::hash;
 using std::string;
 using std::vector;
 
 namespace wm_utils {
+
+    pair<short, short> GetDisplayResolution(Display* dpy, Window root) {
+        XWindowAttributes root_attr = QueryWindowAttributes(dpy, root);
+        return pair<short, short>(root_attr.width, root_attr.height);
+    }
 
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w) {
         XWindowAttributes ret;

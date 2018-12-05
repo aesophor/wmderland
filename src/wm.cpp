@@ -23,13 +23,14 @@ WindowManager* WindowManager::GetInstance() {
     // to the caller. Otherwise we return an instance of WindowManager.
     if (!instance_) {
         Display* dpy;
-        instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : None;
+        instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : nullptr;
     }
     return instance_;
 }
 
 WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
+    root_ = DefaultRootWindow(dpy_);
     current_ = 0;
     fullscreen_ = false;
     tiling_direction_ = Direction::HORIZONTAL;
@@ -60,13 +61,13 @@ void WindowManager::InitWorkspaces(short count) {
 void WindowManager::InitProperties() {
     // Initialize property manager and set _NET_WM_NAME.
     properties_->Set(
-            DefaultRootWindow(dpy_), 
+            root_, 
             properties_->net_atoms_[atom::NET_WM_NAME],
             properties_->utf8string_,
             8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
     );
     properties_->Set(
-            DefaultRootWindow(dpy_),
+            root_,
             properties_->net_atoms_[atom::NET_SUPPORTED],
             XA_ATOM, 32, PropModeReplace, (unsigned char*) properties_->net_atoms_,
             atom::NET_ATOM_SIZE
@@ -75,15 +76,18 @@ void WindowManager::InitProperties() {
 
 void WindowManager::InitXEvents() {
     // Define which key combinations will send us X events.
-    XGrabKey(dpy_, AnyKey, Mod1Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy_, AnyKey, Mod4Mask, DefaultRootWindow(dpy_), True, GrabModeAsync, GrabModeAsync);
+    for (int i = 0; i < 9; i++) {
+        string k = std::to_string(i);
+        XGrabKey(dpy_, XKeysymToKeycode(dpy_, XStringToKeysym(k.c_str())), Mod1Mask, root_, True, GrabModeAsync, GrabModeAsync);
+    }
+    XGrabKey(dpy_, AnyKey, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
 
     // Define which mouse clicks will send us X events.
-    XGrabButton(dpy_, AnyButton, Mod4Mask, DefaultRootWindow(dpy_), True,
+    XGrabButton(dpy_, AnyButton, Mod4Mask, root_, True,
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
     // Enable substructure redirection on the root window.
-    XSelectInput(dpy_, DefaultRootWindow(dpy_), SubstructureNotifyMask | SubstructureRedirectMask);
+    XSelectInput(dpy_, root_, SubstructureNotifyMask | SubstructureRedirectMask);
 
     // Setup the bitch catcher.
     XSetErrorHandler(&WindowManager::OnXError);
@@ -93,7 +97,7 @@ void WindowManager::InitCursors() {
     cursors_[LEFT_PTR_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
     cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
     cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
-    SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
+    SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);
 }
 
 void WindowManager::SetCursor(Window w, Cursor c) {
@@ -295,9 +299,13 @@ void WindowManager::OnKeyPress() {
                 XRaiseWindow(dpy_, w);
 
                 if (!fullscreen_) {
+                    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+                    short screen_width = display_resolution.first;
+                    short screen_height = display_resolution.second;
+
                     // Record the current window's position and size before making it fullscreen.
                     XGetWindowAttributes(dpy_, w, &attr_);
-                    XMoveResizeWindow(dpy_, w, 0, 0, SCREEN_WIDTH - config_->border_width() * 2, SCREEN_HEIGHT - config_->border_width() * 2);
+                    XMoveResizeWindow(dpy_, w, 0, 0, screen_width - config_->border_width() * 2, screen_height - config_->border_width() * 2);
                     fullscreen_ = true;
                 } else {
                     // Restore the window to its original position and size.
@@ -327,13 +335,13 @@ void WindowManager::OnButtonPress() {
         XGetWindowAttributes(dpy_, w, &attr_);
         start_ = event_.xbutton;
 
-        SetCursor(DefaultRootWindow(dpy_), cursors_[event_.xbutton.button]);
+        SetCursor(root_, cursors_[event_.xbutton.button]);
     }
 }
 
 void WindowManager::OnButtonRelease() {
     start_.subwindow = None;
-    SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
+    SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);
 }
 
 void WindowManager::OnMotionNotify() {
@@ -356,13 +364,13 @@ void WindowManager::OnMotionNotify() {
 
 void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->Get(focused_window);
-    properties_->Set(DefaultRootWindow(dpy_), properties_->net_atoms_[atom::NET_ACTIVE_WINDOW],
+    properties_->Set(root_, properties_->net_atoms_[atom::NET_ACTIVE_WINDOW],
             XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
 
 void WindowManager::ClearNetActiveWindow() {
     Atom net_active_window_atom = properties_->net_atoms_[atom::NET_ACTIVE_WINDOW];
-    properties_->Delete(DefaultRootWindow(dpy_), net_active_window_atom);
+    properties_->Delete(root_, net_active_window_atom);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
@@ -414,9 +422,13 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
 
 
 void WindowManager::Center(Window w) {
+    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+    short screen_width = display_resolution.first;
+    short screen_height = display_resolution.second;
+
     XWindowAttributes w_attr = wm_utils::QueryWindowAttributes(dpy_, w);
-    int new_x = SCREEN_WIDTH / 2 - w_attr.width / 2;
-    int new_y = SCREEN_HEIGHT / 2 - w_attr.height / 2;
+    int new_x = screen_width / 2 - w_attr.width / 2;
+    int new_y = screen_height / 2 - w_attr.height / 2;
     XMoveWindow(dpy_, w, new_x, new_y);
 }
 
@@ -429,16 +441,21 @@ void WindowManager::Tile(Workspace* workspace) {
         return;
     }
 
+    // Get display resolution.
+    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+    short screen_width = display_resolution.first;
+    short screen_height = display_resolution.second;
+
     // Tile the clients that we should tile.
     short gap_width = config_->gap_width();
     short border_width = config_->border_width();
 
     size_t col_count = tiling_clients.size();
-    short window_width = SCREEN_WIDTH / col_count;
+    short window_width = screen_width / col_count;
 
     for (size_t col = 0; col < col_count; col++) {
         size_t row_count = tiling_clients[col].size();
-        short window_height = (SCREEN_HEIGHT - bar_height_) / row_count; 
+        short window_height = (screen_height - bar_height_) / row_count; 
 
         for (size_t row = 0; row < row_count; row++) {
             Client* c = tiling_clients[col][row];

@@ -53,6 +53,7 @@ private:
     
 
     Display* dpy_;
+    Window root_;
     XEvent event_;
     XWindowAttributes attr_;
     XButtonEvent start_;
