@@ -19,13 +19,13 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
 ## Installation
-1. From source
+1. Build from source
 ```
 $ git clone https://github.com/aesophor/Wmderland
 $ cd Wmderland && make && sudo make install
 ```
 
-2. Put the following lines at the END of your ~/.xinitrc, make sure you have only one exec statement (don't invoke other wm!)
+2. Put the following lines at the END of your ~/.xinitrc, and make sure there's only one exec statement (don't invoke other wm!)
 ```
 # Fix Non-reparenting window managers / Grey window /
 # Programs not drawing properly
@@ -35,7 +35,7 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 exec Wmderland
 ```
 
-3. Start xorg
+3. Initialize an X session.
 ```
 $ startx
 ```
