@@ -26,7 +26,8 @@ private:
     void InitProperties();
     void InitXEvents();
     void InitCursors();
-    
+    void SetCursor(Window w, Cursor c);
+
     /* XEvent handlers */
     static int OnXError(Display* dpy, XErrorEvent* e);
     void OnMapRequest();
@@ -48,7 +49,8 @@ private:
     void Center(Window w);
     void Tile(Workspace* workspace);
 
-    void SetCursor(Window w, Cursor c);
+    void KillClient(Window w);
+    
 
     Display* dpy_;
     XEvent event_;

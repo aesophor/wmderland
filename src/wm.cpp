@@ -96,6 +96,10 @@ void WindowManager::InitCursors() {
     SetCursor(DefaultRootWindow(dpy_), cursors_[LEFT_PTR_CURSOR]);
 }
 
+void WindowManager::SetCursor(Window w, Cursor c) {
+    XDefineCursor(dpy_, w, c);
+}
+
 
 void WindowManager::Run() {
     // Autostart applications specified in config.
@@ -264,29 +268,7 @@ void WindowManager::OnKeyPress() {
 
             // Mod4 + q -> Kill window.
             if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
-                Atom* supported_protocols;
-                int num_supported_protocols;
-                if (XGetWMProtocols(dpy_,
-                            w,
-                            &supported_protocols,
-                            &num_supported_protocols) &&
-                        (::std::find(supported_protocols,
-                                     supported_protocols + num_supported_protocols,
-                                     properties_->wm_atoms_[atom::WM_DELETE]) !=
-                         supported_protocols + num_supported_protocols)) {
-                    // 1. Construct message.
-                    XEvent msg;
-                    memset(&msg, 0, sizeof(msg));
-                    msg.xclient.type = ClientMessage;
-                    msg.xclient.message_type = properties_->wm_atoms_[atom::WM_PROTOCOLS];
-                    msg.xclient.window = w;
-                    msg.xclient.format = 32;
-                    msg.xclient.data.l[0] = properties_->wm_atoms_[atom::WM_DELETE];
-                    // 2. Send message to window to be closed.
-                    CHECK(XSendEvent(dpy_, w, false, 0, &msg));
-                } else {
-                    XKillClient(dpy_, w);
-                }
+                KillClient(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TOGGLE_CLIENT_FLOAT_KEY))) {
                 Client* c = workspaces_[current_]->active_client();
                 if (c) {
@@ -396,9 +378,6 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     return 0;
 }
 
-void WindowManager::SetCursor(Window w, Cursor c) {
-    XDefineCursor(dpy_, w, c);
-}
 
 void WindowManager::GotoWorkspace(short next) {
     if (current_ == next) return;
@@ -496,5 +475,29 @@ void WindowManager::Tile(Workspace* workspace) {
     if (!floating_clients.empty()) {
         workspace->UnsetFocusClient();
         workspace->SetFocusClient(floating_clients.back()->window());
+    }
+}
+
+
+void WindowManager::KillClient(Window w) {
+    Atom* supported_protocols;
+    int num_supported_protocols;
+
+    // First try to kill the client gracefully via ICCCM.
+    // If the client does not support this method, then
+    // we'll perform the brutal XKillClient().
+    if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
+            && (::std::find(supported_protocols, supported_protocols + num_supported_protocols, 
+                    properties_->wm_atoms_[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
+        XEvent msg;
+        memset(&msg, 0, sizeof(msg));
+        msg.xclient.type = ClientMessage;
+        msg.xclient.message_type = properties_->wm_atoms_[atom::WM_PROTOCOLS];
+        msg.xclient.window = w;
+        msg.xclient.format = 32;
+        msg.xclient.data.l[0] = properties_->wm_atoms_[atom::WM_DELETE];
+        CHECK(XSendEvent(dpy_, w, false, 0, &msg));
+    } else {
+        XKillClient(dpy_, w);
     }
 }
