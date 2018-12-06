@@ -50,6 +50,7 @@ $ startx
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
+* Detect polybar's position (top / bottom)
 * A better configuration system that supports
   * keybinds
   * floating rules with wm_name
