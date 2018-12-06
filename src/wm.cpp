@@ -32,7 +32,6 @@ WindowManager::WindowManager(Display* dpy) {
     dpy_ = dpy;
     root_ = DefaultRootWindow(dpy_);
     current_ = 0;
-    fullscreen_ = false;
     tiling_direction_ = Direction::HORIZONTAL;
     properties_ = new Properties(dpy_);
     config_ = Config::GetInstance();
@@ -119,10 +118,10 @@ void WindowManager::Run() {
 
         switch (event_.type) {
             case MapRequest:
-                OnMapRequest();
+                OnMapRequest(event_.xmaprequest.window);
                 break;
             case DestroyNotify:
-                OnDestroyNotify();
+                OnDestroyNotify(event_.xdestroywindow.window);
                 break;
             case KeyPress:
                 OnKeyPress();
@@ -143,16 +142,15 @@ void WindowManager::Run() {
 }
 
 
-void WindowManager::OnMapRequest() {
-    // Just map the window now. We'll discuss other things later.
-    Window w = event_.xmaprequest.window;
-    
+void WindowManager::OnMapRequest(Window w) {    
     // KDE Plasma Integration.
+    // Make this a rule in config later.
     if (wm_utils::QueryWmClass(dpy_, w) == "plasmashell") {
         XKillClient(dpy_, w);
         return;
     }
-    
+
+    // Just map the window now. We'll discuss other things later.
     XMapWindow(dpy_, w);
 
     // Bars should not have border or be added to a workspace.
@@ -207,9 +205,16 @@ void WindowManager::OnMapRequest() {
     SetNetActiveWindow(w);
 }
 
-void WindowManager::OnDestroyNotify() {
+void WindowManager::OnDestroyNotify(Window w) {
     // When a window is destroyed, remove it from the current workspace's client list.    
-    Window w = event_.xdestroywindow.window;
+    Client* c = Client::mapper_[w];
+    if (!c) return;
+
+    // If the client we are destroying is fullscreen,
+    // make sure to unset the workspace's fullscreen state.
+    if (c->is_fullscreen()) {
+        c->workspace()->set_has_fullscreen_application(false);
+    }
 
     // If the client being destroyed is within current workspace,
     // remove it from current workspace's client list.
@@ -221,19 +226,19 @@ void WindowManager::OnDestroyNotify() {
         // Since the previously active window has been killed, we should
         // manually set focus to another window.
         pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
-        Client* c = workspaces_[current_]->GetByIndex(active_client_pos);
-        if (c != nullptr) {
-            workspaces_[current_]->SetFocusClient(c->window());
-            SetNetActiveWindow(c->window());
+        Client* new_active_client = workspaces_[current_]->GetByIndex(active_client_pos);
+
+        if (new_active_client) {
+            workspaces_[current_]->SetFocusClient(new_active_client->window());
+            SetNetActiveWindow(new_active_client->window());
+        } else {
+            ClearNetActiveWindow();
         }
-        workspaces_[current_]->RaiseAllFloatingClients();
     } else {
-        Client* c = Client::mapper_[w];
-        if (c) {
-            c->workspace()->Remove(w);
-            c->workspace()->RaiseAllFloatingClients();
-        }
+        c->workspace()->Remove(w);
     }
+
+    c->workspace()->RaiseAllFloatingClients();
 }
 
 void WindowManager::OnKeyPress() {
@@ -276,15 +281,7 @@ void WindowManager::OnKeyPress() {
             if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
                 KillClient(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TOGGLE_CLIENT_FLOAT_KEY))) {
-                Client* c = workspaces_[current_]->active_client();
-                if (c) {
-                    c->set_floating(!c->is_floating());
-                    if (c->is_floating()) {
-                        XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-                        Center(c->window());
-                    }
-                    Tile(workspaces_[current_]);
-                }
+                ToggleFloating(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_V_KEY))) {
                 tiling_direction_ = Direction::VERTICAL;
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_H_KEY))) {
@@ -298,22 +295,7 @@ void WindowManager::OnKeyPress() {
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_UP_KEY))) {
                 workspaces_[current_]->FocusUp();
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FULLSCREEN_KEY))) {
-                XRaiseWindow(dpy_, w);
-
-                if (!fullscreen_) {
-                    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
-                    short screen_width = display_resolution.first;
-                    short screen_height = display_resolution.second;
-
-                    // Record the current window's position and size before making it fullscreen.
-                    XGetWindowAttributes(dpy_, w, &attr_);
-                    XMoveResizeWindow(dpy_, w, 0, 0, screen_width - config_->border_width() * 2, screen_height - config_->border_width() * 2);
-                    fullscreen_ = true;
-                } else {
-                    // Restore the window to its original position and size.
-                    XMoveResizeWindow(dpy_, w, attr_.x, attr_.y, attr_.width, attr_.height);
-                    fullscreen_ = false;
-                }
+                ToggleFullScreen(w);
             }
             break;
 
@@ -334,7 +316,7 @@ void WindowManager::OnButtonPress() {
     if (event_.xbutton.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
         // and store the result in attr_
-        XGetWindowAttributes(dpy_, w, &attr_);
+        XGetWindowAttributes(dpy_, w, &c->previous_attr());
         start_ = event_.xbutton;
 
         SetCursor(root_, cursors_[event_.xbutton.button]);
@@ -347,20 +329,24 @@ void WindowManager::OnButtonRelease() {
 }
 
 void WindowManager::OnMotionNotify() {
-    if (start_.subwindow == None) return;
-    
-    // Dragging a window around also raises it to the top.
+    Window w = start_.subwindow;
+    if (w == None) return;
+
+    Client* c = Client::mapper_[w];
+    if (!c) return;
+
     int xdiff = event_.xbutton.x - start_.x;
     int ydiff = event_.xbutton.y - start_.y;
 
-    int new_x = attr_.x + ((start_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
-    int new_y = attr_.y + ((start_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
-    int new_width = attr_.width + ((start_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
-    int new_height = attr_.height + ((start_.button == MOUSE_RIGHT_BTN) ? ydiff : 0);
+    XWindowAttributes& attr = c->previous_attr();
+    int new_x = attr.x + ((start_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
+    int new_y = attr.y + ((start_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
+    int new_width = attr.width + ((start_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
+    int new_height = attr.height + ((start_.button == MOUSE_RIGHT_BTN) ? ydiff : 0);
 
     if (new_width < MIN_WINDOW_WIDTH) new_width = MIN_WINDOW_WIDTH;
     if (new_height < MIN_WINDOW_HEIGHT) new_height = MIN_WINDOW_HEIGHT;
-    XMoveResizeWindow(dpy_, start_.subwindow, new_x, new_y, new_width, new_height);
+    XMoveResizeWindow(dpy_, w, new_x, new_y, new_width, new_height);
 }
 
 
@@ -409,10 +395,21 @@ void WindowManager::GotoWorkspace(short next) {
 void WindowManager::MoveWindowToWorkspace(Window window, short next) {    
     if (current_ == next) return;
 
+    Client* c = Client::mapper_[window];
+    if (!c) return;
+
+    if (c->is_fullscreen()) {
+        workspaces_[current_]->set_has_fullscreen_application(false);
+        c->set_fullscreen(false);
+    }
+
     XUnmapWindow(dpy_, window);
     workspaces_[current_]->Move(window, workspaces_[next]);
 
-    if (workspaces_[current_]->ColSize() == 0) return;
+    if (workspaces_[current_]->ColSize() == 0) {
+        ClearNetActiveWindow();
+        return;
+    }
 
     pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
     Window w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
@@ -497,6 +494,48 @@ void WindowManager::Tile(Workspace* workspace) {
     }
 }
 
+void WindowManager::ToggleFloating(Window w) {
+    Client* c = workspaces_[current_]->active_client();
+
+    if (c) {
+        c->set_floating(!c->is_floating());
+        if (c->is_floating()) {
+            XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+            Center(c->window());
+        }
+        Tile(workspaces_[current_]);
+    }
+}
+
+void WindowManager::ToggleFullScreen(Window w) {
+    Client* c = Client::mapper_[w];
+    if (!c) return;
+
+    XWindowAttributes& attr = c->previous_attr();
+
+    if (!workspaces_[current_]->has_fullscreen_application() && !c->is_fullscreen()) {
+        pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+        short screen_width = display_resolution.first;
+        short screen_height = display_resolution.second;
+
+        // Record the current window's position and size before making it fullscreen.
+        XGetWindowAttributes(dpy_, w, &attr);
+        XMoveResizeWindow(dpy_, w, 0, 0, screen_width, screen_height);
+        c->SetBorderWidth(0);
+
+        workspaces_[current_]->set_has_fullscreen_application(true);
+        c->set_fullscreen(true);
+    } else if (workspaces_[current_]->has_fullscreen_application() && c->is_fullscreen()) {
+        // Restore the window to its original position and size.
+        XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
+        c->SetBorderWidth(config_->border_width());
+
+        workspaces_[current_]->set_has_fullscreen_application(false);
+        c->set_fullscreen(false);
+    }
+
+    XRaiseWindow(dpy_, w);
+}
 
 void WindowManager::KillClient(Window w) {
     Atom* supported_protocols;

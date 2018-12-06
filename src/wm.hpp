@@ -20,8 +20,6 @@ public:
 private:
     static WindowManager* instance_;
     WindowManager(Display* dpy);
-
-    /* Setup */
     void InitWorkspaces(short count);
     void InitProperties();
     void InitXEvents();
@@ -30,8 +28,8 @@ private:
 
     /* XEvent handlers */
     static int OnXError(Display* dpy, XErrorEvent* e);
-    void OnMapRequest();
-    void OnDestroyNotify();
+    void OnMapRequest(Window w);
+    void OnDestroyNotify(Window w);
     void OnKeyPress();
     void OnButtonPress();
     void OnButtonRelease();
@@ -45,20 +43,19 @@ private:
     void GotoWorkspace(short next);
     void MoveWindowToWorkspace(Window window, short next); 
 
-    /* Client window placement */
+    /* Client manipulation */
     void Center(Window w);
     void Tile(Workspace* workspace);
-
+    void ToggleFloating(Window w);
+    void ToggleFullScreen(Window w);
     void KillClient(Window w);
-    
+ 
 
     Display* dpy_;
     Window root_;
     XEvent event_;
-    XWindowAttributes attr_;
     XButtonEvent start_;
     Cursor cursor_;
-    bool fullscreen_;
     Direction tiling_direction_;
 
     /* Properties */

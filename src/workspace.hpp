@@ -47,6 +47,8 @@ public:
     void FocusDown();
     
     short id();
+    bool has_fullscreen_application();
+    void set_has_fullscreen_application(bool has_fullscreen_application);
     Client* active_client();
     std::pair<short, short> active_client_pos();
 
@@ -56,6 +58,7 @@ private:
 
     Display* dpy_;
     short id_;
+    bool has_fullscreen_application_;
     
     std::pair<short, short> active_client_pos_;
     std::vector<std::vector<Client*> > clients_;

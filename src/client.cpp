@@ -11,6 +11,7 @@ Client::Client(Display* dpy, Window window, Workspace* workspace) {
 
     is_bar_ = wm_utils::IsBar(wm_class_);
     is_floating_ = false;
+    is_fullscreen_ = false;
     wm_class_ = wm_utils::QueryWmClass(dpy, window);
     
     mapper_[window_] = this;
@@ -45,8 +46,8 @@ Workspace* Client::workspace() {
     return workspace_;
 }
 
-void Client::set_workspace(Workspace* workspace) {
-    workspace_ = workspace;
+XWindowAttributes& Client::previous_attr() {
+    return previous_attr_;
 }
 
 
@@ -58,8 +59,21 @@ bool Client::is_floating() {
     return is_floating_;
 }
 
+bool Client::is_fullscreen() {
+    return is_fullscreen_;
+}
+
+
+void Client::set_workspace(Workspace* workspace) {
+    workspace_ = workspace;
+}
+
 void Client::set_floating(bool is_floating) {
     is_floating_ = is_floating;
+}
+
+void Client::set_fullscreen(bool is_fullscreen) {
+    is_fullscreen_ = is_fullscreen;
 }
 
 std::string Client::wm_class() {

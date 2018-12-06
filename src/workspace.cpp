@@ -10,6 +10,7 @@ using std::vector;
 Workspace::Workspace(Display* dpy, short id) {
     dpy_ = dpy;
     id_ = id;
+    has_fullscreen_application_ = false;
     active_client_pos_ = {-1, -1};
 }
 
@@ -291,6 +292,14 @@ void Workspace::FocusDown() {
 
 short Workspace::id() {
     return id_;
+}
+
+bool Workspace::has_fullscreen_application() {
+    return has_fullscreen_application_;
+}
+
+void Workspace::set_has_fullscreen_application(bool has_fullscreen_application) {
+    has_fullscreen_application_ = has_fullscreen_application;
 }
 
 Client* Workspace::active_client() {
