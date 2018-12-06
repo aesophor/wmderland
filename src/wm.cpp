@@ -288,12 +288,20 @@ void WindowManager::OnKeyPress() {
                 tiling_direction_ = Direction::HORIZONTAL;
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_LEFT_KEY))) {
                 workspaces_[current_]->FocusLeft();
+                Window w = workspaces_[current_]->active_client()->window();
+                SetNetActiveWindow(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_RIGHT_KEY))) { 
                 workspaces_[current_]->FocusRight();
+                Window w = workspaces_[current_]->active_client()->window();
+                SetNetActiveWindow(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_DOWN_KEY))) {
                 workspaces_[current_]->FocusDown();
+                Window w = workspaces_[current_]->active_client()->window();
+                SetNetActiveWindow(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_UP_KEY))) {
                 workspaces_[current_]->FocusUp();
+                Window w = workspaces_[current_]->active_client()->window();
+                SetNetActiveWindow(w);
             } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FULLSCREEN_KEY))) {
                 ToggleFullScreen(w);
             }
@@ -520,12 +528,16 @@ void WindowManager::ToggleFullScreen(Window w) {
 
         // Record the current window's position and size before making it fullscreen.
         XGetWindowAttributes(dpy_, w, &attr);
+        XChangeProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_STATE], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*) &properties_->net_atoms_[atom::NET_WM_STATE_FULLSCREEN], 1);
         XMoveResizeWindow(dpy_, w, 0, 0, screen_width, screen_height);
         c->SetBorderWidth(0);
 
         workspaces_[current_]->set_has_fullscreen_application(true);
         c->set_fullscreen(true);
     } else if (workspaces_[current_]->has_fullscreen_application() && c->is_fullscreen()) {
+        XChangeProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_STATE], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*) 0, 0);
         // Restore the window to its original position and size.
         XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
         c->SetBorderWidth(config_->border_width());
