@@ -9,21 +9,46 @@ set focused_color = ff565679
 set unfocused_color = ff393f52
 
 
-; Spawning Rules (wm_name not implemented)
-; syntax: assign <wm_class>{,<wm_name>} -> <workspace_id>
+; Spawning Rules (wm_instance not implemented)
+; syntax: assign <wm_class>{,<wm_instance>} -> <workspace_id>
 ; ----------------------------------------------------
 assign URxvt -> 1
+assign jetbrains-idea -> 2
+assign jetbrains-studio -> 2
 assign Firefox -> 3
+assign dolphin -> 4
+assign ark -> 4
+assign Et -> 5
+assign Wps -> 5
+assign Wpp -> 5
+assign Spotify -> 6
+assign vlc -> 6
+assign Gimp -> 7
+assign tiled -> 7
+assign Wine,steam.exe -> 8
+assign Steam -> 8
+assign PCSX2 -> 8
+assign VirtualBox -> 9
+assign Transmission -> 9
 
 
-; Floating Rules (wm_name not implemented)
-; syntax: floating <wm_class>{,<wm_name>} true
+; Floating Rules (wm_instance not implemented)
+; syntax: floating <wm_class>{,<wm_instance>} true
 ; ----------------------------------------------------
+floating feh true
+floating mpv true
+floating Peek true
 floating Gcolor2 true
+floating Steam true
+floating PCSX2 true
+floating VirtualBox true
+floating Wine true
+floating Wine,steam.exe true
+floating Wine,tesv.exe true
 
 
-; Keybind (Not implemented)
-; syntax: bindsym <Modifier+Key> 
+; Keybind
+; syntax: bindsym <Modifier+Key> action
 ; ----------------------------------------------------
 bindsym Mod4+g tile_horizontally
 bindsym Mod4+v tile_vertically
@@ -31,11 +56,12 @@ bindsym Mod4+h focus_left
 bindsym Mod4+l focus_right
 bindsym Mod4+j focus_down
 bindsym Mod4+k focus_up
+bindsym Mod4+o toggle_floating
+bindsym Mod4+f toggle_fullscreen
 bindsym Mod4+q kill
-bindsym Mod4+f fullscreen
 
-bindsym Mod4+Return exec urxvt &
-bindsym Mod4+d exec rofi -show drun
+;bindsym Mod4+Return exec urxvt &
+;bindsym Mod4+d exec rofi -show drun
 
 
 ; Autostart
@@ -47,5 +73,5 @@ exec dispad
 exec compton --config ~/.config/compton/compton.conf &
 exec pulseaudio --start --log-target=syslog
 exec mpd
-exec dunst -config ~/.config/dunst/dunstrc
+;exec dunst
 exec ~/.config/polybar/launch.sh

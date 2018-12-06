@@ -14,6 +14,7 @@ using std::pair;
 using std::string;
 using std::vector;
 using std::stringstream;
+using std::unordered_map;
 
 WindowManager* WindowManager::instance_;
 
@@ -78,10 +79,32 @@ void WindowManager::InitProperties() {
 void WindowManager::InitXEvents() {
     // Define which key combinations will send us X events.
     for (int i = 0; i < 9; i++) {
-        string k = std::to_string(i);
-        XGrabKey(dpy_, XKeysymToKeycode(dpy_, XStringToKeysym(k.c_str())), Mod1Mask, root_, True, GrabModeAsync, GrabModeAsync);
+        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
+        //XGrabKey(dpy_, keycode, Mod1Mask, root_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
     }
-    XGrabKey(dpy_, AnyKey, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
+
+    for (auto r : config_->keybind_rules()) {
+        vector<string> modifier_and_key = string_utils::split(r.first, '+');
+        string modifier = modifier_and_key[0];
+        string key = modifier_and_key[1];
+
+        int keycode = wm_utils::QueryKeycode(dpy_, key);
+        unsigned int mod_mask = None;
+
+        if (modifier == "Mod1") {
+            mod_mask = Mod1Mask;
+        } else if (modifier == "Mod4") {
+            mod_mask = Mod4Mask;
+        } else {
+            continue;
+        }
+
+        XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
+    }
+
+    XGrabKey(dpy_, wm_utils::QueryKeycode(dpy_, "d"), Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy_, wm_utils::QueryKeycode(dpy_, "Return"), Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
 
     // Define which mouse clicks will send us X events.
     XGrabButton(dpy_, AnyButton, Mod4Mask, root_, True,
@@ -242,71 +265,77 @@ void WindowManager::OnDestroyNotify(Window w) {
 }
 
 void WindowManager::OnKeyPress() {
-    auto modifier = event_.xkey.state;
-    auto key = event_.xkey.keycode;
     pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
     Window w;
     if (active_client_pos.first >= 0) {
         w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
     }
+ 
+    // Move application to a specific workspace,
+    // and goto a specific workspace.
+    if (event_.xkey.state == Mod4Mask
+            && (event_.xkey.state & ShiftMask)
+            && event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+            && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+        MoveWindowToWorkspace(w, event_.xkey.keycode - 10);
+        return;
+    } else if (event_.xkey.state == Mod4Mask
+            && event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+            && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+        GotoWorkspace(event_.xkey.keycode - 10);
+        return;
+    }
 
-    switch (modifier) {
-        case Mod1Mask:
-            if (w == None) return;
+    // Key pressed but does NOT require any window to be focused.
+    // Mod4 + Return -> Spawn urxvt.
+    if (event_.xkey.state == Mod4Mask
+            && event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("Return"))) {
+        system("urxvt &");
+        return;
+    } else if (event_.xkey.state == Mod4Mask
+            && event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("d"))) {
+        system("rofi -show drun");
+        return;
+    } 
 
-            if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-                    && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-                MoveWindowToWorkspace(w, key - 10);
-            }
+    if (w == None) return;
+
+    string key = wm_utils::QueryKeysym(dpy_, event_.xkey.keycode, false);
+    LOG(INFO) << "wm_utils::QueryKeysym() -> " << key;
+    Action action = config_->GetKeybindAction(event_.xkey.state, key);
+
+    switch (action) {
+        case TILE_H:
+            tiling_direction_ = Direction::HORIZONTAL;
             break;
-
-        case Mod4Mask:
-            // Key pressed but does NOT require any window to be focused.
-            // Mod4 + Return -> Spawn urxvt.
-            if (key == XKeysymToKeycode(dpy_, XStringToKeysym("Return"))) {
-                system("urxvt &");
-                return;
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym("d"))) {
-                system("rofi -show drun");
-                return;
-            } else if (key >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-                    && key <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-                GotoWorkspace(key - 10);
-                return;
-            }
-
-            if (w == None) return;
-
-            // Mod4 + q -> Kill window.
-            if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_KILL_CLIENT_KEY))) {
-                KillClient(w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TOGGLE_CLIENT_FLOAT_KEY))) {
-                ToggleFloating(w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_V_KEY))) {
-                tiling_direction_ = Direction::VERTICAL;
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_TILE_H_KEY))) {
-                tiling_direction_ = Direction::HORIZONTAL;
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_LEFT_KEY))) {
-                workspaces_[current_]->FocusLeft();
-                Window w = workspaces_[current_]->active_client()->window();
-                SetNetActiveWindow(w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_RIGHT_KEY))) { 
-                workspaces_[current_]->FocusRight();
-                Window w = workspaces_[current_]->active_client()->window();
-                SetNetActiveWindow(w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_DOWN_KEY))) {
-                workspaces_[current_]->FocusDown();
-                Window w = workspaces_[current_]->active_client()->window();
-                SetNetActiveWindow(w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FOCUS_UP_KEY))) {
-                workspaces_[current_]->FocusUp();
-                Window w = workspaces_[current_]->active_client()->window();
-                SetNetActiveWindow(w);
-            } else if (key == XKeysymToKeycode(dpy_, XStringToKeysym(DEFAULT_FULLSCREEN_KEY))) {
-                ToggleFullScreen(w);
-            }
+        case TILE_V:
+            tiling_direction_ = Direction::VERTICAL;
             break;
-
+        case FOCUS_LEFT:
+            workspaces_[current_]->FocusLeft();
+            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            break;
+        case FOCUS_RIGHT:
+            workspaces_[current_]->FocusRight();
+            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            break;
+        case FOCUS_DOWN:
+            workspaces_[current_]->FocusDown();
+            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            break;
+        case FOCUS_UP:
+            workspaces_[current_]->FocusUp();
+            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            break;
+        case TOGGLE_FLOATING:
+            ToggleFloating(w);
+            break;
+        case TOGGLE_FULLSCREEN:
+            ToggleFullScreen(w);
+            break;
+        case KILL:
+            KillClient(w);
+            break;
         default:
             break;
     }

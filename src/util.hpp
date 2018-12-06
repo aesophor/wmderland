@@ -3,6 +3,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/XKBlib.h>
 #include <string>
 #include <vector>
 
@@ -11,12 +12,27 @@ enum Direction {
     VERTICAL
 };
 
+enum Action {
+    TILE_H,
+    TILE_V,
+    FOCUS_LEFT,
+    FOCUS_RIGHT,
+    FOCUS_DOWN,
+    FOCUS_UP,
+    TOGGLE_FLOATING,
+    TOGGLE_FULLSCREEN,
+    KILL,
+    UNDEFINED
+};
+
 namespace wm_utils {
     std::pair<short, short> GetDisplayResolution(Display* dpy, Window root);
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
     std::string QueryWmClass(Display* dpy, Window w);
     std::string QueryWmName(Display* dpy, Window w);
     unsigned int QueryKeycode(Display* dpy, const std::string& key_name);
+    std::string QueryKeysym(Display* dpy, unsigned int keycode, bool shift);
+    Action StrToAction(const std::string& action_str);
     
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms);
     bool IsBar(const std::string& wm_class);

@@ -1,6 +1,7 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
+#include "util.hpp"
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -28,23 +29,22 @@
 #define DEFAULT_FOCUSED_COLOR 0xffffffff
 #define DEFAULT_UNFOCUSED_COLOR 0xff41485f
 
-#define DEFAULT_TILE_H_KEY "g"
-#define DEFAULT_TILE_V_KEY "v"
-#define DEFAULT_FOCUS_LEFT_KEY "h"
-#define DEFAULT_FOCUS_RIGHT_KEY "l"
-#define DEFAULT_FOCUS_DOWN_KEY "j"
-#define DEFAULT_FOCUS_UP_KEY "k"
-#define DEFAULT_FULLSCREEN_KEY "f"
-#define DEFAULT_KILL_CLIENT_KEY "q"
-#define DEFAULT_TOGGLE_CLIENT_FLOAT_KEY "o"
-
+#define DEFAULT_TILE_H_KEY "Mod4+g"
+#define DEFAULT_TILE_V_KEY "Mod4+h"
+#define DEFAULT_FOCUS_LEFT_KEY "Mod4+h"
+#define DEFAULT_FOCUS_RIGHT_KEY "Mod4+l"
+#define DEFAULT_FOCUS_DOWN_KEY "Mod4+j"
+#define DEFAULT_FOCUS_UP_KEY "Mod4+k"
+#define DEFAULT_TOGGLE_FLOATING_KEY "Mod4+o"
+#define DEFAULT_TOGGLE_FULLSCREEN_KEY "Mod4+f"
+#define DEFAULT_KILL_KEY "Mod4+q"
 
 class Config {
 public:
     static Config* GetInstance();
 
-    std::string Get(const std::string& key) const;
-    bool Has(const std::string& key) const;
+    Action GetKeybindAction(int modifier, std::string key);
+    void SetKeybindAction(std::string modifier_and_key, Action action);
 
     unsigned short gap_width();
     unsigned short border_width();
@@ -53,10 +53,11 @@ public:
     unsigned long focused_color();
     unsigned long unfocused_color();
 
-    std::unordered_map<std::string, std::string>& global_vars();
-    std::unordered_map<std::string, short>& spawn_rules();
-    std::unordered_map<std::string, bool>& float_rules();
-    std::vector<std::string>& autostart_rules();
+    std::unordered_map<std::string, std::string> global_vars();
+    std::unordered_map<std::string, short> spawn_rules();
+    std::unordered_map<std::string, bool> float_rules();
+    std::unordered_map<std::string, Action> keybind_rules();
+    std::vector<std::string> autostart_rules();
 
 private:
     static Config* instance_;
@@ -72,6 +73,7 @@ private:
     std::unordered_map<std::string, std::string> global_vars_;
     std::unordered_map<std::string, short> spawn_rules_;
     std::unordered_map<std::string, bool> float_rules_;
+    std::unordered_map<std::string, Action> keybind_rules_;
     std::vector<std::string> autostart_rules_;
 };
 

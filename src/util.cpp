@@ -1,6 +1,6 @@
-#include "properties.hpp"
 #include "util.hpp"
-#include "sstream"
+#include "properties.hpp"
+#include <sstream>
 
 using std::pair;
 using std::size_t;
@@ -34,6 +34,34 @@ namespace wm_utils {
 
     unsigned int QueryKeycode(Display* dpy, const string& key_name) {
         return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
+    }
+
+    string QueryKeysym(Display* dpy, unsigned int keycode, bool shift) {
+        return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 
+    }
+
+    Action StrToAction(const string& action_str) {
+        if (action_str == "tile_horizontally") {
+            return TILE_H;
+        } else if (action_str == "tile_vertically") {
+            return TILE_V;
+        } else if (action_str == "focus_left") {
+            return FOCUS_LEFT;
+        } else if (action_str == "focus_right") {
+            return FOCUS_RIGHT;
+        } else if (action_str == "focus_down") {
+            return Action::FOCUS_DOWN;
+        } else if (action_str == "focus_up") {
+            return Action::FOCUS_UP;
+        } else if (action_str == "toggle_floating") {
+            return Action::TOGGLE_FLOATING;
+        } else if (action_str == "toggle_fullscreen") {
+            return Action::TOGGLE_FULLSCREEN;
+        } else if (action_str == "kill") {
+            return Action::KILL;
+        } else {
+            return Action::UNDEFINED;
+        }
     }
 
 
