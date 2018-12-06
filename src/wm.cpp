@@ -47,6 +47,7 @@ WindowManager::~WindowManager() {
     for (auto const w : workspaces_) {
         delete w;
     }
+    
     delete properties_;
     XCloseDisplay(dpy_);
 }
@@ -66,6 +67,7 @@ void WindowManager::InitProperties() {
             properties_->utf8string_,
             8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
     );
+
     properties_->Set(
             root_,
             properties_->net_atoms_[atom::NET_SUPPORTED],

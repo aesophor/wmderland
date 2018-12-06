@@ -50,7 +50,6 @@ $ startx
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
-* Terminate client peacefully via ICCCM instead of XKillClient().
 * A better configuration system that supports
   * keybinds
   * floating rules with wm_name
@@ -67,4 +66,3 @@ Just fook off
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
-
