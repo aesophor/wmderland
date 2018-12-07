@@ -59,7 +59,7 @@ bindsym Mod4+j focus_down
 bindsym Mod4+k focus_up
 bindsym Mod4+o toggle_floating
 bindsym Mod4+f toggle_fullscreen
-bindsym Mod4+q kill
+bindsym Mod4+Shift+q kill
 
 bindsym Mod4+d exec rofi -show drun
 bindsym Mod4+Return exec urxvt
