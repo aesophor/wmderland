@@ -205,22 +205,22 @@ void WindowManager::OnMapRequest(Window w) {
     bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
 
     string wm_class = wm_utils::QueryWmClass(dpy_, w);
-    string wm_class_and_name = wm_class + "," + wm_utils::QueryWmName(dpy_, w);
+    string wm_class_and_instance = wm_class + "," + wm_utils::QueryWmName(dpy_, w);
 
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(wm_class) != config_->spawn_rules().end()) {
         short target_workspace_id = config_->spawn_rules()[wm_class]- 1;
         GotoWorkspace(target_workspace_id);
-    } else if (config_->spawn_rules().find(wm_class_and_name) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules()[wm_class_and_name] - 1;
+    } else if (config_->spawn_rules().find(wm_class_and_instance) != config_->spawn_rules().end()) {
+        short target_workspace_id = config_->spawn_rules()[wm_class_and_instance] - 1;
         GotoWorkspace(target_workspace_id);
     }
 
     // Apply application floating rules (if exists).
     if (config_->float_rules().find(wm_class) != config_->float_rules().end()) {
         should_float = config_->float_rules()[wm_class];
-    } else if (config_->float_rules().find(wm_class_and_name) != config_->float_rules().end()) {
-        should_float = config_->float_rules()[wm_class_and_name];
+    } else if (config_->float_rules().find(wm_class_and_instance) != config_->float_rules().end()) {
+        should_float = config_->float_rules()[wm_class_and_instance];
     }
 
 

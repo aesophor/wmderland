@@ -44,16 +44,16 @@ $ startx
 * Horizontal and vertical tiling (with gaps!)
 * Toggle windows between tiled / floating.
 * Smart floating (dialog windows will be floating by default).
-* Workspaces `Super + {1~9}`: switch; `Alt + {1~9}`: move application to...
+* Workspaces. ( `Mod4 + {1~9}`: switch; `Mod4 + Shift + {1~9}`: move application to... )
 * Window border.
-* A very basic configuration system. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* Configuration system (not scriptable). ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
-* Detect polybar's position (top / bottom)
-* A better configuration system that supports
-  * floating rules with wm instance
-  * application spawning rules with wm instance
+* IPC mechanisms (to communicate with Polybar and other process)
+* Improve performance of programs running under Wine (it's kinda laggy for now, idk why)
+* Add the ability to define `Super` key in config instead of hardcoding it to `Mod4`
+* Two borders
 
 ## Windows Version
 Just fook off
@@ -63,6 +63,7 @@ Just fook off
 * jichu4n's [basic_wm](https://github.com/jichu4n/basic_wm)
 * mil's [simple_wm](https://github.com/mil/simple-wm)
 * JLErvin's [berry](https://github.com/JLErvin/berry)
+* Mr messyhair's [eveningwm](https://gitlab.com/mrmessyhair/eveningwm/blob/master/eveningwm.c)
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
