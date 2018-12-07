@@ -52,9 +52,8 @@ $ startx
 ## Todo List
 * Detect polybar's position (top / bottom)
 * A better configuration system that supports
-  * keybinds
-  * floating rules with wm_name
-  * application spawning rules with wm_name
+  * floating rules with wm instance
+  * application spawning rules with wm instance
 
 ## Windows Version
 Just fook off
