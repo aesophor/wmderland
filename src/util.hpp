@@ -29,6 +29,7 @@ enum Action {
 namespace wm_utils {
     std::pair<short, short> GetDisplayResolution(Display* dpy, Window root);
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
+    XSizeHints QueryWmNormalHints(Display* dpy, Window w);
     std::string QueryWmClass(Display* dpy, Window w);
     std::string QueryWmName(Display* dpy, Window w);
 

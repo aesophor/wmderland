@@ -20,6 +20,13 @@ namespace wm_utils {
         return ret;
     }
 
+    XSizeHints QueryWmNormalHints(Display* dpy, Window w) {
+        XSizeHints hints;
+        long msize;
+        XGetWMNormalHints(dpy, w, &hints, &msize);
+        return hints;
+    }
+
     string QueryWmClass(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);

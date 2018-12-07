@@ -225,8 +225,17 @@ void WindowManager::OnMapRequest(Window w) {
 
 
     if (should_float) {
-        //XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-        Center(w);
+        XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
+
+        if (hint.min_width > 0 && hint.min_height > 0) {
+            XResizeWindow(dpy_, w, hint.min_width, hint.min_height);
+        }
+
+        if (hint.x > 0 && hint.y > 0) {
+            XMoveWindow(dpy_, w, hint.x, hint.y);
+        } else {
+            Center(w);
+        }
     }
     
     // Regular applications should be added to workspace client list,
@@ -542,15 +551,15 @@ void WindowManager::Tile(Workspace* workspace) {
 
 void WindowManager::ToggleFloating(Window w) {
     Client* c = workspaces_[current_]->active_client();
+    if (!c) return;
 
-    if (c) {
-        c->set_floating(!c->is_floating());
-        if (c->is_floating()) {
-            XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-            Center(c->window());
-        }
-        Tile(workspaces_[current_]);
+    // TODO: Fix floating and fullscreen.
+    c->set_floating(!c->is_floating());
+    if (c->is_floating()) {
+        XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+        Center(c->window());
     }
+    Tile(workspaces_[current_]);
 }
 
 void WindowManager::ToggleFullScreen(Window w) {
