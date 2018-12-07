@@ -22,6 +22,7 @@ enum Action {
     TOGGLE_FLOATING,
     TOGGLE_FULLSCREEN,
     KILL,
+    EXEC,
     UNDEFINED
 };
 
@@ -30,6 +31,7 @@ namespace wm_utils {
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
     std::string QueryWmClass(Display* dpy, Window w);
     std::string QueryWmName(Display* dpy, Window w);
+
     unsigned int QueryKeycode(Display* dpy, const std::string& key_name);
     std::string QueryKeysym(Display* dpy, unsigned int keycode, bool shift);
     Action StrToAction(const std::string& action_str);
@@ -42,6 +44,7 @@ namespace wm_utils {
 namespace string_utils {
     std::vector<std::string> split(const std::string& s, const char delimiter);
     std::vector<std::string> split(const std::string& s, const char delimiter, short count);
+    bool starts_with(const std::string& s, const std::string& keyword);
     void trim(std::string& s);
 }
 

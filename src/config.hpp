@@ -44,6 +44,7 @@ public:
     static Config* GetInstance();
 
     Action GetKeybindAction(int modifier, std::string key);
+    void ExecKeybindAction(int modifier, std::string key);
     void SetKeybindAction(std::string modifier_and_key, Action action);
 
     unsigned short gap_width();
@@ -57,6 +58,7 @@ public:
     std::unordered_map<std::string, short> spawn_rules();
     std::unordered_map<std::string, bool> float_rules();
     std::unordered_map<std::string, Action> keybind_rules();
+    std::unordered_map<std::string, std::string> keybind_cmds();
     std::vector<std::string> autostart_rules();
 
 private:
@@ -74,6 +76,7 @@ private:
     std::unordered_map<std::string, short> spawn_rules_;
     std::unordered_map<std::string, bool> float_rules_;
     std::unordered_map<std::string, Action> keybind_rules_;
+    std::unordered_map<std::string, std::string> keybind_cmds_;
     std::vector<std::string> autostart_rules_;
 };
 

@@ -2,6 +2,8 @@
 #include "util.hpp"
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include <glog/logging.h>
 
 using std::hex;
 using std::pair;
@@ -9,6 +11,8 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
+using std::cout;
+using std::endl;
 
 Config* Config::instance_;
 
@@ -72,8 +76,14 @@ Config::Config(string filename) {
                 float_rules_[wm_class_name] = should_float_bool;
             } else if (first_token == "bindsym") {
                 string modifier_and_key = tokens[1];
-                string action_str = tokens[2];
+                string action_str = string_utils::split(line, ' ', 2)[2];
                 SetKeybindAction(modifier_and_key, wm_utils::StrToAction(action_str));
+
+                if (string_utils::starts_with(action_str, "exec")) {
+                    SetKeybindAction(modifier_and_key, wm_utils::StrToAction(action_str));
+                    string command = string_utils::split(action_str, ' ', 1)[1];
+                    keybind_cmds_[modifier_and_key] = command;
+                }
             } else if (first_token == "exec") {
                 string cmd = string_utils::split(line, ' ', 1)[1];
                 autostart_rules_.push_back(cmd);
@@ -108,12 +118,32 @@ Action Config::GetKeybindAction(int modifier, string key) {
     return keybind_rules_[modifier_str + '+' + key];
 }
 
+void Config::ExecKeybindAction(int modifier, string key) {
+    string modifier_str;
+
+    switch (modifier) {
+        case Mod1Mask:
+            modifier_str = "Mod1";
+            break;
+        case Mod4Mask:
+            modifier_str = "Mod4";
+            break;
+        default:
+            break;
+    }
+
+    string command = keybind_cmds_[modifier_str + '+' + key] + " &";
+    system(command.c_str());
+}
+
 void Config::SetKeybindAction(string modifier_and_key, Action action) {
     // Check if this action has already been registered
     // by another modifier_and_key. If found, remove it.
-    for (auto& r : keybind_rules_) {
-        if (r.second == action) {
-            keybind_rules_.erase(r.first);
+    if (action != Action::EXEC) {
+        for (auto& r : keybind_rules_) {
+            if (r.second == action) {
+                keybind_rules_.erase(r.first);
+            }
         }
     }
 
@@ -160,6 +190,10 @@ unordered_map<string, bool> Config::float_rules() {
 
 unordered_map<string, Action> Config::keybind_rules() {
     return keybind_rules_;
+}
+
+unordered_map<string, string> Config::keybind_cmds() {
+    return keybind_cmds_;
 }
 
 vector<string> Config::autostart_rules() {

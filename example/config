@@ -1,5 +1,5 @@
 ; Global Variables
-; syntax: set <key> = <value>
+; syntax: set <Key> = <Value>
 ; ----------------------------------------------------
 set gap_width = 15
 set border_width = 3
@@ -48,7 +48,8 @@ floating Wine,tesv.exe true
 
 
 ; Keybind
-; syntax: bindsym <Modifier+Key> action
+; syntax: bindsym <Modifier>+<Key> action
+; syntax: bindsym <Modifier>+<Key> exec command
 ; ----------------------------------------------------
 bindsym Mod4+g tile_horizontally
 bindsym Mod4+v tile_vertically
@@ -60,8 +61,8 @@ bindsym Mod4+o toggle_floating
 bindsym Mod4+f toggle_fullscreen
 bindsym Mod4+q kill
 
-;bindsym Mod4+Return exec urxvt &
-;bindsym Mod4+d exec rofi -show drun
+bindsym Mod4+d exec rofi -show drun
+bindsym Mod4+Return exec urxvt
 
 
 ; Autostart

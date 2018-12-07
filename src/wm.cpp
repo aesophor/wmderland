@@ -80,7 +80,7 @@ void WindowManager::InitXEvents() {
     // Define which key combinations will send us X events.
     for (int i = 0; i < 9; i++) {
         int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
-        //XGrabKey(dpy_, keycode, Mod1Mask, root_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
     }
 
@@ -103,8 +103,24 @@ void WindowManager::InitXEvents() {
         XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
     }
 
-    XGrabKey(dpy_, wm_utils::QueryKeycode(dpy_, "d"), Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy_, wm_utils::QueryKeycode(dpy_, "Return"), Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
+    for (auto r : config_->keybind_cmds()) {
+        vector<string> modifier_and_key = string_utils::split(r.first, '+');
+        string modifier = modifier_and_key[0];
+        string key = modifier_and_key[1];
+
+        int keycode = wm_utils::QueryKeycode(dpy_, key);
+        unsigned int mod_mask = None;
+
+        if (modifier == "Mod1") {
+            mod_mask = Mod1Mask;
+        } else if (modifier == "Mod4") {
+            mod_mask = Mod4Mask;
+        } else {
+            continue;
+        }
+
+        XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
+    }
 
     // Define which mouse clicks will send us X events.
     XGrabButton(dpy_, AnyButton, Mod4Mask, root_, True,
@@ -273,7 +289,8 @@ void WindowManager::OnKeyPress() {
  
     // Move application to a specific workspace,
     // and goto a specific workspace.
-    if (event_.xkey.state == Mod4Mask
+    if (event_.xkey.state == Mod4Mask 
+            && (Mod4Mask & ShiftMask)
             && (event_.xkey.state & ShiftMask)
             && event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
             && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
@@ -285,24 +302,16 @@ void WindowManager::OnKeyPress() {
         GotoWorkspace(event_.xkey.keycode - 10);
         return;
     }
+ 
+    string key = wm_utils::QueryKeysym(dpy_, event_.xkey.keycode, false);
+    Action action = config_->GetKeybindAction(event_.xkey.state, key);
 
-    // Key pressed but does NOT require any window to be focused.
-    // Mod4 + Return -> Spawn urxvt.
-    if (event_.xkey.state == Mod4Mask
-            && event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("Return"))) {
-        system("urxvt &");
+    if (action == Action::EXEC) {
+        config_->ExecKeybindAction(event_.xkey.state, key);
         return;
-    } else if (event_.xkey.state == Mod4Mask
-            && event_.xkey.keycode == XKeysymToKeycode(dpy_, XStringToKeysym("d"))) {
-        system("rofi -show drun");
-        return;
-    } 
+    }
 
     if (w == None) return;
-
-    string key = wm_utils::QueryKeysym(dpy_, event_.xkey.keycode, false);
-    LOG(INFO) << "wm_utils::QueryKeysym() -> " << key;
-    Action action = config_->GetKeybindAction(event_.xkey.state, key);
 
     switch (action) {
         case TILE_H:

@@ -59,6 +59,8 @@ namespace wm_utils {
             return Action::TOGGLE_FULLSCREEN;
         } else if (action_str == "kill") {
             return Action::KILL;
+        } else if (string_utils::starts_with(action_str, "exec")) {
+            return Action::EXEC;
         } else {
             return Action::UNDEFINED;
         }
@@ -119,8 +121,18 @@ namespace string_utils {
             head = tail + 1;
             tail = s.find(delimiter, tail + 1);
         }
-        tokens.push_back(s.substr(head, string::npos));
+
+        if (head != 0) {
+            tokens.push_back(s.substr(head, string::npos));
+        }
         return tokens;
+    }
+
+    bool starts_with(const string& s, const string& keyword) {
+        if (s.find(keyword) == 0) {
+            return true;
+        }
+        return false;
     }
 
     void trim(string& s) {
