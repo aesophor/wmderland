@@ -9,7 +9,7 @@ set focused_color = ff565679
 set unfocused_color = ff393f52
 
 
-; Spawning Rules (wm_instance not implemented)
+; Spawning Rules
 ; syntax: assign <wm_class>{,<wm_instance>} -> <workspace_id>
 ; ----------------------------------------------------
 assign URxvt -> 1
@@ -32,7 +32,7 @@ assign VirtualBox -> 9
 assign Transmission -> 9
 
 
-; Floating Rules (wm_instance not implemented)
+; Floating Rules
 ; syntax: floating <wm_class>{,<wm_instance>} true
 ; ----------------------------------------------------
 floating feh true

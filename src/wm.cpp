@@ -298,9 +298,7 @@ void WindowManager::OnKeyPress() {
  
     // Move application to a specific workspace,
     // and goto a specific workspace.
-    if (event_.xkey.state == Mod4Mask 
-            && (Mod4Mask & ShiftMask)
-            && (event_.xkey.state & ShiftMask)
+    if (event_.xkey.state == (Mod4Mask | ShiftMask)
             && event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
             && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
         MoveWindowToWorkspace(w, event_.xkey.keycode - 10);
