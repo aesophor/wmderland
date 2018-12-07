@@ -136,10 +136,11 @@ namespace string_utils {
     }
 
     bool starts_with(const string& s, const string& keyword) {
-        if (s.find(keyword) == 0) {
-            return true;
-        }
-        return false;
+        return s.find(keyword) == 0;
+    }
+
+    bool Contains(const string& s, const string& keyword) {
+        return s.find(keyword) != string::npos;
     }
 
     void trim(string& s) {

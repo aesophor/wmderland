@@ -108,8 +108,14 @@ Action Config::GetKeybindAction(int modifier, string key) {
         case Mod1Mask:
             modifier_str = "Mod1";
             break;
+        case Mod1Mask | ShiftMask:
+            modifier_str = "Mod1+Shift";
+            break;
         case Mod4Mask:
             modifier_str = "Mod4";
+            break;
+        case Mod4Mask | ShiftMask:
+            modifier_str = "Mod4+Shift";
             break;
         default:
             return Action::UNDEFINED;

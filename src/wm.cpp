@@ -86,8 +86,10 @@ void WindowManager::InitXEvents() {
 
     for (auto r : config_->keybind_rules()) {
         vector<string> modifier_and_key = string_utils::split(r.first, '+');
+        bool shift = string_utils::Contains(r.first, "Shift");
+
         string modifier = modifier_and_key[0];
-        string key = modifier_and_key[1];
+        string key = modifier_and_key[(shift) ? 2 : 1];
 
         int keycode = wm_utils::QueryKeycode(dpy_, key);
         unsigned int mod_mask = None;
@@ -100,13 +102,19 @@ void WindowManager::InitXEvents() {
             continue;
         }
 
+        if (shift) {
+            mod_mask |= ShiftMask;
+        }
+
         XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
     }
 
     for (auto r : config_->keybind_cmds()) {
         vector<string> modifier_and_key = string_utils::split(r.first, '+');
+        bool shift = string_utils::Contains(r.first, "Shift");
+
         string modifier = modifier_and_key[0];
-        string key = modifier_and_key[1];
+        string key = modifier_and_key[(shift) ? 2 : 1];
 
         int keycode = wm_utils::QueryKeycode(dpy_, key);
         unsigned int mod_mask = None;
@@ -117,6 +125,10 @@ void WindowManager::InitXEvents() {
             mod_mask = Mod4Mask;
         } else {
             continue;
+        }
+
+        if (shift) {
+            mod_mask |= ShiftMask;
         }
 
         XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
