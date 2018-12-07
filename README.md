@@ -53,6 +53,7 @@ $ startx
 * IPC mechanisms (to communicate with Polybar and other process)
 * Improve performance of programs running under Wine (it's kinda laggy for now, idk why)
 * Add the ability to define `Super` key in config instead of hardcoding it to `Mod4`
+* Remember the position and size of floating windows
 * Two borders
 
 ## Windows Version
