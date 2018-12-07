@@ -66,7 +66,7 @@ namespace wm_utils {
             return Action::TOGGLE_FULLSCREEN;
         } else if (action_str == "kill") {
             return Action::KILL;
-        } else if (string_utils::starts_with(action_str, "exec")) {
+        } else if (string_utils::StartsWith(action_str, "exec")) {
             return Action::EXEC;
         } else {
             return Action::UNDEFINED;
@@ -107,7 +107,7 @@ namespace wm_utils {
 
 namespace string_utils {
 
-    vector<string> split(const string& s, const char delimiter) {
+    vector<string> Split(const string& s, const char delimiter) {
         std::stringstream ss(s);
         string t;
         vector<string> tokens;
@@ -118,7 +118,7 @@ namespace string_utils {
         return tokens;
     }
 
-    vector<string> split(const string& s, const char delimiter, short count) {
+    vector<string> Split(const string& s, const char delimiter, short count) {
         vector<string> tokens;
         string::size_type head = 0;
         string::size_type tail = s.find(delimiter, head);
@@ -135,7 +135,7 @@ namespace string_utils {
         return tokens;
     }
 
-    bool starts_with(const string& s, const string& keyword) {
+    bool StartsWith(const string& s, const string& keyword) {
         return s.find(keyword) == 0;
     }
 
@@ -143,7 +143,7 @@ namespace string_utils {
         return s.find(keyword) != string::npos;
     }
 
-    void trim(string& s) {
+    void Trim(string& s) {
         s.erase(s.find_last_not_of(" \n\r\t") + 1);
     }
 

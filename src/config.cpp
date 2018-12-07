@@ -52,10 +52,10 @@ Config::Config(string filename) {
     string line;
 
     while (std::getline(file, line)) {
-        string_utils::trim(line);
+        string_utils::Trim(line);
 
         if (!line.empty() && line.at(0) != ';') {
-            vector<string> tokens = string_utils::split(line, ' ');
+            vector<string> tokens = string_utils::Split(line, ' ');
             string& first_token = tokens[0];
 
             if (first_token == "set") {
@@ -76,16 +76,16 @@ Config::Config(string filename) {
                 float_rules_[wm_class_name] = should_float_bool;
             } else if (first_token == "bindsym") {
                 string modifier_and_key = tokens[1];
-                string action_str = string_utils::split(line, ' ', 2)[2];
+                string action_str = string_utils::Split(line, ' ', 2)[2];
                 SetKeybindAction(modifier_and_key, wm_utils::StrToAction(action_str));
 
-                if (string_utils::starts_with(action_str, "exec")) {
+                if (string_utils::StartsWith(action_str, "exec")) {
                     SetKeybindAction(modifier_and_key, wm_utils::StrToAction(action_str));
-                    string command = string_utils::split(action_str, ' ', 1)[1];
+                    string command = string_utils::Split(action_str, ' ', 1)[1];
                     keybind_cmds_[modifier_and_key] = command;
                 }
             } else if (first_token == "exec") {
-                string cmd = string_utils::split(line, ' ', 1)[1];
+                string cmd = string_utils::Split(line, ' ', 1)[1];
                 autostart_rules_.push_back(cmd);
             }
         }

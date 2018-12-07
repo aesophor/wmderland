@@ -85,7 +85,7 @@ void WindowManager::InitXEvents() {
     }
 
     for (auto r : config_->keybind_rules()) {
-        vector<string> modifier_and_key = string_utils::split(r.first, '+');
+        vector<string> modifier_and_key = string_utils::Split(r.first, '+');
         bool shift = string_utils::Contains(r.first, "Shift");
 
         string modifier = modifier_and_key[0];
@@ -110,7 +110,7 @@ void WindowManager::InitXEvents() {
     }
 
     for (auto r : config_->keybind_cmds()) {
-        vector<string> modifier_and_key = string_utils::split(r.first, '+');
+        vector<string> modifier_and_key = string_utils::Split(r.first, '+');
         bool shift = string_utils::Contains(r.first, "Shift");
 
         string modifier = modifier_and_key[0];

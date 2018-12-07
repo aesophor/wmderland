@@ -43,11 +43,11 @@ namespace wm_utils {
 }
 
 namespace string_utils {
-    std::vector<std::string> split(const std::string& s, const char delimiter);
-    std::vector<std::string> split(const std::string& s, const char delimiter, short count);
-    bool starts_with(const std::string& s, const std::string& keyword);
+    std::vector<std::string> Split(const std::string& s, const char delimiter);
+    std::vector<std::string> Split(const std::string& s, const char delimiter, short count);
+    bool StartsWith(const std::string& s, const std::string& keyword);
     bool Contains(const std::string& s, const std::string& keyword);
-    void trim(std::string& s);
+    void Trim(std::string& s);
 }
 
 #endif
