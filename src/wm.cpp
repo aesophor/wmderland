@@ -303,7 +303,7 @@ void WindowManager::OnDestroyNotify(Window w) {
 
 void WindowManager::OnKeyPress() {
     pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
-    Window w;
+    Window w = None;
     if (active_client_pos.first >= 0) {
         w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
     }
