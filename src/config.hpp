@@ -8,7 +8,7 @@
 
 
 #define WM_NAME "Wmderland"
-#define VERSION "0.7.1 Beta"
+#define VERSION "0.8 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 #define WORKSPACE_COUNT 9
