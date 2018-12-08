@@ -41,23 +41,19 @@ $ startx
 ```
 
 ## Features
-* Horizontal and vertical tiling (with gaps!)
+* Horizontal and vertical tiling.
+* Gaps and borders.
 * Toggle windows between tiled / floating.
 * Smart floating (dialog windows will be floating by default).
 * Workspaces. ( `Mod4 + {1~9}`: switch; `Mod4 + Shift + {1~9}`: move application to... )
-* Window border.
 * Configuration supported. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* Remembers the position and size of floating windows.
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
 * IPC mechanisms (to communicate with Polybar and other process)
 * Improve performance of programs running under Wine (it's kinda laggy for now, idk why)
-* Add the ability to define `Super` key in config instead of hardcoding it to `Mod4`
-* Remember the position and size of floating windows
 * Two borders
-
-## Windows Version
-Just fook off
 
 ## Special Thanks
 * suckless.org's dwm
