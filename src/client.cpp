@@ -2,6 +2,8 @@
 #include "config.hpp"
 #include "util.hpp"
 
+using std::string;
+
 std::unordered_map<Window, Client*> Client::mapper_;
 
 Client::Client(Display* dpy, Window window, Workspace* workspace) {
@@ -9,10 +11,9 @@ Client::Client(Display* dpy, Window window, Workspace* workspace) {
     window_ = window;
     workspace_ = workspace;
 
-    is_bar_ = wm_utils::IsBar(wm_class_);
+    is_bar_ = wm_utils::IsBar(dpy, window);
     is_floating_ = false;
     is_fullscreen_ = false;
-    wm_class_ = wm_utils::QueryWmClass(dpy, window);
     
     mapper_[window_] = this;
 
@@ -74,8 +75,4 @@ void Client::set_floating(bool is_floating) {
 
 void Client::set_fullscreen(bool is_fullscreen) {
     is_fullscreen_ = is_fullscreen;
-}
-
-std::string Client::wm_class() {
-    return wm_class_;
 }

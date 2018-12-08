@@ -8,8 +8,9 @@
 
 
 #define WM_NAME "Wmderland"
-#define VERSION "0.7.1 Beta"
+#define VERSION "0.8 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
+#define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 #define WORKSPACE_COUNT 9
 
 #define MOUSE_LEFT_BTN 1
@@ -38,13 +39,14 @@
 #define DEFAULT_FOCUS_UP_KEY "Mod4+k"
 #define DEFAULT_TOGGLE_FLOATING_KEY "Mod4+o"
 #define DEFAULT_TOGGLE_FULLSCREEN_KEY "Mod4+f"
-#define DEFAULT_KILL_KEY "Mod4+q"
+#define DEFAULT_KILL_KEY "Mod4+Shift+q"
+#define DEFAULT_EXIT_KEY "Mod4+Shift+Escape"
 
 class Config {
 public:
     static Config* GetInstance();
 
-    Action GetKeybindAction(int modifier, std::string key);
+    Action GetKeybindAction(std::string modifier, std::string key);
     void SetKeybindAction(std::string modifier_and_key, Action action);
 
     unsigned short gap_width();

@@ -7,6 +7,25 @@ using std::size_t;
 using std::string;
 using std::vector;
 
+WindowPosSize::WindowPosSize() {
+    WindowPosSize(0, 0, 0, 0);
+}
+
+WindowPosSize::WindowPosSize(int x, int y, int width, int height)
+    : x(x), y(y), width(width), height(height) {
+
+}
+
+bool WindowPosSize::operator==(const WindowPosSize& other) {
+    return (x == other.x) && (y == other.y) && (width == other.width) && (height == other.height);
+}
+
+bool WindowPosSize::operator!=(const WindowPosSize& other) {
+    return (x != other.x) || (y != other.y) || (width != other.width) || (height != other.height);
+}
+
+
+
 namespace wm_utils {
  
     pair<short, short> GetDisplayResolution(Display* dpy, Window root) {
@@ -27,17 +46,12 @@ namespace wm_utils {
         return hints;
     }
 
-    string QueryWmClass(Display* dpy, Window w) {
+    XClassHint QueryWmClass(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
-        return string(hint.res_class);
+        return hint;
     }
 
-    string QueryWmName(Display* dpy, Window w) {
-        XClassHint hint;
-        XGetClassHint(dpy, w, &hint);
-        return string(hint.res_name);
-    }
 
     unsigned int QueryKeycode(Display* dpy, const string& key_name) {
         return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
@@ -124,6 +138,8 @@ namespace wm_utils {
             return Action::TOGGLE_FULLSCREEN;
         } else if (action_str == "kill") {
             return Action::KILL;
+        } else if (action_str == "exit") {
+            return Action::EXIT;
         } else if (string_utils::StartsWith(action_str, "exec")) {
             return Action::EXEC;
         } else {
@@ -152,12 +168,10 @@ namespace wm_utils {
         return false;
     }
 
-    bool IsBar(const string& wm_class) {
-        return wm_class.find("Polybar") != string::npos;
-    }
 
     bool IsBar(Display* dpy, Window w) {
-        return IsBar(QueryWmClass(dpy, w));
+        string class_name = string(QueryWmClass(dpy, w).res_class);
+        return string_utils::Contains(class_name, "Polybar");
     }
 
 }
@@ -212,6 +226,16 @@ namespace string_utils {
 
     void Trim(string& s) {
         s.erase(s.find_last_not_of(" \n\r\t") + 1);
+    }
+
+    string ToAbsPath(const string& path) {
+        string abs_path = path;
+
+        if (path.at(0) == '~') {
+            abs_path = string(getenv("HOME")) + path.substr(1, string::npos);
+        }
+
+        return abs_path;
     }
 
 }

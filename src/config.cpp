@@ -1,9 +1,8 @@
 #include "config.hpp"
 #include "util.hpp"
+#include <glog/logging.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
-#include <glog/logging.h>
 
 using std::hex;
 using std::pair;
@@ -11,8 +10,6 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
-using std::cout;
-using std::endl;
 
 Config* Config::instance_;
 
@@ -42,11 +39,10 @@ Config::Config(string filename) {
     SetKeybindAction(DEFAULT_TOGGLE_FLOATING_KEY, Action::TOGGLE_FLOATING);
     SetKeybindAction(DEFAULT_TOGGLE_FULLSCREEN_KEY, Action::TOGGLE_FULLSCREEN);
     SetKeybindAction(DEFAULT_KILL_KEY, Action::KILL);
+    SetKeybindAction(DEFAULT_EXIT_KEY, Action::EXIT);
 
     // If the file starts with ~, convert it to full path first.
-    if (filename.at(0) == '~') {
-        filename = string(getenv("HOME")) + filename.substr(1, string::npos);
-    }
+    filename = string_utils::ToAbsPath(filename);
 
     std::ifstream file(filename);
     string line;
@@ -92,9 +88,13 @@ Config::Config(string filename) {
             } else if (first_token == "exec") {
                 string cmd = string_utils::Split(line, ' ', 1)[1];
                 autostart_rules_.push_back(cmd);
+            } else {
+                LOG(INFO) << "Unrecognized symbol: " << first_token << ". Ignoring...";
             }
         }
     }
+
+    file.close();
 
     // Override default global values with the values specified in config.
     stringstream(global_vars_["gap_width"]) >> gap_width_;
@@ -113,27 +113,8 @@ void Config::ReplaceSymbols(string& s) {
 }
 
 
-Action Config::GetKeybindAction(int modifier, string key) {
-    string modifier_str;
-
-    switch (modifier) {
-        case Mod1Mask:
-            modifier_str = "Mod1";
-            break;
-        case Mod1Mask | ShiftMask:
-            modifier_str = "Mod1+Shift";
-            break;
-        case Mod4Mask:
-            modifier_str = "Mod4";
-            break;
-        case Mod4Mask | ShiftMask:
-            modifier_str = "Mod4+Shift";
-            break;
-        default:
-            return Action::UNDEFINED;
-    }
-
-    return keybind_rules_[modifier_str + '+' + key];
+Action Config::GetKeybindAction(string modifier, string key) {
+    return keybind_rules_[modifier + '+' + key];
 }
 
 void Config::SetKeybindAction(string modifier_and_key, Action action) {

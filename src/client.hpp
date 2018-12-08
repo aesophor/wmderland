@@ -35,8 +35,6 @@ public:
     void set_floating(bool is_floating);
     void set_fullscreen(bool is_fullscreen);
 
-    std::string wm_class();
-    
 private:
     Display* dpy_;
     Window window_;
@@ -46,8 +44,6 @@ private:
     bool is_bar_;
     bool is_floating_;
     bool is_fullscreen_;
-
-    std::string wm_class_;
 };
 
 #endif
