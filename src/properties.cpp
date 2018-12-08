@@ -22,6 +22,19 @@ Properties::Properties(Display* dpy) {
     net_atoms_[atom::NET_CLIENT_LIST] = XInternAtom(dpy_, "_NET_CLIENT_LIST", false);
 };
 
+Atom Properties::Get(Window w, Atom property) {
+    int di;
+    unsigned long dl;
+    unsigned char *p = NULL;
+    Atom da, atom = None;
+    
+    if (XGetWindowProperty(dpy_, w, property, 0L, sizeof atom, False, XA_ATOM,
+                &da, &di, &dl, &dl, &p) == Success && p) {
+        atom = *(Atom *)p;
+        XFree(p);
+    }
+    return atom;
+}
 
 void Properties::Set(Window w, Atom property, Atom type,
         int format, int mode, unsigned char* data, int n_elements) {

@@ -17,6 +17,7 @@
  */
 class Cookie {
 public:
+    static const char kDelimiter = ' ';
     Cookie(const std::string filename);
 
     WindowPosSize Get(const std::string& res_class_name);

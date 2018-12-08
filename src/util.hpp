@@ -43,6 +43,7 @@ namespace wm_utils {
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
     XSizeHints QueryWmNormalHints(Display* dpy, Window w);
     XClassHint QueryWmClass(Display* dpy, Window w);
+    std::string QueryWmName(Display* dpy, Window w);
 
     unsigned int QueryKeycode(Display* dpy, const std::string& key_name);
     std::string QueryKeysym(Display* dpy, unsigned int keycode, bool shift);
@@ -50,6 +51,7 @@ namespace wm_utils {
     int StrToKeymask(const std::string& modifier_str, bool shift);
     Action StrToAction(const std::string& action_str);
     
+    bool IsFullScreen(Display* dpy, Window w, Atom* atoms);
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms);
     bool IsBar(Display* dpy, Window w);
 }

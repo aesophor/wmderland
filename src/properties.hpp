@@ -38,6 +38,7 @@ class Properties {
 public:
     Properties(Display* dpy);
     
+    Atom Get(Window w, Atom property);
     void Set(Window w, Atom property, Atom type, int format, int mode, unsigned char* data, int n_elements);
     void Delete(Window w, Atom property);
     Atom utf8string() const;
