@@ -80,8 +80,8 @@ void WindowManager::InitXEvents() {
     // Define which key combinations will send us X events.
     for (int i = 0; i < 9; i++) {
         int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
-        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
     }
 
     for (auto r : config_->keybind_rules()) {

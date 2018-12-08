@@ -1,17 +1,18 @@
 ; Global Variables
 ; syntax: set <Key> = <Value>
-; ----------------------------------------------------
+;         set $<Variable> = <Value>
+; -------------------------------------------------------------
 set gap_width = 15
 set border_width = 3
-set min_window_width = 50
-set min_window_height = 50
+set min_window_width = 100
+set min_window_height = 100
 set focused_color = ff565679
 set unfocused_color = ff393f52
-
+set $Mod = Mod4
 
 ; Spawning Rules
 ; syntax: assign <wm_class>{,<wm_instance>} -> <workspace_id>
-; ----------------------------------------------------
+; -------------------------------------------------------------
 assign URxvt -> 1
 assign jetbrains-idea -> 2
 assign jetbrains-studio -> 2
@@ -34,7 +35,8 @@ assign Transmission -> 9
 
 ; Floating Rules
 ; syntax: floating <wm_class>{,<wm_instance>} true
-; ----------------------------------------------------
+; -------------------------------------------------------------
+floating systemsettings true
 floating feh true
 floating mpv true
 floating Peek true
@@ -45,29 +47,30 @@ floating VirtualBox true
 floating Wine true
 floating Wine,steam.exe true
 floating Wine,tesv.exe true
+floating Vigilante true
 
 
 ; Keybind
 ; syntax: bindsym <Modifier>+<Key> action
 ; syntax: bindsym <Modifier>+<Key> exec command
-; ----------------------------------------------------
-bindsym Mod4+g tile_horizontally
-bindsym Mod4+v tile_vertically
-bindsym Mod4+h focus_left
-bindsym Mod4+l focus_right
-bindsym Mod4+j focus_down
-bindsym Mod4+k focus_up
-bindsym Mod4+o toggle_floating
-bindsym Mod4+f toggle_fullscreen
-bindsym Mod4+Shift+q kill
+; -------------------------------------------------------------
+bindsym $Mod+g tile_horizontally
+bindsym $Mod+v tile_vertically
+bindsym $Mod+h focus_left
+bindsym $Mod+l focus_right
+bindsym $Mod+j focus_down
+bindsym $Mod+k focus_up
+bindsym $Mod+o toggle_floating
+bindsym $Mod+f toggle_fullscreen
+bindsym $Mod+Shift+q kill
 
-bindsym Mod4+d exec rofi -show drun
-bindsym Mod4+Return exec urxvt
+bindsym $Mod+d exec rofi -show drun
+bindsym $Mod+Return exec urxvt
 
 
 ; Autostart
 ; syntax: exec <command>
-; ----------------------------------------------------
+; -------------------------------------------------------------
 exec wmctrl -c Plasma
 exec displayctl
 exec dispad
