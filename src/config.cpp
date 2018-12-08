@@ -39,11 +39,10 @@ Config::Config(string filename) {
     SetKeybindAction(DEFAULT_TOGGLE_FLOATING_KEY, Action::TOGGLE_FLOATING);
     SetKeybindAction(DEFAULT_TOGGLE_FULLSCREEN_KEY, Action::TOGGLE_FULLSCREEN);
     SetKeybindAction(DEFAULT_KILL_KEY, Action::KILL);
+    SetKeybindAction(DEFAULT_EXIT_KEY, Action::EXIT);
 
     // If the file starts with ~, convert it to full path first.
-    if (filename.at(0) == '~') {
-        filename = string(getenv("HOME")) + filename.substr(1, string::npos);
-    }
+    filename = string_utils::ToAbsPath(filename);
 
     std::ifstream file(filename);
     string line;
@@ -95,6 +94,8 @@ Config::Config(string filename) {
         }
     }
 
+    file.close();
+
     // Override default global values with the values specified in config.
     stringstream(global_vars_["gap_width"]) >> gap_width_;
     stringstream(global_vars_["border_width"]) >> border_width_;
@@ -112,27 +113,8 @@ void Config::ReplaceSymbols(string& s) {
 }
 
 
-Action Config::GetKeybindAction(int modifier, string key) {
-    string modifier_str;
-
-    switch (modifier) {
-        case Mod1Mask:
-            modifier_str = "Mod1";
-            break;
-        case Mod1Mask | ShiftMask:
-            modifier_str = "Mod1+Shift";
-            break;
-        case Mod4Mask:
-            modifier_str = "Mod4";
-            break;
-        case Mod4Mask | ShiftMask:
-            modifier_str = "Mod4+Shift";
-            break;
-        default:
-            return Action::UNDEFINED;
-    }
-
-    return keybind_rules_[modifier_str + '+' + key];
+Action Config::GetKeybindAction(string modifier, string key) {
+    return keybind_rules_[modifier + '+' + key];
 }
 
 void Config::SetKeybindAction(string modifier_and_key, Action action) {

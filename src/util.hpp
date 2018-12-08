@@ -22,6 +22,7 @@ enum Action {
     TOGGLE_FLOATING,
     TOGGLE_FULLSCREEN,
     KILL,
+    EXIT,
     EXEC,
     UNDEFINED
 };
@@ -57,6 +58,7 @@ namespace string_utils {
     bool Contains(const std::string& s, const std::string& keyword);
     void Replace(std::string& s, const std::string keyword, const std::string newword);
     void Trim(std::string& s);
+    std::string ToAbsPath(const std::string& path);
 }
 
 #endif

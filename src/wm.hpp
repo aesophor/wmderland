@@ -4,7 +4,7 @@
 #include "properties.hpp"
 #include "workspace.hpp"
 #include "config.hpp"
-#include "data.hpp"
+#include "cookie.hpp"
 #include "util.hpp"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -18,6 +18,8 @@ public:
     static WindowManager* GetInstance();
     ~WindowManager();
     void Run();
+    void Stop();
+
 private:
     static WindowManager* instance_;
     WindowManager(Display* dpy);
@@ -51,7 +53,6 @@ private:
     void ToggleFullScreen(Window w);
     void KillClient(Window w);
  
-
     Display* dpy_;
     Window root_;
     XEvent event_;
@@ -62,7 +63,7 @@ private:
     /* Properties */
     Properties* properties_;
     Config* config_;
-    Data* data_;
+    Cookie* cookie_;
 
     /* Cursors */
     Cursor cursors_[4];

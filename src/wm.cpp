@@ -36,7 +36,7 @@ WindowManager::WindowManager(Display* dpy) {
     tiling_direction_ = Direction::HORIZONTAL;
     properties_ = new Properties(dpy_);
     config_ = Config::GetInstance();
-    data_ = new Data(DATA_FILE);
+    cookie_ = new Cookie(COOKIE_FILE);
 
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
@@ -50,6 +50,8 @@ WindowManager::~WindowManager() {
     }
     
     delete properties_;
+    delete config_;
+    delete cookie_;
     XCloseDisplay(dpy_);
 }
 
@@ -129,7 +131,7 @@ void WindowManager::Run() {
         system(s.c_str());
     }
 
-    for(;;) {
+    for (;;) {
         // Retrieve and dispatch next X event.
         XNextEvent(dpy_, &event_);
 
@@ -156,6 +158,11 @@ void WindowManager::Run() {
                 break;
         }
     }
+}
+
+void WindowManager::Stop() {
+    cookie_->WriteToFile();
+    system("pkill X");
 }
 
 
@@ -205,7 +212,7 @@ void WindowManager::OnMapRequest(Window w) {
 
 
     if (should_float) {
-        WindowPosSize stored_attr = data_->Get(res_class_name);
+        WindowPosSize stored_attr = cookie_->Get(res_class_name);
         XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
 
         if (stored_attr.width > 0 && stored_attr.height > 0) {
@@ -295,14 +302,16 @@ void WindowManager::OnKeyPress() {
         return;
     }
  
+    string modifier = wm_utils::KeymaskToStr(event_.xkey.state);
     string key = wm_utils::QueryKeysym(dpy_, event_.xkey.keycode, false);
-    Action action = config_->GetKeybindAction(event_.xkey.state, key);
+    Action action = config_->GetKeybindAction(modifier, key);
 
     if (action == Action::EXEC) {
-        string modifier = wm_utils::KeymaskToStr(event_.xkey.state);
         string command = config_->keybind_cmds()[modifier + '+' + key] + '&';
         system(command.c_str());
         return;
+    } else if (action == Action::EXIT) {
+        Stop();
     }
 
     if (w == None) return;
@@ -367,7 +376,7 @@ void WindowManager::OnButtonRelease() {
     XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, start_.subwindow);
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, start_.subwindow);
     string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
-    data_->Put(res_class_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
+    cookie_->Put(res_class_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
 
     start_.subwindow = None;
     SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);

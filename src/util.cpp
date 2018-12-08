@@ -128,6 +128,8 @@ namespace wm_utils {
             return Action::TOGGLE_FULLSCREEN;
         } else if (action_str == "kill") {
             return Action::KILL;
+        } else if (action_str == "exit") {
+            return Action::EXIT;
         } else if (string_utils::StartsWith(action_str, "exec")) {
             return Action::EXEC;
         } else {
@@ -214,6 +216,16 @@ namespace string_utils {
 
     void Trim(string& s) {
         s.erase(s.find_last_not_of(" \n\r\t") + 1);
+    }
+
+    string ToAbsPath(const string& path) {
+        string abs_path = path;
+
+        if (path.at(0) == '~') {
+            abs_path = string(getenv("HOME")) + path.substr(1, string::npos);
+        }
+
+        return abs_path;
     }
 
 }

@@ -1,30 +1,31 @@
-#ifndef DATA_HPP_
-#define DATA_HPP_
+#ifndef COOKIE_HPP_
+#define COOKIE_HPP_
 
 #include "util.hpp"
 #include <X11/Xutil.h>
 #include <string>
 #include <unordered_map>
 
-/* The Data class holds the user-prefered positions and sizes
+/* The Cookie class holds the user-prefered positions and sizes
  * of windows (these data are stored in XSizeHints struct).
  *
  * When the Window Manager starts, these data will be loaded
- * into attr_map_ from a file.
+ * into window_pos_size_map_ from a file.
  *
  * When the Window Manager shutdowns, these data will be written
- * back to the file from attr_map_.
+ * back to the file from window_pos_size_map_.
  */
-class Data {
+class Cookie {
 public:
-    Data(const std::string filename);
+    Cookie(const std::string filename);
 
     WindowPosSize Get(const std::string& res_class_name);
     void Put(const std::string& res_class_name, WindowPosSize window_pos_size);
+    void WriteToFile();
 
 private:
-    const std::string filename_;
-    std::unordered_map<std::string, WindowPosSize> attr_map_;
+    std::string filename_;
+    std::unordered_map<std::string, WindowPosSize> window_pos_size_map_;
 };
 
 #endif
