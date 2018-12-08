@@ -35,6 +35,7 @@ namespace wm_utils {
 
     unsigned int QueryKeycode(Display* dpy, const std::string& key_name);
     std::string QueryKeysym(Display* dpy, unsigned int keycode, bool shift);
+    int StrToKeymask(const std::string& modifier_str, bool shift);
     Action StrToAction(const std::string& action_str);
     
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms);

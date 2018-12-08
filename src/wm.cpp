@@ -92,45 +92,7 @@ void WindowManager::InitXEvents() {
         string key = modifier_and_key[(shift) ? 2 : 1];
 
         int keycode = wm_utils::QueryKeycode(dpy_, key);
-        unsigned int mod_mask = None;
-
-        if (modifier == "Mod1") {
-            mod_mask = Mod1Mask;
-        } else if (modifier == "Mod4") {
-            mod_mask = Mod4Mask;
-        } else {
-            continue;
-        }
-
-        if (shift) {
-            mod_mask |= ShiftMask;
-        }
-
-        XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
-    }
-
-    for (auto r : config_->keybind_cmds()) {
-        vector<string> modifier_and_key = string_utils::Split(r.first, '+');
-        bool shift = string_utils::Contains(r.first, "Shift");
-
-        string modifier = modifier_and_key[0];
-        string key = modifier_and_key[(shift) ? 2 : 1];
-
-        int keycode = wm_utils::QueryKeycode(dpy_, key);
-        unsigned int mod_mask = None;
-
-        if (modifier == "Mod1") {
-            mod_mask = Mod1Mask;
-        } else if (modifier == "Mod4") {
-            mod_mask = Mod4Mask;
-        } else {
-            continue;
-        }
-
-        if (shift) {
-            mod_mask |= ShiftMask;
-        }
-
+        int mod_mask = wm_utils::StrToKeymask(modifier, shift); 
         XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
     }
 

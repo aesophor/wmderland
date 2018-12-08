@@ -8,7 +8,7 @@ using std::string;
 using std::vector;
 
 namespace wm_utils {
-
+ 
     pair<short, short> GetDisplayResolution(Display* dpy, Window root) {
         XWindowAttributes root_attr = QueryWindowAttributes(dpy, root);
         return pair<short, short>(root_attr.width, root_attr.height);
@@ -45,6 +45,18 @@ namespace wm_utils {
 
     string QueryKeysym(Display* dpy, unsigned int keycode, bool shift) {
         return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 
+    }
+
+    int StrToKeymask(const string& modifier, bool shift) {
+        static int mod_masks[6] = { 0, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask };
+        int modifier_id = modifier.at(3) - '0'; // "Mod4": 0123
+
+        if (modifier_id >= 1 && modifier_id <= 5) {
+            int mod_mask = mod_masks[modifier_id];
+            return (shift) ? mod_mask | ShiftMask : mod_mask;
+        } else {
+            return None;
+        }
     }
 
     Action StrToAction(const string& action_str) {
