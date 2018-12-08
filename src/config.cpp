@@ -1,9 +1,8 @@
 #include "config.hpp"
 #include "util.hpp"
+#include <glog/logging.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
-#include <glog/logging.h>
 
 using std::hex;
 using std::pair;
@@ -11,8 +10,6 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
-using std::cout;
-using std::endl;
 
 Config* Config::instance_;
 
@@ -92,6 +89,8 @@ Config::Config(string filename) {
             } else if (first_token == "exec") {
                 string cmd = string_utils::Split(line, ' ', 1)[1];
                 autostart_rules_.push_back(cmd);
+            } else {
+                LOG(INFO) << "Unrecognized symbol: " << first_token << ". Ignoring...";
             }
         }
     }

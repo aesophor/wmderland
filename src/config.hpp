@@ -10,6 +10,7 @@
 #define WM_NAME "Wmderland"
 #define VERSION "0.7.1 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
+#define DATA_FILE "~/.local/Wmderland/hints"
 #define WORKSPACE_COUNT 9
 
 #define MOUSE_LEFT_BTN 1

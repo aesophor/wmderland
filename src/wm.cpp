@@ -36,6 +36,7 @@ WindowManager::WindowManager(Display* dpy) {
     tiling_direction_ = Direction::HORIZONTAL;
     properties_ = new Properties(dpy_);
     config_ = Config::GetInstance();
+    data_ = new Data(DATA_FILE);
 
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
@@ -55,7 +56,7 @@ WindowManager::~WindowManager() {
 
 void WindowManager::InitWorkspaces(short count) {
     for (short i = 0; i < count; i++) {
-        workspaces_.push_back(new Workspace(dpy_, i));
+        workspaces_[i] = new Workspace(dpy_, i);
     }
 }
 
@@ -77,13 +78,8 @@ void WindowManager::InitProperties() {
 }
 
 void WindowManager::InitXEvents() {
-    // Define which key combinations will send us X events.
-    for (int i = 0; i < 9; i++) {
-        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
-        XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
-        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
-    }
-
+    // Define the key combinations which will send us X events based on
+    // the key combinations that user has defined in config.
     for (auto r : config_->keybind_rules()) {
         vector<string> modifier_and_key = string_utils::Split(r.first, '+');
         bool shift = string_utils::Contains(r.first, "Shift");
@@ -94,6 +90,14 @@ void WindowManager::InitXEvents() {
         int keycode = wm_utils::QueryKeycode(dpy_, key);
         int mod_mask = wm_utils::StrToKeymask(modifier, shift); 
         XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
+    }
+
+    // Define the key combinations to goto a specific workspace,
+    // as well as moving an application to a specific workspace.
+    for (int i = 0; i < 9; i++) {
+        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
+        XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
     }
 
     // Define which mouse clicks will send us X events.
@@ -155,10 +159,15 @@ void WindowManager::Run() {
 }
 
 
-void WindowManager::OnMapRequest(Window w) {    
+void WindowManager::OnMapRequest(Window w) {
+    XClassHint class_hint = wm_utils::QueryWmClass(dpy_, w);
+    string res_class = string(class_hint.res_class);
+    string res_name = string(class_hint.res_name);
+    string res_class_name = res_class + ',' + res_name;
+
     // KDE Plasma Integration.
     // Make this a rule in config later.
-    if (wm_utils::QueryWmClass(dpy_, w) == "plasmashell") {
+    if (res_class == "plasmashell") {
         XKillClient(dpy_, w);
         return;
     }
@@ -178,34 +187,36 @@ void WindowManager::OnMapRequest(Window w) {
     // If this window is a dialog, resize it to floating window width / height and center it.
     bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
 
-    string wm_class = wm_utils::QueryWmClass(dpy_, w);
-    string wm_class_and_instance = wm_class + "," + wm_utils::QueryWmName(dpy_, w);
-
     // Apply application spawning rules (if exists).
-    if (config_->spawn_rules().find(wm_class) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules()[wm_class]- 1;
+    if (config_->spawn_rules().find(res_class_name) != config_->spawn_rules().end()) {
+        short target_workspace_id = config_->spawn_rules()[res_class_name]- 1;
         GotoWorkspace(target_workspace_id);
-    } else if (config_->spawn_rules().find(wm_class_and_instance) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules()[wm_class_and_instance] - 1;
+    } else if (config_->spawn_rules().find(res_class) != config_->spawn_rules().end()) {
+        short target_workspace_id = config_->spawn_rules()[res_class] - 1;
         GotoWorkspace(target_workspace_id);
     }
 
     // Apply application floating rules (if exists).
-    if (config_->float_rules().find(wm_class) != config_->float_rules().end()) {
-        should_float = config_->float_rules()[wm_class];
-    } else if (config_->float_rules().find(wm_class_and_instance) != config_->float_rules().end()) {
-        should_float = config_->float_rules()[wm_class_and_instance];
+    if (config_->float_rules().find(res_class_name) != config_->float_rules().end()) {
+        should_float = config_->float_rules()[res_class_name];
+    } else if (config_->float_rules().find(res_class) != config_->float_rules().end()) {
+        should_float = config_->float_rules()[res_class];
     }
 
 
     if (should_float) {
+        WindowPosSize stored_attr = data_->Get(res_class_name);
         XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
 
-        if (hint.min_width > 0 && hint.min_height > 0) {
+        if (stored_attr.width > 0 && stored_attr.height > 0) {
+            XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
+        } else if (hint.min_width > 0 && hint.min_height > 0) {
             XResizeWindow(dpy_, w, hint.min_width, hint.min_height);
         }
 
-        if (hint.x > 0 && hint.y > 0) {
+        if (stored_attr.x > 0 && stored_attr.y > 0) {
+            XMoveWindow(dpy_, w, stored_attr.x, stored_attr.y);
+        } else if (hint.x > 0 && hint.y > 0) {
             XMoveWindow(dpy_, w, hint.x, hint.y);
         } else {
             Center(w);
@@ -353,6 +364,11 @@ void WindowManager::OnButtonPress() {
 }
 
 void WindowManager::OnButtonRelease() {
+    XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, start_.subwindow);
+    XClassHint class_hint = wm_utils::QueryWmClass(dpy_, start_.subwindow);
+    string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
+    data_->Put(res_class_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
+
     start_.subwindow = None;
     SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);
 }

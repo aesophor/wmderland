@@ -7,6 +7,15 @@ using std::size_t;
 using std::string;
 using std::vector;
 
+WindowPosSize::WindowPosSize() {
+    WindowPosSize(0, 0, 0, 0);
+}
+
+WindowPosSize::WindowPosSize(int x, int y, int width, int height)
+    : x(x), y(y), width(width), height(height) {
+
+}
+
 namespace wm_utils {
  
     pair<short, short> GetDisplayResolution(Display* dpy, Window root) {
@@ -27,17 +36,12 @@ namespace wm_utils {
         return hints;
     }
 
-    string QueryWmClass(Display* dpy, Window w) {
+    XClassHint QueryWmClass(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
-        return string(hint.res_class);
+        return hint;
     }
 
-    string QueryWmName(Display* dpy, Window w) {
-        XClassHint hint;
-        XGetClassHint(dpy, w, &hint);
-        return string(hint.res_name);
-    }
 
     unsigned int QueryKeycode(Display* dpy, const string& key_name) {
         return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
@@ -152,12 +156,10 @@ namespace wm_utils {
         return false;
     }
 
-    bool IsBar(const string& wm_class) {
-        return wm_class.find("Polybar") != string::npos;
-    }
 
     bool IsBar(Display* dpy, Window w) {
-        return IsBar(QueryWmClass(dpy, w));
+        string class_name = string(QueryWmClass(dpy, w).res_class);
+        return string_utils::Contains(class_name, "Polybar");
     }
 
 }
