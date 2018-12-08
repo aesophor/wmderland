@@ -97,7 +97,7 @@ void WindowManager::InitXEvents() {
     // Define the key combinations to goto a specific workspace,
     // as well as moving an application to a specific workspace.
     for (int i = 0; i < 9; i++) {
-        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
+        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i+1).c_str());
         XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
     }
@@ -372,6 +372,8 @@ void WindowManager::OnButtonPress() {
 }
 
 void WindowManager::OnButtonRelease() {
+    if (start_.subwindow == None) return;
+
     XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, start_.subwindow);
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, start_.subwindow);
     string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
