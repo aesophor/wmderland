@@ -16,6 +16,16 @@ WindowPosSize::WindowPosSize(int x, int y, int width, int height)
 
 }
 
+bool WindowPosSize::operator==(const WindowPosSize& other) {
+    return (x == other.x) && (y == other.y) && (width == other.width) && (height == other.height);
+}
+
+bool WindowPosSize::operator!=(const WindowPosSize& other) {
+    return (x != other.x) || (y != other.y) || (width != other.width) || (height != other.height);
+}
+
+
+
 namespace wm_utils {
  
     pair<short, short> GetDisplayResolution(Display* dpy, Window root) {

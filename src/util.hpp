@@ -33,6 +33,9 @@ struct WindowPosSize {
 
     int x, y;
     int width, height;
+
+    bool operator==(const WindowPosSize& other);
+    bool operator!=(const WindowPosSize& other);
 };
 
 namespace wm_utils {

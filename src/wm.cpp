@@ -161,7 +161,6 @@ void WindowManager::Run() {
 }
 
 void WindowManager::Stop() {
-    cookie_->WriteToFile();
     system("pkill X");
 }
 
