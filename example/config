@@ -63,6 +63,8 @@ bindsym $Mod+k focus_up
 bindsym $Mod+o toggle_floating
 bindsym $Mod+f toggle_fullscreen
 bindsym $Mod+Shift+q kill
+bindsym $Mod+Shift+Escape exit
+
 
 bindsym $Mod+d exec rofi -show drun
 bindsym $Mod+Return exec urxvt
@@ -77,5 +79,5 @@ exec dispad
 exec compton --config ~/.config/compton/compton.conf &
 exec pulseaudio --start --log-target=syslog
 exec mpd
-;exec dunst
 exec ~/.config/polybar/launch.sh
+exec dunst
