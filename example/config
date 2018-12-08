@@ -11,7 +11,7 @@ set unfocused_color = ff393f52
 set $Mod = Mod4
 
 ; Spawning Rules
-; syntax: assign <wm_class>{,<wm_instance>} -> <workspace_id>
+; syntax: assign <class>{,<instance>} -> <workspace_id>
 ; -------------------------------------------------------------
 assign URxvt -> 1
 assign jetbrains-idea -> 2
@@ -34,7 +34,7 @@ assign Transmission -> 9
 
 
 ; Floating Rules
-; syntax: floating <wm_class>{,<wm_instance>} true
+; syntax: floating <class>{,<instance>} true
 ; -------------------------------------------------------------
 floating systemsettings true
 floating feh true
