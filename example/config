@@ -52,7 +52,7 @@ floating Vigilante true
 
 ; Keybind
 ; syntax: bindsym <Modifier>+<Key> action
-; syntax: bindsym <Modifier>+<Key> exec command
+;         bindsym <Modifier>+<Key> exec command
 ; -------------------------------------------------------------
 bindsym $Mod+g tile_horizontally
 bindsym $Mod+v tile_vertically

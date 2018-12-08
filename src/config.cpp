@@ -136,24 +136,6 @@ Action Config::GetKeybindAction(int modifier, string key) {
     return keybind_rules_[modifier_str + '+' + key];
 }
 
-void Config::ExecKeybindAction(int modifier, string key) {
-    string modifier_str;
-
-    switch (modifier) {
-        case Mod1Mask:
-            modifier_str = "Mod1";
-            break;
-        case Mod4Mask:
-            modifier_str = "Mod4";
-            break;
-        default:
-            break;
-    }
-
-    string command = keybind_cmds_[modifier_str + '+' + key] + " &";
-    system(command.c_str());
-}
-
 void Config::SetKeybindAction(string modifier_and_key, Action action) {
     // Check if this action has already been registered
     // by another modifier_and_key. If found, remove it.

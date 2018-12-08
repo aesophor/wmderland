@@ -47,6 +47,52 @@ namespace wm_utils {
         return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 
     }
 
+    string KeymaskToStr(int modifier) {
+        string modifier_str = "";
+
+        switch (modifier) {
+            case Mod4Mask: // Cmd
+                modifier_str = "Mod4";
+                break;
+            case Mod4Mask | ShiftMask: // Cmd + Shift
+                modifier_str = "Mod4+Shift";
+                break;
+
+            case Mod1Mask: // Alt
+                modifier_str = "Mod1";
+                break;
+            case Mod1Mask | ShiftMask: // Alt + Shift
+                modifier_str = "Mod1+Shift";
+                break;
+
+            case Mod2Mask:
+                modifier_str = "Mod2";
+                break;
+            case Mod2Mask | ShiftMask:
+                modifier_str = "Mod2+Shift";
+                break;
+
+            case Mod3Mask:
+                modifier_str = "Mod3";
+                break;
+            case Mod3Mask | ShiftMask:
+                modifier_str = "Mod3+Shift";
+                break;
+
+            case Mod5Mask:
+                modifier_str = "Mod5";
+                break;
+            case Mod5Mask | ShiftMask:
+                modifier_str = "Mod5+Shift";
+                break;
+
+            default:
+                break;
+        }
+
+        return modifier_str;
+    }
+
     int StrToKeymask(const string& modifier, bool shift) {
         static int mod_masks[6] = { 0, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask };
         int modifier_id = modifier.at(3) - '0'; // "Mod4": 0123

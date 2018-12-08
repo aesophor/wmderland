@@ -45,7 +45,6 @@ public:
     static Config* GetInstance();
 
     Action GetKeybindAction(int modifier, std::string key);
-    void ExecKeybindAction(int modifier, std::string key);
     void SetKeybindAction(std::string modifier_and_key, Action action);
 
     unsigned short gap_width();

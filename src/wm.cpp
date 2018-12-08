@@ -288,7 +288,9 @@ void WindowManager::OnKeyPress() {
     Action action = config_->GetKeybindAction(event_.xkey.state, key);
 
     if (action == Action::EXEC) {
-        config_->ExecKeybindAction(event_.xkey.state, key);
+        string modifier = wm_utils::KeymaskToStr(event_.xkey.state);
+        string command = config_->keybind_cmds()[modifier + '+' + key] + '&';
+        system(command.c_str());
         return;
     }
 
