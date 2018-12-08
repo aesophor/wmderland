@@ -46,7 +46,7 @@ $ startx
 * Smart floating (dialog windows will be floating by default).
 * Workspaces. ( `Mod4 + {1~9}`: switch; `Mod4 + Shift + {1~9}`: move application to... )
 * Window border.
-* Configuration system (not scriptable). ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* Configuration supported. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Compatible with Polybar's `xwindow` module.
 
 ## Todo List
