@@ -155,6 +155,15 @@ namespace string_utils {
         return s.find(keyword) != string::npos;
     }
 
+    void Replace(string& s, const string keyword, const string newword) {
+        string::size_type pos = s.find(keyword);
+
+        while(pos != std::string::npos) {
+            s.replace(pos, keyword.size(), newword);
+            pos = s.find(keyword, pos + newword.size());
+        }
+    }
+
     void Trim(string& s) {
         s.erase(s.find_last_not_of(" \n\r\t") + 1);
     }

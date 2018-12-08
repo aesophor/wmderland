@@ -48,6 +48,7 @@ namespace string_utils {
     std::vector<std::string> Split(const std::string& s, const char delimiter, short count);
     bool StartsWith(const std::string& s, const std::string& keyword);
     bool Contains(const std::string& s, const std::string& keyword);
+    void Replace(std::string& s, const std::string keyword, const std::string newword);
     void Trim(std::string& s);
 }
 

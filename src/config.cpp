@@ -55,13 +55,18 @@ Config::Config(string filename) {
         string_utils::Trim(line);
 
         if (!line.empty() && line.at(0) != ';') {
+            ReplaceSymbols(line);
             vector<string> tokens = string_utils::Split(line, ' ');
             string& first_token = tokens[0];
 
             if (first_token == "set") {
                 string key = tokens[1];
                 string value = tokens[3];
-                global_vars_[key] = value;
+                if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
+                    symtab_[key] = value;
+                } else {
+                    global_vars_[key] = value;
+                }
             } else if (first_token == "assign") {
                 string wm_class_name = tokens[1];
                 string workspace_id = tokens[3];
@@ -98,6 +103,13 @@ Config::Config(string filename) {
     stringstream(global_vars_["min_window_height"]) >> min_window_height_;
     stringstream(global_vars_["focused_color"]) >> hex >> focused_color_;
     stringstream(global_vars_["unfocused_color"]) >> hex >> unfocused_color_;
+}
+
+
+void Config::ReplaceSymbols(string& s) {
+    for (auto symtab_record : symtab_) {
+        string_utils::Replace(s, symtab_record.first, symtab_record.second);
+    }
 }
 
 

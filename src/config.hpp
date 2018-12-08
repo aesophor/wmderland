@@ -29,6 +29,7 @@
 #define DEFAULT_FOCUSED_COLOR 0xffffffff
 #define DEFAULT_UNFOCUSED_COLOR 0xff41485f
 
+#define VARIABLE_PREFIX "$"
 #define DEFAULT_TILE_H_KEY "Mod4+g"
 #define DEFAULT_TILE_V_KEY "Mod4+h"
 #define DEFAULT_FOCUS_LEFT_KEY "Mod4+h"
@@ -65,6 +66,10 @@ private:
     static Config* instance_;
     Config(std::string filename);
 
+    std::unordered_map<std::string, std::string> symtab_;
+    void ReplaceSymbols(std::string& s);
+
+    /* Global Variables */
     unsigned short gap_width_;
     unsigned short border_width_;
     unsigned short min_window_width_;
@@ -72,6 +77,7 @@ private:
     unsigned long focused_color_;
     unsigned long unfocused_color_;
 
+    /* Rules */
     std::unordered_map<std::string, std::string> global_vars_;
     std::unordered_map<std::string, short> spawn_rules_;
     std::unordered_map<std::string, bool> float_rules_;
