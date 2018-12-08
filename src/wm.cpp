@@ -97,7 +97,7 @@ void WindowManager::InitXEvents() {
     // Define the key combinations to goto a specific workspace,
     // as well as moving an application to a specific workspace.
     for (int i = 0; i < 9; i++) {
-        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i).c_str());
+        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i+1).c_str());
         XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
     }
@@ -170,6 +170,7 @@ void WindowManager::OnMapRequest(Window w) {
     string res_class = string(class_hint.res_class);
     string res_name = string(class_hint.res_name);
     string res_class_name = res_class + ',' + res_name;
+    string wm_name = wm_utils::QueryWmName(dpy_, w);
 
     // KDE Plasma Integration.
     // Make this a rule in config later.
@@ -188,8 +189,7 @@ void WindowManager::OnMapRequest(Window w) {
         bar_height_ = attr.height;
         return;
     }
-
-
+ 
     // If this window is a dialog, resize it to floating window width / height and center it.
     bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
 
@@ -211,13 +211,19 @@ void WindowManager::OnMapRequest(Window w) {
 
 
     if (should_float) {
-        WindowPosSize stored_attr = cookie_->Get(res_class_name);
+        WindowPosSize stored_attr = cookie_->Get(res_class_name + ',' + wm_name);
         XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
 
         if (stored_attr.width > 0 && stored_attr.height > 0) {
             XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
         } else if (hint.min_width > 0 && hint.min_height > 0) {
             XResizeWindow(dpy_, w, hint.min_width, hint.min_height);
+        } else if (hint.base_width > 0 && hint.base_height > 0) {
+            XResizeWindow(dpy_, w, hint.base_width, hint.base_height);
+        } else if (hint.width > 0 && hint.height > 0) {
+            XResizeWindow(dpy_, w, hint.width, hint.height);
+        } else {
+            XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
         }
 
         if (stored_attr.x > 0 && stored_attr.y > 0) {
@@ -242,6 +248,13 @@ void WindowManager::OnMapRequest(Window w) {
     workspaces_[current_]->SetFocusClient(w);
     Tile(workspaces_[current_]);
     SetNetActiveWindow(w);
+
+    /*
+    bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, properties_->net_atoms_);
+    if (should_fullscreen) {
+        ToggleFullScreen(w);
+    }
+    */
 }
 
 void WindowManager::OnDestroyNotify(Window w) {
@@ -372,10 +385,13 @@ void WindowManager::OnButtonPress() {
 }
 
 void WindowManager::OnButtonRelease() {
+    if (start_.subwindow == None) return;
+
     XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, start_.subwindow);
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, start_.subwindow);
     string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
-    cookie_->Put(res_class_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
+    string wm_name = wm_utils::QueryWmName(dpy_, start_.subwindow);
+    cookie_->Put(res_class_name + ',' + wm_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
 
     start_.subwindow = None;
     SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);

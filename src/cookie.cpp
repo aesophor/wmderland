@@ -20,15 +20,22 @@ Cookie::Cookie(string filename) : filename_ (filename) {
         string_utils::Trim(line);
 
         if (!line.empty()) {
+            int res_class_name_length;
             string res_class_name;
             WindowPosSize window_pos_size;
 
-            vector<string> tokens = string_utils::Split(line, ' ');
-            res_class_name = tokens[0];
-            stringstream(tokens[1]) >> window_pos_size.x;
-            stringstream(tokens[2]) >> window_pos_size.y;
-            stringstream(tokens[3]) >> window_pos_size.width;
-            stringstream(tokens[4]) >> window_pos_size.height;
+            // First, check the length of the res_class_name string, and 
+            // use res_class_name_tokens[1].substr() to extract it accurately.
+            vector<string> res_class_name_tokens = string_utils::Split(line, kDelimiter, 1);
+            stringstream(res_class_name_tokens[0]) >> res_class_name_length;
+            res_class_name = res_class_name_tokens[1].substr(0, res_class_name_length);
+
+            string pos_size_str = res_class_name_tokens[1].substr(res_class_name_length + 1, string::npos);
+            vector<string> pos_size_tokens = string_utils::Split(pos_size_str, kDelimiter);
+            stringstream(pos_size_tokens[0]) >> window_pos_size.x;
+            stringstream(pos_size_tokens[1]) >> window_pos_size.y;
+            stringstream(pos_size_tokens[2]) >> window_pos_size.width;
+            stringstream(pos_size_tokens[3]) >> window_pos_size.height;
 
             window_pos_size_map_[res_class_name] = window_pos_size;
         }
@@ -42,7 +49,7 @@ WindowPosSize Cookie::Get(const string& res_class_name) {
     if (window_pos_size_map_.find(res_class_name) != window_pos_size_map_.end()) {
         return window_pos_size_map_[res_class_name];
     }
-    return WindowPosSize();
+    return WindowPosSize(0, 0, 0, 0);
 }
 
 void Cookie::Put(const string& res_class_name, WindowPosSize window_pos_size) {
@@ -54,9 +61,9 @@ void Cookie::WriteToFile() {
     std::ofstream file(filename_);
 
     for (auto wps : window_pos_size_map_) {
-        file << wps.first << " "
-            << wps.second.x << " " << wps.second.y << " "
-            << wps.second.width << " " << wps.second.height << endl;
+        file << wps.first.length() << kDelimiter << wps.first << kDelimiter
+            << wps.second.x << kDelimiter << wps.second.y << kDelimiter
+            << wps.second.width << kDelimiter << wps.second.height << endl;
     }
 
     file.close();

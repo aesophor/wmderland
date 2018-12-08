@@ -52,6 +52,20 @@ namespace wm_utils {
         return hint;
     }
 
+    string QueryWmName(Display* dpy, Window w) {
+        Atom prop = XInternAtom(dpy, "WM_NAME", False), type;
+        int form;
+        unsigned long remain, len;
+        unsigned char *list;
+
+        if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, AnyPropertyType,
+                    &type,&form,&len,&remain,&list) != Success) {
+            return NULL;
+        }
+
+        return string((char*) list);
+    }
+
 
     unsigned int QueryKeycode(Display* dpy, const string& key_name) {
         return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
@@ -148,6 +162,24 @@ namespace wm_utils {
     }
 
 
+    bool IsFullScreen(Display* dpy, Window w, Atom* atoms) {
+        Atom prop, da;
+        unsigned char *prop_ret = nullptr;
+        int di;
+        unsigned long dl;
+
+        if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_STATE], 0,
+                    sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
+            if (prop_ret) {
+                prop = ((Atom *)prop_ret)[0];
+                if (prop == atoms[atom::NET_WM_STATE_FULLSCREEN]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms) {
         Atom prop, da;
         unsigned char *prop_ret = nullptr;
@@ -164,7 +196,6 @@ namespace wm_utils {
                 }
             }
         }
-
         return false;
     }
 
@@ -185,7 +216,9 @@ namespace string_utils {
         vector<string> tokens;
 
         while (std::getline(ss, t, delimiter)) {
-            tokens.push_back(t);
+            if (t.length() > 0) {
+                tokens.push_back(t);
+            }
         }
         return tokens;
     }
@@ -196,13 +229,19 @@ namespace string_utils {
         string::size_type tail = s.find(delimiter, head);
 
         for (short i = 0; i < count; i++) {
-            tokens.push_back(s.substr(head, tail - head));
+            string t = s.substr(head, tail - head);
+            if (t.length() > 0) {
+                tokens.push_back(t);
+            }
             head = tail + 1;
             tail = s.find(delimiter, tail + 1);
         }
 
         if (head != 0) {
-            tokens.push_back(s.substr(head, string::npos));
+            string t = s.substr(head, string::npos);
+            if (t.length() > 0) {
+                tokens.push_back(t);
+            }
         }
         return tokens;
     }
