@@ -34,7 +34,7 @@ WindowManager::WindowManager(Display* dpy) {
     root_ = DefaultRootWindow(dpy_);
     current_ = 0;
     tiling_direction_ = Direction::HORIZONTAL;
-    properties_ = new Properties(dpy_);
+    prop_ = new Properties(dpy_);
     config_ = Config::GetInstance();
     cookie_ = new Cookie(COOKIE_FILE);
 
@@ -49,7 +49,7 @@ WindowManager::~WindowManager() {
         delete w;
     }
     
-    delete properties_;
+    delete prop_;
     delete config_;
     delete cookie_;
     XCloseDisplay(dpy_);
@@ -63,20 +63,15 @@ void WindowManager::InitWorkspaces(short count) {
 }
 
 void WindowManager::InitProperties() {
-    // Initialize property manager and set _NET_WM_NAME.
-    properties_->Set(
-            root_, 
-            properties_->net_atoms_[atom::NET_WM_NAME],
-            properties_->utf8string_,
-            8, PropModeReplace, (unsigned char*) WM_NAME, sizeof(WM_NAME)
-    );
+    // Set the name of window manager (i.e., Wmderland) on the root_ window,
+    // so that other programs can acknowledge the name of this WM.
+    XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_WM_NAME], prop_->utf8string, 8,
+            PropModeReplace, (unsigned char*) WIN_MGR_NAME, sizeof(WIN_MGR_NAME));
 
-    properties_->Set(
-            root_,
-            properties_->net_atoms_[atom::NET_SUPPORTED],
-            XA_ATOM, 32, PropModeReplace, (unsigned char*) properties_->net_atoms_,
-            atom::NET_ATOM_SIZE
-    );
+    // Set NET_SUPPORTED to support polybar's xwindow module.
+    // However, we still have to set _NET_WM_ACTIVE_WINDOW manually!
+    XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_SUPPORTED], XA_ATOM, 32,
+            PropModeReplace, (unsigned char*) prop_->net_atoms, atom::NET_ATOM_SIZE);
 }
 
 void WindowManager::InitXEvents() {
@@ -187,11 +182,12 @@ void WindowManager::OnMapRequest(Window w) {
     if (wm_utils::IsBar(dpy_, w)) {
         XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, w);
         bar_height_ = attr.height;
+        bar_ = w;
         return;
     }
  
     // If this window is a dialog, resize it to floating window width / height and center it.
-    bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, properties_->net_atoms_);
+    bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, prop_->net_atoms);
 
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(res_class_name) != config_->spawn_rules().end()) {
@@ -251,7 +247,7 @@ void WindowManager::OnMapRequest(Window w) {
     SetNetActiveWindow(w);
 
     pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_);
-    bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, properties_->net_atoms_);
+    bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net_atoms);
     Client* c = Client::mapper_[w];
     if ((c && should_fullscreen && !c->is_fullscreen())
             || (hint.min_width == resolution.first && hint.min_height == resolution.second)) {
@@ -423,13 +419,12 @@ void WindowManager::OnMotionNotify() {
 
 void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->Get(focused_window);
-    properties_->Set(root_, properties_->net_atoms_[atom::NET_ACTIVE_WINDOW],
-            XA_WINDOW, 32, PropModeReplace, (unsigned char*) &(c->window()), 1);
+    XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
+            PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
 
 void WindowManager::ClearNetActiveWindow() {
-    Atom net_active_window_atom = properties_->net_atoms_[atom::NET_ACTIVE_WINDOW];
-    properties_->Delete(root_, net_active_window_atom);
+    XDeleteProperty(dpy_, root_, prop_->net_atoms[atom::NET_ACTIVE_WINDOW]);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
@@ -591,8 +586,8 @@ void WindowManager::ToggleFullScreen(Window w) {
 
         // Record the current window's position and size before making it fullscreen.
         XGetWindowAttributes(dpy_, w, &attr);
-        XChangeProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_STATE], XA_ATOM, 32,
-                PropModeReplace, (unsigned char*) &properties_->net_atoms_[atom::NET_WM_STATE_FULLSCREEN], 1);
+        XChangeProperty(dpy_, w, prop_->net_atoms[atom::NET_WM_STATE], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*) &prop_->net_atoms[atom::NET_WM_STATE_FULLSCREEN], 1);
         XMoveResizeWindow(dpy_, w, 0, 0, screen_width, screen_height);
         c->SetBorderWidth(0);
 
@@ -602,7 +597,7 @@ void WindowManager::ToggleFullScreen(Window w) {
         workspaces_[current_]->UnmapAllClients();
         XMapWindow(dpy_, w);
     } else if (workspaces_[current_]->has_fullscreen_application() && c->is_fullscreen()) {
-        XChangeProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_STATE], XA_ATOM, 32,
+        XChangeProperty(dpy_, w, prop_->net_atoms[atom::NET_WM_STATE], XA_ATOM, 32,
                 PropModeReplace, (unsigned char*) 0, 0);
         // Restore the window to its original position and size.
         XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
@@ -626,14 +621,14 @@ void WindowManager::KillClient(Window w) {
     // we'll perform the brutal XKillClient().
     if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
             && (::std::find(supported_protocols, supported_protocols + num_supported_protocols, 
-                    properties_->wm_atoms_[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
+                    prop_->wm_atoms[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
         XEvent msg;
         memset(&msg, 0, sizeof(msg));
         msg.xclient.type = ClientMessage;
-        msg.xclient.message_type = properties_->wm_atoms_[atom::WM_PROTOCOLS];
+        msg.xclient.message_type = prop_->wm_atoms[atom::WM_PROTOCOLS];
         msg.xclient.window = w;
         msg.xclient.format = 32;
-        msg.xclient.data.l[0] = properties_->wm_atoms_[atom::WM_DELETE];
+        msg.xclient.data.l[0] = prop_->wm_atoms[atom::WM_DELETE];
         CHECK(XSendEvent(dpy_, w, false, 0, &msg));
     } else {
         XKillClient(dpy_, w);
