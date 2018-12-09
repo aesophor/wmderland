@@ -162,6 +162,9 @@ namespace wm_utils {
     }
 
 
+    // Rename this shit
+    // We are checking if the window has _NET_WM_STATE_FULLSCREEN
+    // if so, we have to set it to fullscreen upon receiving map request.
     bool IsFullScreen(Display* dpy, Window w, Atom* atoms) {
         Atom prop, da;
         unsigned char *prop_ret = nullptr;
@@ -171,7 +174,7 @@ namespace wm_utils {
         if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_STATE], 0,
                     sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
             if (prop_ret) {
-                prop = ((Atom *)prop_ret)[0];
+                prop = ((Atom*) prop_ret)[0];
                 if (prop == atoms[atom::NET_WM_STATE_FULLSCREEN]) {
                     return true;
                 }

@@ -210,10 +210,11 @@ void WindowManager::OnMapRequest(Window w) {
     }
 
 
-    if (should_float) {
-        WindowPosSize stored_attr = cookie_->Get(res_class_name + ',' + wm_name);
-        XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
+    WindowPosSize stored_attr = cookie_->Get(res_class_name + ',' + wm_name);
+    XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
 
+    if (should_float) {
+        
         if (stored_attr.width > 0 && stored_attr.height > 0) {
             XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
         } else if (hint.min_width > 0 && hint.min_height > 0) {
@@ -249,12 +250,13 @@ void WindowManager::OnMapRequest(Window w) {
     Tile(workspaces_[current_]);
     SetNetActiveWindow(w);
 
-    /*
+    pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_);
     bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, properties_->net_atoms_);
-    if (should_fullscreen) {
+    Client* c = Client::mapper_[w];
+    if ((c && should_fullscreen && !c->is_fullscreen())
+            || (hint.min_width == resolution.first && hint.min_height == resolution.second)) {
         ToggleFullScreen(w);
     }
-    */
 }
 
 void WindowManager::OnDestroyNotify(Window w) {
@@ -596,6 +598,9 @@ void WindowManager::ToggleFullScreen(Window w) {
 
         workspaces_[current_]->set_has_fullscreen_application(true);
         c->set_fullscreen(true);
+
+        workspaces_[current_]->UnmapAllClients();
+        XMapWindow(dpy_, w);
     } else if (workspaces_[current_]->has_fullscreen_application() && c->is_fullscreen()) {
         XChangeProperty(dpy_, w, properties_->net_atoms_[atom::NET_WM_STATE], XA_ATOM, 32,
                 PropModeReplace, (unsigned char*) 0, 0);
@@ -605,6 +610,8 @@ void WindowManager::ToggleFullScreen(Window w) {
 
         workspaces_[current_]->set_has_fullscreen_application(false);
         c->set_fullscreen(false);
+
+        workspaces_[current_]->MapAllClients();
     }
 
     XRaiseWindow(dpy_, w);
