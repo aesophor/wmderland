@@ -4,7 +4,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
-
 namespace atom {
 
     /* Default atoms, defined by X */
@@ -33,23 +32,14 @@ namespace atom {
 
 }
 
-
-class Properties {
-public:
+struct Properties {
     Properties(Display* dpy);
-    
-    Atom Get(Window w, Atom property);
-    void Set(Window w, Atom property, Atom type, int format, int mode, unsigned char* data, int n_elements);
-    void Delete(Window w, Atom property);
-    Atom utf8string() const;
-    
-    friend class WindowManager;
 
-private:
-    Display* dpy_;
-    Atom utf8string_;
-    Atom wm_atoms_[atom::WM_ATOM_SIZE];
-    Atom net_atoms_[atom::NET_ATOM_SIZE];
+    Atom utf8string;
+    Atom wm_atoms[atom::WM_ATOM_SIZE];
+    Atom net_atoms[atom::NET_ATOM_SIZE];
+
+    friend class WindowManager;
 };
 
 #endif

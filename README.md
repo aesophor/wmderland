@@ -1,3 +1,5 @@
+[![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
+
 <div align="center">
 <h3>Wmderland</h3>
 <img src="https://github.com/aesophor/Wmderland/raw/master/assets/scrot.jpg">

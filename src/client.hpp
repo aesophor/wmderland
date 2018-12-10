@@ -15,22 +15,23 @@ class Workspace;
 
 class Client {
 public:
-    Client(Display* dpy, Window window, Workspace* workspace);
-    ~Client();
+    /* The lightning fast mapper which maps Window to Client* in O(1) */
     static std::unordered_map<Window, Client*> mapper_;
 
+    Client(Display* dpy, Window window, Workspace* workspace);
+    ~Client();
+    
     void SetBorderWidth(unsigned int width);
     void SetBorderColor(unsigned long color);
     XWindowAttributes GetXWindowAttributes();
 
     Window& window();
     Workspace* workspace();
-    XWindowAttributes& previous_attr();
-    
+    XWindowAttributes& previous_attr();    
+
     bool is_bar();
     bool is_floating();
     bool is_fullscreen();
-
     void set_workspace(Workspace* workspace);
     void set_floating(bool is_floating);
     void set_fullscreen(bool is_fullscreen);

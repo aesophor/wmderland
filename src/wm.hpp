@@ -61,7 +61,7 @@ private:
     Direction tiling_direction_;
 
     /* Properties */
-    Properties* properties_;
+    Properties* prop_;
     Config* config_;
     Cookie* cookie_;
 
@@ -70,6 +70,7 @@ private:
 
     /* Bar */
     short bar_height_;
+    Window bar_;
 
     /* Workspaces */
     Workspace* workspaces_[WORKSPACE_COUNT];

@@ -7,7 +7,7 @@
 #include <string>
 
 
-#define WM_NAME "Wmderland"
+#define WIN_MGR_NAME "Wmderland"
 #define VERSION "0.8.1 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
