@@ -249,8 +249,7 @@ void WindowManager::OnMapRequest(Window w) {
     pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_);
     bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net_atoms);
     Client* c = Client::mapper_[w];
-    if ((c && should_fullscreen && !c->is_fullscreen())
-            || (hint.min_width == resolution.first && hint.min_height == resolution.second)) {
+    if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
         ToggleFullScreen(w);
     }
 }
