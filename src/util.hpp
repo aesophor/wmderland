@@ -1,32 +1,15 @@
 #ifndef UTIL_HPP_
 #define UTIL_HPP_
 
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <X11/Xatom.h>
+}
 #include <string>
 #include <vector>
-
-enum Direction {
-    HORIZONTAL,
-    VERTICAL
-};
-
-enum Action {
-    TILE_H,
-    TILE_V,
-    FOCUS_LEFT,
-    FOCUS_RIGHT,
-    FOCUS_DOWN,
-    FOCUS_UP,
-    TOGGLE_FLOATING,
-    TOGGLE_FULLSCREEN,
-    KILL,
-    EXIT,
-    EXEC,
-    UNDEFINED
-};
+#include "tiling.hpp"
 
 struct WindowPosSize {
     WindowPosSize();
@@ -50,7 +33,7 @@ namespace wm_utils {
     std::string QueryKeysym(Display* dpy, unsigned int keycode, bool shift);
     std::string KeymaskToStr(int modifier);
     int StrToKeymask(const std::string& modifier_str, bool shift);
-    Action StrToAction(const std::string& action_str);
+    tiling::Action StrToAction(const std::string& action_str);
     
     bool IsFullScreen(Display* dpy, Window w, Atom* atoms);
     bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms);

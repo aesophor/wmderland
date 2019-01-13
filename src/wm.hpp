@@ -14,7 +14,7 @@
 
 class WindowManager {
 public:
-    /* Singleton since only a single WM is required at once. */
+    // Singleton since only a single WM is required at once.
     static WindowManager* GetInstance();
     ~WindowManager();
     void Run();
@@ -29,7 +29,7 @@ private:
     void InitCursors();
     void SetCursor(Window w, Cursor c);
 
-    /* XEvent handlers */
+    // XEvent handlers
     static int OnXError(Display* dpy, XErrorEvent* e);
     void OnMapRequest(Window w);
     void OnDestroyNotify(Window w);
@@ -38,15 +38,15 @@ private:
     void OnButtonRelease();
     void OnMotionNotify();
 
-    /* Properties manipulation */
+    // Properties manipulation
     void SetNetActiveWindow(Window focused_window);
     void ClearNetActiveWindow();
 
-    /* Workspace manipulation */
+    // Workspace manipulation
     void GotoWorkspace(short next);
     void MoveWindowToWorkspace(Window window, short next); 
 
-    /* Client manipulation */
+    // Client manipulation
     void Center(Window w);
     void Tile(Workspace* workspace);
     void ToggleFloating(Window w);
@@ -58,21 +58,20 @@ private:
     XEvent event_;
     XButtonEvent start_;
     Cursor cursor_;
-    Direction tiling_direction_;
 
-    /* Properties */
+    // Properties
     Properties* prop_;
     Config* config_;
     Cookie* cookie_;
 
-    /* Cursors */
+    // Cursors
     Cursor cursors_[4];
 
-    /* Bar */
+    // Bar
     short bar_height_;
     Window bar_;
 
-    /* Workspaces */
+    // Workspaces
     Workspace* workspaces_[WORKSPACE_COUNT];
     short current_;
 };

@@ -1,13 +1,16 @@
-#include "wm.hpp"
-#include "client.hpp"
-#include "util.hpp"
-#include <string>
-#include <sstream>
-#include <algorithm>
+extern "C" {
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
+}
 #include <glog/logging.h>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include "wm.hpp"
+#include "client.hpp"
+#include "tiling.hpp"
+#include "util.hpp"
 
 using std::hex;
 using std::pair;
@@ -15,6 +18,8 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
+using tiling::Direction;
+using tiling::Action;
 
 WindowManager* WindowManager::instance_;
 
@@ -29,11 +34,8 @@ WindowManager* WindowManager::GetInstance() {
     return instance_;
 }
 
-WindowManager::WindowManager(Display* dpy) {
-    dpy_ = dpy;
-    root_ = DefaultRootWindow(dpy_);
+WindowManager::WindowManager(Display* dpy) : dpy_(dpy), root_(DefaultRootWindow(dpy_)) {
     current_ = 0;
-    tiling_direction_ = Direction::HORIZONTAL;
     prop_ = new Properties(dpy_);
     config_ = Config::GetInstance();
     cookie_ = new Cookie(COOKIE_FILE);
@@ -235,14 +237,14 @@ void WindowManager::OnMapRequest(Window w) {
     // Regular applications should be added to workspace client list,
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) { 
-        workspaces_[current_]->UnsetFocusClient();
+        workspaces_[current_]->UnsetFocusedClient();
 
         // XSelectInput() and Borders are automatically done in the constructor of Client class.
-        workspaces_[current_]->Add(w, tiling_direction_, should_float);
+        workspaces_[current_]->Add(w, should_float);
     }
 
     // Set the newly mapped client as the focused one.
-    workspaces_[current_]->SetFocusClient(w);
+    workspaces_[current_]->SetFocusedClient(w);
     Tile(workspaces_[current_]);
     SetNetActiveWindow(w);
 
@@ -262,7 +264,7 @@ void WindowManager::OnDestroyNotify(Window w) {
     // If the client we are destroying is fullscreen,
     // make sure to unset the workspace's fullscreen state.
     if (c->is_fullscreen()) {
-        c->workspace()->set_has_fullscreen_application(false);
+        c->workspace()->set_fullscreen(false);
     }
 
     // If the client being destroyed is within current workspace,
@@ -274,12 +276,11 @@ void WindowManager::OnDestroyNotify(Window w) {
 
         // Since the previously active window has been killed, we should
         // manually set focus to another window.
-        pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
-        Client* new_active_client = workspaces_[current_]->GetByIndex(active_client_pos);
+        Client* new_focused_client = workspaces_[current_]->GetFocusedClient();
 
-        if (new_active_client) {
-            workspaces_[current_]->SetFocusClient(new_active_client->window());
-            SetNetActiveWindow(new_active_client->window());
+        if (new_focused_client) {
+            workspaces_[current_]->SetFocusedClient(new_focused_client->window());
+            SetNetActiveWindow(new_focused_client->window());
         } else {
             ClearNetActiveWindow();
         }
@@ -291,11 +292,8 @@ void WindowManager::OnDestroyNotify(Window w) {
 }
 
 void WindowManager::OnKeyPress() {
-    pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
-    Window w = None;
-    if (active_client_pos.first >= 0) {
-        w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
-    }
+    Client* focused_client = workspaces_[current_]->GetFocusedClient();
+    Window w = (focused_client) ? focused_client->window() : None;
  
     // Move application to a specific workspace,
     // and goto a specific workspace.
@@ -326,35 +324,35 @@ void WindowManager::OnKeyPress() {
     if (w == None) return;
 
     switch (action) {
-        case TILE_H:
-            tiling_direction_ = Direction::HORIZONTAL;
+        case Action::TILE_H:
+            workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
             break;
-        case TILE_V:
-            tiling_direction_ = Direction::VERTICAL;
+        case Action::TILE_V:
+            workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
             break;
-        case FOCUS_LEFT:
+        case Action::FOCUS_LEFT:
             workspaces_[current_]->FocusLeft();
-            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
             break;
-        case FOCUS_RIGHT:
+        case Action::FOCUS_RIGHT:
             workspaces_[current_]->FocusRight();
-            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
             break;
-        case FOCUS_DOWN:
+        case Action::FOCUS_DOWN:
             workspaces_[current_]->FocusDown();
-            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
             break;
-        case FOCUS_UP:
+        case Action::FOCUS_UP:
             workspaces_[current_]->FocusUp();
-            SetNetActiveWindow(workspaces_[current_]->active_client()->window());
+            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
             break;
-        case TOGGLE_FLOATING:
+        case Action::TOGGLE_FLOATING:
             ToggleFloating(w);
             break;
-        case TOGGLE_FULLSCREEN:
+        case Action::TOGGLE_FULLSCREEN:
             ToggleFullScreen(w);
             break;
-        case KILL:
+        case Action::KILL:
             KillClient(w);
             break;
         default:
@@ -417,7 +415,7 @@ void WindowManager::OnMotionNotify() {
 
 
 void WindowManager::SetNetActiveWindow(Window focused_window) {
-    Client* c = workspaces_[current_]->Get(focused_window);
+    Client* c = workspaces_[current_]->GetClient(focused_window);
     XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
             PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
@@ -449,10 +447,10 @@ void WindowManager::GotoWorkspace(short next) {
     workspaces_[next]->MapAllClients();
     current_ = next;
 
-    Client* active_client = workspaces_[current_]->active_client();
-    if (active_client) {
-        workspaces_[current_]->SetFocusClient(active_client->window());
-        SetNetActiveWindow(active_client->window());
+    Client* focused_client = workspaces_[current_]->GetFocusedClient();
+    if (focused_client) {
+        workspaces_[current_]->SetFocusedClient(focused_client->window());
+        SetNetActiveWindow(focused_client->window());
         Tile(workspaces_[current_]);
     }
 }
@@ -464,23 +462,22 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
     if (!c) return;
 
     if (c->is_fullscreen()) {
-        workspaces_[current_]->set_has_fullscreen_application(false);
+        workspaces_[current_]->set_fullscreen(false);
         c->set_fullscreen(false);
     }
 
     XUnmapWindow(dpy_, window);
     workspaces_[current_]->Move(window, workspaces_[next]);
 
-    if (workspaces_[current_]->ColSize() == 0) {
+    Client* focused_client = workspaces_[current_]->GetFocusedClient();
+
+    if (!focused_client) {
         ClearNetActiveWindow();
         return;
     }
 
-    pair<short, short> active_client_pos = workspaces_[current_]->active_client_pos();
-    Window w = workspaces_[current_]->GetByIndex(active_client_pos)->window();
-
-    workspaces_[current_]->SetFocusClient(w);
-    workspaces_[next]->SetFocusClient(window);
+    workspaces_[current_]->SetFocusedClient(focused_client->window());
+    workspaces_[next]->SetFocusedClient(window);
     Tile(workspaces_[current_]);
 }
 
@@ -552,15 +549,11 @@ void WindowManager::Tile(Workspace* workspace) {
 
 
     // Make sure floating clients are at the top.
-    vector<Client*> floating_clients = workspace->GetFloatingClients();
-    if (!floating_clients.empty()) {
-        workspace->UnsetFocusClient();
-        workspace->SetFocusClient(floating_clients.back()->window());
-    }
+    workspaces_[current_]->RaiseAllFloatingClients();
 }
 
 void WindowManager::ToggleFloating(Window w) {
-    Client* c = workspaces_[current_]->active_client();
+    Client* c = workspaces_[current_]->GetFocusedClient();
     if (!c) return;
 
     // TODO: Fix floating and fullscreen.
@@ -578,7 +571,7 @@ void WindowManager::ToggleFullScreen(Window w) {
 
     XWindowAttributes& attr = c->previous_attr();
 
-    if (!workspaces_[current_]->has_fullscreen_application() && !c->is_fullscreen()) {
+    if (!workspaces_[current_]->is_fullscreen() && !c->is_fullscreen()) {
         pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
         short screen_width = display_resolution.first;
         short screen_height = display_resolution.second;
@@ -590,19 +583,19 @@ void WindowManager::ToggleFullScreen(Window w) {
         XMoveResizeWindow(dpy_, w, 0, 0, screen_width, screen_height);
         c->SetBorderWidth(0);
 
-        workspaces_[current_]->set_has_fullscreen_application(true);
+        workspaces_[current_]->set_fullscreen(true);
         c->set_fullscreen(true);
 
         workspaces_[current_]->UnmapAllClients();
         XMapWindow(dpy_, w);
-    } else if (workspaces_[current_]->has_fullscreen_application() && c->is_fullscreen()) {
+    } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
         XChangeProperty(dpy_, w, prop_->net_atoms[atom::NET_WM_STATE], XA_ATOM, 32,
                 PropModeReplace, (unsigned char*) 0, 0);
         // Restore the window to its original position and size.
         XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
         c->SetBorderWidth(config_->border_width());
 
-        workspaces_[current_]->set_has_fullscreen_application(false);
+        workspaces_[current_]->set_fullscreen(false);
         c->set_fullscreen(false);
 
         workspaces_[current_]->MapAllClients();

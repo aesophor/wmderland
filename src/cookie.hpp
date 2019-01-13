@@ -1,3 +1,12 @@
+// Cookie holds the user-prefered positions and sizes
+// of windows (these data are stored in XSizeHints struct).
+//
+// When the Window Manager starts, these data will be loaded
+// into window_pos_size_map_ from a file.
+//
+// When the Window Manager shutdowns, these data will be written
+// back to the file from window_pos_size_map_.
+
 #ifndef COOKIE_HPP_
 #define COOKIE_HPP_
 
@@ -6,15 +15,6 @@
 #include <string>
 #include <unordered_map>
 
-/* The Cookie class holds the user-prefered positions and sizes
- * of windows (these data are stored in XSizeHints struct).
- *
- * When the Window Manager starts, these data will be loaded
- * into window_pos_size_map_ from a file.
- *
- * When the Window Manager shutdowns, these data will be written
- * back to the file from window_pos_size_map_.
- */
 class Cookie {
 public:
     static const char kDelimiter = ' ';

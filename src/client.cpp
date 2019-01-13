@@ -6,17 +6,11 @@ using std::string;
 
 std::unordered_map<Window, Client*> Client::mapper_;
 
-Client::Client(Display* dpy, Window window, Workspace* workspace) {
-    dpy_ = dpy;
-    window_ = window;
-    workspace_ = workspace;
-
-    is_bar_ = wm_utils::IsBar(dpy, window);
-    is_floating_ = false;
-    is_fullscreen_ = false;
-    
+Client::Client(Display* dpy, Window w, Workspace* workspace) :
+    dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
     mapper_[window_] = this;
-
+    is_bar_ = wm_utils::IsBar(dpy, w);
+ 
     SetBorderWidth(Config::GetInstance()->border_width());
     SetBorderColor(Config::GetInstance()->focused_color());
 }
@@ -25,6 +19,14 @@ Client::~Client() {
     mapper_.erase(window_);
 }
 
+
+void Client::Map() {
+    XMapWindow(dpy_, window_);
+}
+
+void Client::Unmap() {
+    XUnmapWindow(dpy_, window_);
+}
 
 void Client::SetBorderWidth(unsigned int width) {
     XSetWindowBorderWidth(dpy_, window_, width);
@@ -52,15 +54,15 @@ XWindowAttributes& Client::previous_attr() {
 }
 
 
-bool Client::is_bar() {
+bool Client::is_bar() const {
     return is_bar_;
 }
 
-bool Client::is_floating() {
+bool Client::is_floating() const {
     return is_floating_;
 }
 
-bool Client::is_fullscreen() {
+bool Client::is_fullscreen() const {
     return is_fullscreen_;
 }
 

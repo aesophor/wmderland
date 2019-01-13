@@ -1,8 +1,9 @@
-#include "config.hpp"
-#include "util.hpp"
 #include <glog/logging.h>
 #include <fstream>
 #include <sstream>
+#include "config.hpp"
+#include "tiling.hpp"
+#include "util.hpp"
 
 using std::hex;
 using std::pair;
@@ -10,6 +11,7 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
+using tiling::Action;
 
 Config* Config::instance_;
 

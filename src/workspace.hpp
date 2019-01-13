@@ -1,67 +1,58 @@
+// A Workspace contains its id, the active window in this workspace
+// and a list of windows.
+
 #ifndef WORKSPACE_HPP_
 #define WORKSPACE_HPP_
 
-#include "client.hpp"
-#include "util.hpp"
+extern "C" {
 #include <X11/Xlib.h>
+}
 #include <vector>
-#include <string>
+#include "client.hpp"
+#include "tiling.hpp"
+#include "tree.hpp"
+#include "util.hpp"
 
-/* A Workspace contains its id, the active window in this workspace
- * and a list of windows.
- */
 class Client;
 
 class Workspace {
 public:
-    Workspace(Display* dpy, short id);
-    ~Workspace();
+    Workspace(Display* dpy, int id);
+    virtual ~Workspace();
 
-    /* clients_ vector manipulation */    
-    void Add(Window w, Direction tiling_direction, bool is_floating);
-    void Remove(Window w);
-    void Move(Window w, Workspace* workspace);
     bool Has(Window w);
-    
-    bool IsEmpty();
-    short ColSize() const;
-    short RowSize(short col_idx) const;
-    std::string ToString();
-    
-    Client* Get(Window w);
-    Client* GetByIndex(std::pair<short, short> pos);
+    void Add(Window w, bool is_floating);
+    void Remove(Window w);
+    void Move(Window w, Workspace* new_workspace);
+    void Arrange();
+    void SetTilingDirection(tiling::Direction tiling_direction);
 
-    std::vector<Client*> GetFloatingClients();
-    std::vector<std::vector<Client*> > GetTilingClients();
-    
-    /* client window manipulation */
     void MapAllClients();
     void UnmapAllClients();
     void RaiseAllFloatingClients();
-    void SetFocusClient(Window focused_window);
-    void UnsetFocusClient();
-    
+    void SetFocusedClient(Window w);
+    void UnsetFocusedClient();
+
+    Client* GetFocusedClient() const;
+    Client* GetClient(Window w) const;
+    std::vector<Client*> GetFloatingClients() const;
+    std::vector<Client*> GetTilingClients() const;
+
     void FocusLeft();
     void FocusRight();
     void FocusUp();
     void FocusDown();
     
-    short id();
-    bool has_fullscreen_application();
-    void set_has_fullscreen_application(bool has_fullscreen_application);
-    Client* active_client();
-    std::pair<short, short> active_client_pos();
+    int id();
+    bool is_fullscreen();
+    void set_fullscreen(bool is_fullscreen);
 
 private:
-    void AddHorizontal(Window w, bool is_floating);
-    void AddVertical(Window w, bool is_floating);
-
     Display* dpy_;
-    short id_;
-    bool has_fullscreen_application_;
+    Tree* client_tree_;
     
-    std::pair<short, short> active_client_pos_;
-    std::vector<std::vector<Client*> > clients_;
+    int id_;
+    bool is_fullscreen_;
 };
 
 #endif
