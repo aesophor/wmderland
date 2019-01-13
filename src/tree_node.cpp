@@ -5,10 +5,6 @@ using std::vector;
 using std::remove;
 using tiling::Direction;
 
-TreeNode::TreeNode(int id) : id_(id), tiling_direction_(Direction::UNSPECIFIED) {
-
-}
-
 TreeNode::TreeNode(Client* client) : client_(client), tiling_direction_(Direction::UNSPECIFIED) {
 
 }
@@ -91,8 +87,4 @@ Direction TreeNode::tiling_direction() const {
 
 void TreeNode::set_tiling_direction(Direction tiling_direction) {
     tiling_direction_ = tiling_direction;
-}
-
-int TreeNode::id() const {
-    return id_;
 }

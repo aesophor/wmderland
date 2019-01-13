@@ -9,7 +9,6 @@ class Client;
 
 class TreeNode {
 public:
-    TreeNode(int id);
     TreeNode(Client* client);
     virtual ~TreeNode();
 
@@ -25,7 +24,6 @@ public:
     TreeNode* parent() const;
     void set_parent(TreeNode* parent);
 
-    int id() const;
     Client* client() const;
     void set_client(Client* client);
 
@@ -36,7 +34,6 @@ private:
     std::vector<TreeNode*> children_;
     TreeNode* parent_;
 
-    int id_;
     Client* client_;
     tiling::Direction tiling_direction_;
 };

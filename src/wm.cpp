@@ -60,7 +60,7 @@ WindowManager::~WindowManager() {
 
 void WindowManager::InitWorkspaces(short count) {
     for (short i = 0; i < count; i++) {
-        workspaces_[i] = new Workspace(dpy_, i);
+        workspaces_[i] = new Workspace(dpy_, root_, i);
     }
 }
 
@@ -494,59 +494,7 @@ void WindowManager::Center(Window w) {
 }
 
 void WindowManager::Tile(Workspace* workspace) {
-    // Retrieve all clients that we should tile.
-    vector<vector<Client*> > tiling_clients = workspace->GetTilingClients();
-
-    // If there's no clients to tile, return immediately.
-    if (tiling_clients.empty()) {
-        return;
-    }
-
-    // Get display resolution.
-    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
-    short screen_width = display_resolution.first;
-    short screen_height = display_resolution.second;
-
-    // Tile the clients that we should tile.
-    short gap_width = config_->gap_width();
-    short border_width = config_->border_width();
-
-    size_t col_count = tiling_clients.size();
-    short window_width = screen_width / col_count;
-
-    for (size_t col = 0; col < col_count; col++) {
-        size_t row_count = tiling_clients[col].size();
-        short window_height = (screen_height - bar_height_) / row_count; 
-
-        for (size_t row = 0; row < row_count; row++) {
-            Client* c = tiling_clients[col][row];
-            short new_x = col * window_width + gap_width / 2;
-            short new_y = bar_height_ + row * window_height + gap_width / 2;
-            short new_width = window_width - border_width * 2 - gap_width;
-            short new_height = window_height - border_width * 2 - gap_width;
-
-            if (col == 0) {
-                new_x += gap_width / 2;
-                new_width -= gap_width / 2;
-            }
-
-            if (row == 0) {
-                new_y += gap_width / 2;
-                new_height -= gap_width / 2;
-            }
-
-            if (col == col_count - 1) {
-                new_width -= gap_width / 2;
-            }            
-
-            if (row == row_count - 1) {
-                new_height -= gap_width / 2;
-            }
-            
-            XMoveResizeWindow(dpy_, c->window(), new_x, new_y, new_width, new_height);
-        }
-    }
-
+    workspace->Arrange();
 
     // Make sure floating clients are at the top.
     workspaces_[current_]->RaiseAllFloatingClients();

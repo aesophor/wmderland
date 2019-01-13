@@ -17,7 +17,7 @@ class Client;
 
 class Workspace {
 public:
-    Workspace(Display* dpy, int id);
+    Workspace(Display* dpy, Window root_window_, int id);
     virtual ~Workspace();
 
     bool Has(Window w);
@@ -48,7 +48,10 @@ public:
     void set_fullscreen(bool is_fullscreen);
 
 private:
+    void Tile(TreeNode* node, int x, int y, int width, int height);
+
     Display* dpy_;
+    Window root_window_;
     Tree* client_tree_;
     
     int id_;

@@ -29,7 +29,7 @@ bool WindowPosSize::operator!=(const WindowPosSize& other) {
 
 namespace wm_utils {
  
-    pair<short, short> GetDisplayResolution(Display* dpy, Window root) {
+    pair<int, int> GetDisplayResolution(Display* dpy, Window root) {
         XWindowAttributes root_attr = QueryWindowAttributes(dpy, root);
         return pair<short, short>(root_attr.width, root_attr.height);
     }
@@ -227,7 +227,7 @@ namespace string_utils {
         return tokens;
     }
 
-    vector<string> Split(const string& s, const char delimiter, short count) {
+    vector<string> Split(const string& s, const char delimiter, int count) {
         vector<string> tokens;
         string::size_type head = 0;
         string::size_type tail = s.find(delimiter, head);

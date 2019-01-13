@@ -4,14 +4,16 @@
 #include "workspace.hpp"
 #include "config.hpp"
 #include "tiling.hpp"
+#include "util.hpp"
 
+using std::pair;
 using std::stack;
 using std::vector;
 using std::remove_if;
 using tiling::Direction;
 
-Workspace::Workspace(Display* dpy, int id) : 
-    dpy_(dpy), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {
+Workspace::Workspace(Display* dpy, Window root_window, int id) : 
+    dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {
 
 }
 
@@ -103,7 +105,42 @@ void Workspace::Move(Window w, Workspace* new_workspace) {
 }
 
 void Workspace::Arrange() {
+    // If there are no clients to arrange, return at once.
+    if (!client_tree_->current()) return;
 
+    // Get display resolution.
+    pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    int screen_width = display_resolution.first;
+    int screen_height = display_resolution.second;
+    Tile(client_tree_->root(), 0, 0, screen_width, screen_height);
+}
+
+void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
+    // Retrieve all clients that we should tile.
+    vector<TreeNode*> tiling_children;
+    for (const auto& child : node->children()) {
+        if (!child->client()->is_floating()) {
+            tiling_children.push_back(child);
+        }
+    }
+
+    Direction dir = node->tiling_direction();
+    int child_x = x;
+    int child_y = y;
+    int child_width = (dir == Direction::HORIZONTAL) ? width / tiling_children.size() : width;
+    int child_height = (dir == Direction::VERTICAL) ? height / tiling_children.size() : height;
+
+    for (size_t i = 0; i < tiling_children.size(); i++) {
+        TreeNode* child = node->children()[i];
+        if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + i * child_width;
+        if (node->tiling_direction() == Direction::VERTICAL) child_y = y + i * child_height;
+
+        if (child->IsLeaf()) {
+            XMoveResizeWindow(dpy_, child->client()->window(), child_x, child_y, child_width, child_height);
+        } else {
+            Tile(child, child_x, child_y, child_width, child_height);
+        }
+    }
 }
 
 void Workspace::SetTilingDirection(Direction tiling_direction) {
@@ -140,6 +177,8 @@ void Workspace::SetFocusedClient(Window w) {
 }
 
 void Workspace::UnsetFocusedClient() {
+    if (!client_tree_->current()) return;
+
     Client* c = client_tree_->current()->client();
     if (c) {
         c->SetBorderColor(Config::GetInstance()->unfocused_color());
@@ -189,7 +228,11 @@ void Workspace::FocusLeft() {
         TreeNode* left_sibling = ptr->GetLeftSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && left_sibling) {
-            SetFocusedClient(left_sibling->client()->window());
+            ptr = left_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().back();
+            }
+            SetFocusedClient(ptr->client()->window());
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
@@ -205,7 +248,11 @@ void Workspace::FocusRight() {
         TreeNode* right_sibling = ptr->GetRightSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && right_sibling) {
-            SetFocusedClient(right_sibling->client()->window());
+            ptr = right_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().front();
+            }
+            SetFocusedClient(ptr->client()->window());
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
@@ -221,7 +268,11 @@ void Workspace::FocusUp() {
         TreeNode* left_sibling = ptr->GetLeftSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::VERTICAL && left_sibling) {
-            SetFocusedClient(left_sibling->client()->window());
+            ptr = left_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().back();
+            }
+            SetFocusedClient(ptr->client()->window());
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
@@ -237,7 +288,11 @@ void Workspace::FocusDown() {
         TreeNode* right_sibling = ptr->GetRightSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::VERTICAL && right_sibling) {
-            SetFocusedClient(right_sibling->client()->window());
+            ptr = right_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().front();
+            }
+            SetFocusedClient(ptr->client()->window());
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;

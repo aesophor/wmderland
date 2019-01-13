@@ -20,7 +20,7 @@ Tree::~Tree() {
 
 
 TreeNode* Tree::GetTreeNode(Client* client) const {
-    if (root_->children().size() == 0) {
+    if (!current_) {
         return nullptr;
     }
 
@@ -90,12 +90,4 @@ void Tree::set_root(TreeNode* root) {
 
 void Tree::set_current(TreeNode* current) {
     current_ = current;
-}
-
-
-ostream& operator<< (ostream& os, const Tree& t) {
-    for (auto leaf : t.GetAllLeaves()) {
-        os << leaf->id() << " ";
-    }
-    return os;
 }

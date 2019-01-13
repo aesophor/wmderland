@@ -23,7 +23,7 @@ struct WindowPosSize {
 };
 
 namespace wm_utils {
-    std::pair<short, short> GetDisplayResolution(Display* dpy, Window root);
+    std::pair<int, int> GetDisplayResolution(Display* dpy, Window root);
     XWindowAttributes QueryWindowAttributes(Display* dpy, Window w);
     XSizeHints QueryWmNormalHints(Display* dpy, Window w);
     XClassHint QueryWmClass(Display* dpy, Window w);
@@ -42,7 +42,7 @@ namespace wm_utils {
 
 namespace string_utils {
     std::vector<std::string> Split(const std::string& s, const char delimiter);
-    std::vector<std::string> Split(const std::string& s, const char delimiter, short count);
+    std::vector<std::string> Split(const std::string& s, const char delimiter, int count);
     bool StartsWith(const std::string& s, const std::string& keyword);
     bool Contains(const std::string& s, const std::string& keyword);
     void Replace(std::string& s, const std::string keyword, const std::string newword);

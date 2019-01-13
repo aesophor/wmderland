@@ -20,8 +20,6 @@ public:
     void set_root(TreeNode* root);
     void set_current(TreeNode* current);
 
-    friend std::ostream& operator<< (std::ostream& os, const Tree& t);
-
 private:
     TreeNode* root_;
     TreeNode* current_;
