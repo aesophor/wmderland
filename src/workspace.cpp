@@ -32,13 +32,12 @@ void Workspace::Add(Window w, bool is_floating) {
 
     TreeNode* new_node = new TreeNode(c);
 
-    if (client_tree_->root()->children().empty()) {
-        // If there's no any window at all, add the node
-        // as the root's child.
+    if (!client_tree_->current()) {
+        // If there are no windows at all, add the node as the root's child.
         client_tree_->root()->AddChild(new_node);
     } else if (client_tree_->current()->tiling_direction() == Direction::UNSPECIFIED) {
-        // If the user has not specified any tiling direction
-        // on current node, then add the new node as its brother.
+        // If the user has not specified any tiling direction on current node, 
+        // then add the new node as its brother.
         TreeNode* current_node = client_tree_->current();
         if (current_node == current_node->parent()->children().back()) {
             current_node->parent()->AddChild(new_node);
@@ -46,10 +45,10 @@ void Workspace::Add(Window w, bool is_floating) {
             current_node->parent()->InsertChild(new_node, current_node);
         }
     } else {
-        // If the user has specified a tiling direction on
-        // current node, then set current node as an internal node,
-        // add the original current node as this internal node's child
-        // and add the new node as this internal node's another child.
+        // If the user has specified a tiling direction on current node, 
+        // then set current node as an internal node, add the original
+        // current node as this internal node's child and add the new node
+        // as this internal node's another child.
         TreeNode* current_node = client_tree_->current();
         current_node->AddChild(new TreeNode(current_node->client()));
         current_node->AddChild(new_node);
@@ -64,7 +63,7 @@ void Workspace::Remove(Window w) {
     if (!c) return;
 
     TreeNode* node = client_tree_->GetTreeNode(c);
-    if (node == client_tree_->root()) return;
+    if (!node || node == client_tree_->root()) return;
 
     // Get all tiling leaves and find the index of the node we're going to remove.
     vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
@@ -77,22 +76,22 @@ void Workspace::Remove(Window w) {
     parent_node->RemoveChild(node);
     delete node;
 
-    // If its parent has no children left, then remove parent from
-    // its grandparent (If this parent is not the root).
+    // If its parent has no children left, then remove parent from its grandparent 
+    // (If this parent is not the root).
     if (parent_node != client_tree_->root() && parent_node->children().empty()) {
         TreeNode* grandparent_node = parent_node->parent();
         grandparent_node->RemoveChild(parent_node);
         delete parent_node;
     }
 
-    // Decide which node shall be set as the new current TreeNode.
-    // If there are no windows left, set current to nullptr.
+    // Decide which node shall be set as the new current TreeNode. If there are no
+    // windows left, set current to nullptr.
     if (nodes.size() - 1 == 0) {
         client_tree_->set_current(nullptr);
         return;
     }
     // If idx is out of bounds, decrement it by one.
-    if (idx >= (long) nodes.size() - 1) {
+    if (idx >= (long) nodes.size() - 1 - 1) {
         idx--;
     }
     client_tree_->set_current(nodes[idx]);
@@ -104,7 +103,7 @@ void Workspace::Move(Window w, Workspace* new_workspace) {
     new_workspace->Add(w, is_floating);
 }
 
-void Workspace::Arrange() {
+void Workspace::Arrange(int bar_height) {
     // If there are no clients to arrange, return at once.
     if (!client_tree_->current()) return;
 
@@ -112,7 +111,7 @@ void Workspace::Arrange() {
     pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
     int screen_width = display_resolution.first;
     int screen_height = display_resolution.second;
-    Tile(client_tree_->root(), 0, 0, screen_width, screen_height);
+    Tile(client_tree_->root(), 0, bar_height, screen_width, screen_height);
 }
 
 void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
@@ -144,6 +143,7 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
 }
 
 void Workspace::SetTilingDirection(Direction tiling_direction) {
+    if (!client_tree_->current()) return;
     client_tree_->current()->set_tiling_direction(tiling_direction);
 }
 

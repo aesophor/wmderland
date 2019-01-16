@@ -24,7 +24,7 @@ public:
     void Add(Window w, bool is_floating);
     void Remove(Window w);
     void Move(Window w, Workspace* new_workspace);
-    void Arrange();
+    void Arrange(int bar_height);
     void SetTilingDirection(tiling::Direction tiling_direction);
 
     void MapAllClients();

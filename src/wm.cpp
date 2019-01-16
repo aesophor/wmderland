@@ -494,10 +494,10 @@ void WindowManager::Center(Window w) {
 }
 
 void WindowManager::Tile(Workspace* workspace) {
-    workspace->Arrange();
+    workspace->Arrange(bar_height_);
 
     // Make sure floating clients are at the top.
-    workspaces_[current_]->RaiseAllFloatingClients();
+    //workspaces_[current_]->RaiseAllFloatingClients();
 }
 
 void WindowManager::ToggleFloating(Window w) {
