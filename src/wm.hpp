@@ -17,15 +17,20 @@ private:
     WindowManager(Display* dpy);
     void InitXEvents();
 
-    void OnMapRequest(const XMapRequestEvent& e);
+    void OnCreateNotify(const XCreateWindowEvent& e);
     void OnDestroyNotify(const XDestroyWindowEvent& e);
+    void OnMapRequest(const XMapRequestEvent& e);
     void OnKeyPress(const XKeyEvent& e);
-    void OnButtonPress();
-    void OnButtonRelease();
-    void OnMotionNotify();
+    void OnButtonPress(const XButtonEvent& e);
+    void OnButtonRelease(const XButtonEvent& e);
+    void OnMotionNotify(const XButtonEvent& e);
 
     Display* dpy_;
     Window root_window_;
+
+    // Window move, resize data cache.
+    XButtonEvent btn_pressed_event_;
+    XWindowAttributes btn_pressed_attr_;
 };
 
 #endif
