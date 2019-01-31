@@ -116,7 +116,6 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
     int xdiff = e.x - btn_pressed_event_.x;
     int ydiff = e.y - btn_pressed_event_.y;
-
     int x = btn_pressed_attr_.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
     int y = btn_pressed_attr_.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
     int width = btn_pressed_attr_.width + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
