@@ -52,13 +52,7 @@ void Workspace::Remove(Window w) {
     if (!c) return;
 
     TreeNode* node = client_tree_->GetTreeNode(c);
-    if (!node || node == client_tree_->root()) return;
-
-    // Get all tiling leaves and find the index of the node we're going to remove.
-    vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
-    nodes.erase(remove_if(nodes.begin(), nodes.end(), [](TreeNode* n) {
-            return n->client()->is_floating(); }), nodes.end());
-    ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
+    if (!node) return;
 
     // Remove this node from its parent.
     TreeNode* parent_node = node->parent();
@@ -74,14 +68,20 @@ void Workspace::Remove(Window w) {
         delete parent_node;
     }
 
+    // Get all tiling leaves and find the index of the node we're going to remove.
+    vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
+    nodes.erase(remove_if(nodes.begin(), nodes.end(), [](TreeNode* n) {
+            return n->client()->is_floating(); }), nodes.end());
+    ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
+
     // Decide which node shall be set as the new current TreeNode. If there are no
     // windows left, set current to nullptr.
-    if (nodes.size() - 1 == 0) {
+    if (nodes.empty()) {
         client_tree_->set_current(nullptr);
         return;
     }
     // If idx is out of bounds, decrement it by one.
-    if (idx >= (long) nodes.size() - 1 - 1) {
+    if (idx >= (long) nodes.size() - 1) {
         idx--;
     }
     client_tree_->set_current(nodes[idx]);
@@ -235,7 +235,9 @@ void Workspace::FocusLeft() {
             while (!ptr->IsLeaf()) {
                 ptr = ptr->children().back();
             }
+            UnsetFocusedClient();
             SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
@@ -255,7 +257,9 @@ void Workspace::FocusRight() {
             while (!ptr->IsLeaf()) {
                 ptr = ptr->children().front();
             }
+            UnsetFocusedClient();
             SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
@@ -275,7 +279,9 @@ void Workspace::FocusUp() {
             while (!ptr->IsLeaf()) {
                 ptr = ptr->children().back();
             }
+            UnsetFocusedClient();
             SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
@@ -295,7 +301,9 @@ void Workspace::FocusDown() {
             while (!ptr->IsLeaf()) {
                 ptr = ptr->children().front();
             }
+            UnsetFocusedClient();
             SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
             return;
         } else {
             if (ptr->parent() == client_tree_->root()) return;
