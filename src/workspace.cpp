@@ -41,7 +41,7 @@ void Workspace::Add(Window w, bool is_floating) {
         if (current_node == current_node->parent()->children().back()) {
             current_node->parent()->AddChild(new_node);
         } else {
-            current_node->parent()->InsertChild(new_node, current_node);
+            current_node->parent()->InsertChildAfter(new_node, current_node);
         }
     } 
 
@@ -237,9 +237,7 @@ vector<Client*> Workspace::GetTilingClients() const {
 
 
 void Workspace::FocusLeft() {
-    TreeNode* ptr = client_tree_->current();
-
-    while (ptr) {
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* left_sibling = ptr->GetLeftSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && left_sibling) {
@@ -251,17 +249,14 @@ void Workspace::FocusLeft() {
             SetFocusedClient(ptr->client()->window());
             client_tree_->set_current(ptr);
             return;
-        } else {
-            if (ptr->parent() == client_tree_->root()) return;
-            ptr = ptr->parent();
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
         }
     }
 }
 
 void Workspace::FocusRight() {
-    TreeNode* ptr = client_tree_->current();
-
-    while (ptr) {
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* right_sibling = ptr->GetRightSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && right_sibling) {
@@ -273,17 +268,14 @@ void Workspace::FocusRight() {
             SetFocusedClient(ptr->client()->window());
             client_tree_->set_current(ptr);
             return;
-        } else {
-            if (ptr->parent() == client_tree_->root()) return;
-            ptr = ptr->parent();
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
         }
     }
 }
 
 void Workspace::FocusUp() {
-    TreeNode* ptr = client_tree_->current();
-
-    while (ptr) {
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* left_sibling = ptr->GetLeftSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::VERTICAL && left_sibling) {
@@ -295,17 +287,14 @@ void Workspace::FocusUp() {
             SetFocusedClient(ptr->client()->window());
             client_tree_->set_current(ptr);
             return;
-        } else {
-            if (ptr->parent() == client_tree_->root()) return;
-            ptr = ptr->parent();
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
         }
     }
 }
 
 void Workspace::FocusDown() {
-    TreeNode* ptr = client_tree_->current();
-
-    while (ptr) {
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* right_sibling = ptr->GetRightSibling();
 
         if (ptr->parent()->tiling_direction() == Direction::VERTICAL && right_sibling) {
@@ -317,9 +306,8 @@ void Workspace::FocusDown() {
             SetFocusedClient(ptr->client()->window());
             client_tree_->set_current(ptr);
             return;
-        } else {
-            if (ptr->parent() == client_tree_->root()) return;
-            ptr = ptr->parent();
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
         }
     }
 }

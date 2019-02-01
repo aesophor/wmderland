@@ -23,14 +23,14 @@ void TreeNode::AddChild(TreeNode* child) {
     child->set_parent(this);
 }
 
-void TreeNode::InsertChild(TreeNode* child, TreeNode* ref) {
-    ptrdiff_t ref_idx = find(children_.begin(), children_.end(), ref) - children_.begin();
-    children_.insert(children_.begin() + ref_idx + 1, child);
-}
-
 void TreeNode::RemoveChild(TreeNode* child) {
     children_.erase(remove(children_.begin(), children_.end(), child), children_.end());
     child->set_parent(nullptr);
+}
+
+void TreeNode::InsertChildAfter(TreeNode* child, TreeNode* ref) {
+    ptrdiff_t ref_idx = find(children_.begin(), children_.end(), ref) - children_.begin();
+    children_.insert(children_.begin() + ref_idx + 1, child);
 }
 
 

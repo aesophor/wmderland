@@ -20,9 +20,7 @@ Tree::~Tree() {
 
 
 TreeNode* Tree::GetTreeNode(Client* client) const {
-    if (!current_) {
-        return nullptr;
-    }
+    if (!current_) return nullptr;
 
     TreeNode* ptr = root_;
     stack<TreeNode*> s;

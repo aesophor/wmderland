@@ -14,8 +14,8 @@ public:
 
     bool IsLeaf() const;
     void AddChild(TreeNode* child);
-    void InsertChild(TreeNode* child, TreeNode* ref); // Insert child after ref.
     void RemoveChild(TreeNode* child);
+    void InsertChildAfter(TreeNode* child, TreeNode* ref);
 
     TreeNode* GetLeftSibling() const;
     TreeNode* GetRightSibling() const;
