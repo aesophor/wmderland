@@ -24,7 +24,7 @@ public:
     void Add(Window w, bool is_floating);
     void Remove(Window w);
     void Move(Window w, Workspace* new_workspace);
-    void Arrange(int bar_height);
+    void Arrange(int bar_height, int border_width, int gap_width);
     void SetTilingDirection(tiling::Direction tiling_direction);
 
     void MapAllClients();
@@ -48,7 +48,7 @@ public:
     void set_fullscreen(bool is_fullscreen);
 
 private:
-    void Tile(TreeNode* node, int x, int y, int width, int height);
+    void Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width);
 
     Display* dpy_;
     Window root_window_;

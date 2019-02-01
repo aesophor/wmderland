@@ -97,7 +97,7 @@ void Workspace::Move(Window w, Workspace* new_workspace) {
     new_workspace->Add(w, is_floating);
 }
 
-void Workspace::Arrange(int bar_height) {
+void Workspace::Arrange(int bar_height, int border_width, int gap_width) {
     // If there are no clients to arrange, return at once.
     if (!client_tree_->current()) return;
 
@@ -105,10 +105,10 @@ void Workspace::Arrange(int bar_height) {
     pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
     int screen_width = display_resolution.first;
     int screen_height = display_resolution.second;
-    Tile(client_tree_->root(), 0, bar_height, screen_width, screen_height - bar_height);
+    Tile(client_tree_->root(), 0, bar_height, screen_width, screen_height - bar_height, border_width, gap_width);
 }
 
-void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
+void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) {
     // Retrieve all clients that we should tile.
     vector<TreeNode*> tiling_children;
     for (const auto& child : node->children()) {
@@ -124,16 +124,20 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
     int child_y = y;
     int child_width = (dir == Direction::HORIZONTAL) ? width / tiling_children.size() : width;
     int child_height = (dir == Direction::VERTICAL) ? height / tiling_children.size() : height;
-
+    
     for (size_t i = 0; i < tiling_children.size(); i++) {
         TreeNode* child = tiling_children[i];
         if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + child_width * i;
         if (node->tiling_direction() == Direction::VERTICAL) child_y = y + child_height * i;
 
         if (child->IsLeaf()) {
-            XMoveResizeWindow(dpy_, child->client()->window(), child_x, child_y, child_width, child_height);
+            int new_x = child_x;
+            int new_y = child_y;
+            int new_width = child_width - border_width * 2;
+            int new_height = child_height - border_width * 2;
+            XMoveResizeWindow(dpy_, child->client()->window(), new_x, new_y, new_width, new_height);
         } else {
-            Tile(child, child_x, child_y, child_width, child_height);
+            Tile(child, child_x, child_y, child_width, child_height, border_width, gap_width);
         }
     }
 }
