@@ -6,8 +6,8 @@ using std::string;
 
 std::unordered_map<Window, Client*> Client::mapper_;
 
-Client::Client(Display* dpy, Window w, Workspace* workspace) :
-    dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
+Client::Client(Display* dpy, Window w, Workspace* workspace)
+    : dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
     mapper_[window_] = this;
     is_bar_ = wm_utils::IsBar(dpy, w);
  

@@ -15,7 +15,7 @@ TreeNode::~TreeNode() {
 
 
 bool TreeNode::IsLeaf() const {
-    return children_.size() == 0;
+    return children_.empty();
 }
 
 void TreeNode::AddChild(TreeNode* child) {

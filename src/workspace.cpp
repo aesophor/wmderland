@@ -12,10 +12,8 @@ using std::vector;
 using std::remove_if;
 using tiling::Direction;
 
-Workspace::Workspace(Display* dpy, Window root_window, int id) : 
-    dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {
-
-}
+Workspace::Workspace(Display* dpy, Window root_window, int id)
+    : dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {}
 
 Workspace::~Workspace() {
     delete client_tree_;
@@ -35,7 +33,7 @@ void Workspace::Add(Window w, bool is_floating) {
     if (!client_tree_->current()) {
         // If there are no windows at all, add the node as the root's child.
         client_tree_->root()->AddChild(new_node);
-    } else if (client_tree_->current()->tiling_direction() == Direction::UNSPECIFIED) {
+    } else {
         // If the user has not specified any tiling direction on current node, 
         // then add the new node as its brother.
         TreeNode* current_node = client_tree_->current();
@@ -44,16 +42,7 @@ void Workspace::Add(Window w, bool is_floating) {
         } else {
             current_node->parent()->InsertChild(new_node, current_node);
         }
-    } else {
-        // If the user has specified a tiling direction on current node, 
-        // then set current node as an internal node, add the original
-        // current node as this internal node's child and add the new node
-        // as this internal node's another child.
-        TreeNode* current_node = client_tree_->current();
-        current_node->AddChild(new TreeNode(current_node->client()));
-        current_node->AddChild(new_node);
-        current_node->set_client(nullptr);
-    }
+    } 
 
     client_tree_->set_current(new_node);
 }
@@ -75,6 +64,7 @@ void Workspace::Remove(Window w) {
     TreeNode* parent_node = node->parent();
     parent_node->RemoveChild(node);
     delete node;
+    delete c;
 
     // If its parent has no children left, then remove parent from its grandparent 
     // (If this parent is not the root).
@@ -111,14 +101,16 @@ void Workspace::Arrange(int bar_height) {
     pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
     int screen_width = display_resolution.first;
     int screen_height = display_resolution.second;
-    Tile(client_tree_->root(), 0, bar_height, screen_width, screen_height);
+    Tile(client_tree_->root(), 0, bar_height, screen_width, screen_height - bar_height);
 }
 
 void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
     // Retrieve all clients that we should tile.
     vector<TreeNode*> tiling_children;
     for (const auto& child : node->children()) {
-        if (!child->client()->is_floating()) {
+        if (child->client() && child->client()->is_floating()) {
+            continue;
+        } else {
             tiling_children.push_back(child);
         }
     }
@@ -130,9 +122,9 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
     int child_height = (dir == Direction::VERTICAL) ? height / tiling_children.size() : height;
 
     for (size_t i = 0; i < tiling_children.size(); i++) {
-        TreeNode* child = node->children()[i];
-        if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + i * child_width;
-        if (node->tiling_direction() == Direction::VERTICAL) child_y = y + i * child_height;
+        TreeNode* child = tiling_children[i];
+        if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + child_width * i;
+        if (node->tiling_direction() == Direction::VERTICAL) child_y = y + child_height * i;
 
         if (child->IsLeaf()) {
             XMoveResizeWindow(dpy_, child->client()->window(), child_x, child_y, child_width, child_height);
@@ -143,8 +135,19 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
 }
 
 void Workspace::SetTilingDirection(Direction tiling_direction) {
-    if (!client_tree_->current()) return;
-    client_tree_->current()->set_tiling_direction(tiling_direction);
+    if (!client_tree_->current()) {
+        client_tree_->root()->set_tiling_direction(tiling_direction);
+    } else if (client_tree_->current()->parent()->children().size() > 1){
+        // If the user has specified a tiling direction on current node, 
+        // then set current node as an internal node, add the original
+        // current node as this internal node's child and add the new node
+        // as this internal node's another child.
+        TreeNode* current_node = client_tree_->current();
+        current_node->set_tiling_direction(tiling_direction);
+        current_node->AddChild(new TreeNode(current_node->client()));
+        current_node->set_client(nullptr);
+        client_tree_->set_current(current_node->children()[0]);
+    }
 }
 
 

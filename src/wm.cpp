@@ -248,12 +248,12 @@ void WindowManager::OnMapRequest(Window w) {
     Tile(workspaces_[current_]);
     SetNetActiveWindow(w);
 
-    pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_);
-    bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net_atoms);
-    Client* c = Client::mapper_[w];
-    if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
-        ToggleFullScreen(w);
-    }
+    //pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+    //bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net_atoms);
+    //Client* c = Client::mapper_[w];
+    //if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
+    //    ToggleFullScreen(w);
+    //}
 }
 
 void WindowManager::OnDestroyNotify(Window w) {
@@ -277,18 +277,15 @@ void WindowManager::OnDestroyNotify(Window w) {
         // Since the previously active window has been killed, we should
         // manually set focus to another window.
         Client* new_focused_client = workspaces_[current_]->GetFocusedClient();
-
         if (new_focused_client) {
             workspaces_[current_]->SetFocusedClient(new_focused_client->window());
             SetNetActiveWindow(new_focused_client->window());
-        } else {
-            ClearNetActiveWindow();
         }
     } else {
         c->workspace()->Remove(w);
     }
 
-    c->workspace()->RaiseAllFloatingClients();
+    //c->workspace()->RaiseAllFloatingClients();
 }
 
 void WindowManager::OnKeyPress() {
@@ -319,17 +316,15 @@ void WindowManager::OnKeyPress() {
         return;
     } else if (action == Action::EXIT) {
         Stop();
+    } else if (action == Action::TILE_H) {
+        workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
+    } else if (action == Action::TILE_V) {
+        workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
     }
 
     if (w == None) return;
 
     switch (action) {
-        case Action::TILE_H:
-            workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
-            break;
-        case Action::TILE_V:
-            workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
-            break;
         case Action::FOCUS_LEFT:
             workspaces_[current_]->FocusLeft();
             SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
