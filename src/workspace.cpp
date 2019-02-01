@@ -69,10 +69,11 @@ void Workspace::Remove(Window w) {
 
     // If its parent has no children left, then remove parent from its grandparent 
     // (If this parent is not the root).
-    if (parent_node != client_tree_->root() && parent_node->children().empty()) {
+    while (parent_node != client_tree_->root() && parent_node->children().empty()) {
         TreeNode* grandparent_node = parent_node->parent();
         grandparent_node->RemoveChild(parent_node);
         delete parent_node;
+        parent_node = grandparent_node;
     }
 
     // Decide which node shall be set as the new current TreeNode. If there are no
