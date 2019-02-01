@@ -9,6 +9,7 @@
 using std::pair;
 using std::stack;
 using std::vector;
+using std::remove;
 using std::remove_if;
 using tiling::Direction;
 
@@ -54,6 +55,12 @@ void Workspace::Remove(Window w) {
     TreeNode* node = client_tree_->GetTreeNode(c);
     if (!node) return;
 
+    // Get all tiling leaves and find the index of the node we're going to remove.
+    vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
+    nodes.erase(remove_if(nodes.begin(), nodes.end(), [](TreeNode* n) {
+            return n->client()->is_floating(); }), nodes.end());
+    ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
+
     // Remove this node from its parent.
     TreeNode* parent_node = node->parent();
     parent_node->RemoveChild(node);
@@ -68,20 +75,16 @@ void Workspace::Remove(Window w) {
         delete parent_node;
     }
 
-    // Get all tiling leaves and find the index of the node we're going to remove.
-    vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
-    nodes.erase(remove_if(nodes.begin(), nodes.end(), [](TreeNode* n) {
-            return n->client()->is_floating(); }), nodes.end());
-    ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
-
     // Decide which node shall be set as the new current TreeNode. If there are no
     // windows left, set current to nullptr.
+    nodes.erase(remove(nodes.begin(), nodes.end(), node), nodes.end());
+
     if (nodes.empty()) {
         client_tree_->set_current(nullptr);
         return;
     }
     // If idx is out of bounds, decrement it by one.
-    if (idx >= (long) nodes.size() - 1) {
+    if (idx > (long) nodes.size() - 1) {
         idx--;
     }
     client_tree_->set_current(nodes[idx]);
