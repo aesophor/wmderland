@@ -285,7 +285,7 @@ void WindowManager::OnDestroyNotify(Window w) {
         c->workspace()->Remove(w);
     }
 
-    //c->workspace()->RaiseAllFloatingClients();
+    c->workspace()->RaiseAllFloatingClients();
 }
 
 void WindowManager::OnKeyPress() {

@@ -157,13 +157,17 @@ void Workspace::SetTilingDirection(Direction tiling_direction) {
 
 void Workspace::MapAllClients() {
     for (auto leaf : client_tree_->GetAllLeaves()) {
-        XMapWindow(dpy_, leaf->client()->window());
+        if (leaf != client_tree_->root()) {
+            XMapWindow(dpy_, leaf->client()->window());
+        }
     }
 }
 
 void Workspace::UnmapAllClients() {
     for (auto leaf : client_tree_->GetAllLeaves()) {
-        XUnmapWindow(dpy_, leaf->client()->window());
+        if (leaf != client_tree_->root()) {
+            XUnmapWindow(dpy_, leaf->client()->window());
+        }
     }
 }
 
@@ -211,7 +215,7 @@ vector<Client*> Workspace::GetFloatingClients() const {
     vector<Client*> floating_clients;
 
     for (auto leaf : client_tree_->GetAllLeaves()) {
-        if (leaf->client()->is_floating()) {
+        if (leaf != client_tree_->root() && leaf->client()->is_floating()) {
             floating_clients.push_back(leaf->client());
         }
     }
