@@ -38,11 +38,7 @@ void Workspace::Add(Window w, bool is_floating) {
         // If the user has not specified any tiling direction on current node, 
         // then add the new node as its brother.
         TreeNode* current_node = client_tree_->current();
-        if (current_node == current_node->parent()->children().back()) {
-            current_node->parent()->AddChild(new_node);
-        } else {
-            current_node->parent()->InsertChildAfter(new_node, current_node);
-        }
+        current_node->parent()->InsertChildAfter(new_node, current_node);
     } 
 
     client_tree_->set_current(new_node);

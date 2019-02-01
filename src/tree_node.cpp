@@ -31,6 +31,7 @@ void TreeNode::RemoveChild(TreeNode* child) {
 void TreeNode::InsertChildAfter(TreeNode* child, TreeNode* ref) {
     ptrdiff_t ref_idx = find(children_.begin(), children_.end(), ref) - children_.begin();
     children_.insert(children_.begin() + ref_idx + 1, child);
+    child->set_parent(this);
 }
 
 
