@@ -140,7 +140,7 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height) {
 void Workspace::SetTilingDirection(Direction tiling_direction) {
     if (!client_tree_->current()) {
         client_tree_->root()->set_tiling_direction(tiling_direction);
-    } else if (client_tree_->current()->parent()->children().size() > 1){
+    } else if (client_tree_->current()->parent()->children().size() > 0){
         // If the user has specified a tiling direction on current node, 
         // then set current node as an internal node, add the original
         // current node as this internal node's child and add the new node
