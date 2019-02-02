@@ -1,5 +1,5 @@
-#ifndef UTIL_HPP_
-#define UTIL_HPP_
+#ifndef WMDERLAND_UTIL_HPP_
+#define WMDERLAND_UTIL_HPP_
 
 extern "C" {
 #include <X11/Xlib.h>

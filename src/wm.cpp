@@ -25,7 +25,7 @@ WindowManager* WindowManager::instance_;
 
 WindowManager* WindowManager::GetInstance() {
     // If the instance is not yet initialized, we'll try to open a display
-    // to X server. If it fails (i.e., dpy is None), then we return None
+    // to X server. If it fails (i.e., dpy is None), then we return nullptr
     // to the caller. Otherwise we return an instance of WindowManager.
     if (!instance_) {
         Display* dpy;
@@ -34,12 +34,13 @@ WindowManager* WindowManager::GetInstance() {
     return instance_;
 }
 
-WindowManager::WindowManager(Display* dpy) : dpy_(dpy), root_(DefaultRootWindow(dpy_)) {
-    current_ = 0;
-    prop_ = new Properties(dpy_);
-    config_ = Config::GetInstance();
-    cookie_ = new Cookie(COOKIE_FILE);
-
+WindowManager::WindowManager(Display* dpy) 
+    : dpy_(dpy), 
+      root_window_(DefaultRootWindow(dpy_)),
+      prop_(new Properties(dpy_)),
+      config_(Config::GetInstance()),
+      cookie_(new Cookie(COOKIE_FILE)),
+      current_(0) {
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
     InitXEvents();
@@ -60,20 +61,20 @@ WindowManager::~WindowManager() {
 
 void WindowManager::InitWorkspaces(short count) {
     for (short i = 0; i < count; i++) {
-        workspaces_[i] = new Workspace(dpy_, root_, i);
+        workspaces_[i] = new Workspace(dpy_, root_window_, i);
     }
 }
 
 void WindowManager::InitProperties() {
-    // Set the name of window manager (i.e., Wmderland) on the root_ window,
+    // Set the name of window manager (i.e., Wmderland) on the root_window_ window,
     // so that other programs can acknowledge the name of this WM.
-    XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_WM_NAME], prop_->utf8string, 8,
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_WM_NAME], prop_->utf8string, 8,
             PropModeReplace, (unsigned char*) WIN_MGR_NAME, sizeof(WIN_MGR_NAME));
 
-    // Set NET_SUPPORTED to support polybar's xwindow module.
-    // However, we still have to set _NET_WM_ACTIVE_WINDOW manually!
-    XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_SUPPORTED], XA_ATOM, 32,
-            PropModeReplace, (unsigned char*) prop_->net_atoms, atom::NET_ATOM_SIZE);
+    // Set NET_SUPPORTED to support polybar's xwindow module. However, whenever window
+    // focus changes, we still have to set _NET_WM_ACTIVE_WINDOW manually!
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_SUPPORTED], XA_ATOM, 32,
+            PropModeReplace, (unsigned char*) prop_->net, atom::NET_ATOM_SIZE);
 }
 
 void WindowManager::InitXEvents() {
@@ -88,23 +89,23 @@ void WindowManager::InitXEvents() {
 
         int keycode = wm_utils::QueryKeycode(dpy_, key);
         int mod_mask = wm_utils::StrToKeymask(modifier, shift); 
-        XGrabKey(dpy_, keycode, mod_mask, root_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
 
     // Define the key combinations to goto a specific workspace,
     // as well as moving an application to a specific workspace.
     for (int i = 0; i < 9; i++) {
         int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i+1).c_str());
-        XGrabKey(dpy_, keycode, Mod4Mask, root_, True, GrabModeAsync, GrabModeAsync);
-        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, Mod4Mask, root_window_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
 
     // Define which mouse clicks will send us X events.
-    XGrabButton(dpy_, AnyButton, Mod4Mask, root_, True,
+    XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
     // Enable substructure redirection on the root window.
-    XSelectInput(dpy_, root_, SubstructureNotifyMask | SubstructureRedirectMask);
+    XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
 
     // Setup the bitch catcher.
     XSetErrorHandler(&WindowManager::OnXError);
@@ -114,11 +115,7 @@ void WindowManager::InitCursors() {
     cursors_[LEFT_PTR_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
     cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
     cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
-    SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);
-}
-
-void WindowManager::SetCursor(Window w, Cursor c) {
-    XDefineCursor(dpy_, w, c);
+    XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
 }
 
 
@@ -233,7 +230,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     }
  
     // If this window is a dialog, resize it to floating window width / height and center it.
-    bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, prop_->net_atoms);
+    bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, prop_->net);
 
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(res_class_name) != config_->spawn_rules().end()) {
@@ -292,12 +289,12 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     Tile(workspaces_[current_]);
     SetNetActiveWindow(w);
 
-    //pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_);
-    //bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net_atoms);
-    //Client* c = Client::mapper_[w];
-    //if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
-    //    ToggleFullScreen(w);
-    //}
+    pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net);
+    Client* c = Client::mapper_[w];
+    if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
+        ToggleFullScreen(w);
+    }
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
@@ -382,7 +379,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
         XGetWindowAttributes(dpy_, w, &c->previous_attr());
         btn_pressed_event_ = e;
 
-        SetCursor(root_, cursors_[e.button]);
+        XDefineCursor(dpy_, root_window_, cursors_[e.button]);
     }
 }
 
@@ -396,7 +393,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
     cookie_->Put(res_class_name + ',' + wm_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
 
     btn_pressed_event_.subwindow = None;
-    SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);
+    XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
@@ -423,12 +420,12 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
 void WindowManager::SetNetActiveWindow(Window focused_window) {
     Client* c = workspaces_[current_]->GetClient(focused_window);
-    XChangeProperty(dpy_, root_, prop_->net_atoms[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
             PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
 
 void WindowManager::ClearNetActiveWindow() {
-    XDeleteProperty(dpy_, root_, prop_->net_atoms[atom::NET_ACTIVE_WINDOW]);
+    XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW]);
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
@@ -490,7 +487,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, short next) {
 
 
 void WindowManager::Center(Window w) {
-    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
     short screen_width = display_resolution.first;
     short screen_height = display_resolution.second;
 
@@ -527,14 +524,14 @@ void WindowManager::ToggleFullScreen(Window w) {
     XWindowAttributes& attr = c->previous_attr();
 
     if (!workspaces_[current_]->is_fullscreen() && !c->is_fullscreen()) {
-        pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_);
+        pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
         short screen_width = display_resolution.first;
         short screen_height = display_resolution.second;
 
         // Record the current window's position and size before making it fullscreen.
         XGetWindowAttributes(dpy_, w, &attr);
-        XChangeProperty(dpy_, w, prop_->net_atoms[atom::NET_WM_STATE], XA_ATOM, 32,
-                PropModeReplace, (unsigned char*) &prop_->net_atoms[atom::NET_WM_STATE_FULLSCREEN], 1);
+        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*) &prop_->net[atom::NET_WM_STATE_FULLSCREEN], 1);
         XMoveResizeWindow(dpy_, w, 0, 0, screen_width, screen_height);
         c->SetBorderWidth(0);
 
@@ -544,7 +541,7 @@ void WindowManager::ToggleFullScreen(Window w) {
         workspaces_[current_]->UnmapAllClients();
         XMapWindow(dpy_, w);
     } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
-        XChangeProperty(dpy_, w, prop_->net_atoms[atom::NET_WM_STATE], XA_ATOM, 32,
+        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
                 PropModeReplace, (unsigned char*) 0, 0);
         // Restore the window to its original position and size.
         XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
@@ -568,14 +565,14 @@ void WindowManager::KillClient(Window w) {
     // we'll perform the brutal XKillClient().
     if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
             && (::std::find(supported_protocols, supported_protocols + num_supported_protocols, 
-                    prop_->wm_atoms[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
+                    prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
         XEvent msg;
         memset(&msg, 0, sizeof(msg));
         msg.xclient.type = ClientMessage;
-        msg.xclient.message_type = prop_->wm_atoms[atom::WM_PROTOCOLS];
+        msg.xclient.message_type = prop_->wm[atom::WM_PROTOCOLS];
         msg.xclient.window = w;
         msg.xclient.format = 32;
-        msg.xclient.data.l[0] = prop_->wm_atoms[atom::WM_DELETE];
+        msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
         CHECK(XSendEvent(dpy_, w, false, 0, &msg));
     } else {
         XKillClient(dpy_, w);

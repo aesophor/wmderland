@@ -1,8 +1,8 @@
 // A Workspace contains its id, the active window in this workspace
 // and a list of windows.
 
-#ifndef WORKSPACE_HPP_
-#define WORKSPACE_HPP_
+#ifndef WMDERLAND_WORKSPACE_HPP_
+#define WMDERLAND_WORKSPACE_HPP_
 
 extern "C" {
 #include <X11/Xlib.h>

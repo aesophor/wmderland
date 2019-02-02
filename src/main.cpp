@@ -1,7 +1,7 @@
 #include "wm.hpp"
 #include <glog/logging.h>
 
-int main(int argc, char** args) {
+int main(int argc, char* args[]) {
     // Initialize google's c++ logging library.
     google::InitGoogleLogging(args[0]);
 
@@ -16,7 +16,6 @@ int main(int argc, char** args) {
     }
 
     wm->Run();
-
     delete wm;
     return EXIT_SUCCESS;
 }

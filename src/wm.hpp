@@ -1,5 +1,5 @@
-#ifndef WM_HPP_
-#define WM_HPP_
+#ifndef WMDERLAND_WM_HPP_
+#define WMDERLAND_WM_HPP_
 
 #include "properties.hpp"
 #include "workspace.hpp"
@@ -14,7 +14,6 @@
 
 class WindowManager {
 public:
-    // Singleton since only a single WM is required at once.
     static WindowManager* GetInstance();
     ~WindowManager();
     void Run();
@@ -27,7 +26,6 @@ private:
     void InitProperties();
     void InitXEvents();
     void InitCursors();
-    void SetCursor(Window w, Cursor c);
 
     // XEvent handlers
     static int OnXError(Display* dpy, XErrorEvent* e);
@@ -55,7 +53,7 @@ private:
     void KillClient(Window w);
  
     Display* dpy_;
-    Window root_;
+    Window root_window_;
 
     // Window move, resize event cache.
     XButtonEvent btn_pressed_event_;

@@ -1,5 +1,9 @@
-#ifndef CLIENT_HPP_
-#define CLIENT_HPP_
+// A Client is any window that we have decided to manage.
+// It is a wrapper class of Window which provides some 
+// useful information and methods.
+
+#ifndef WMDERLAND_CLIENT_HPP_
+#define WMDERLAND_CLIENT_HPP_
 
 #include "workspace.hpp"
 #include <X11/Xlib.h>
@@ -7,9 +11,6 @@
 #include <unordered_map>
 #include <string>
 
-// A Client is any window that we have decided to manage.
-// It is a wrapper class of Window which provides some 
-// useful information and methods.
 class Workspace;
 
 class Client {

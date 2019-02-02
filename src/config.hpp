@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP_
-#define CONFIG_HPP_
+#ifndef WMDERLAND_CONFIG_HPP_
+#define WMDERLAND_CONFIG_HPP_
 
 #include "tiling.hpp"
 #include "util.hpp"
