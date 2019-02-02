@@ -262,7 +262,6 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     // If the client being destroyed is within current workspace,
     // remove it from current workspace's client list.
     c->workspace()->Remove(w);
-    c->workspace()->Remove(w);
     Tile(c->workspace());
     ClearNetActiveWindow();
 
@@ -537,9 +536,8 @@ void WindowManager::KillClient(Window w) {
     Atom* supported_protocols;
     int num_supported_protocols;
 
-    // First try to kill the client gracefully via ICCCM.
-    // If the client does not support this method, then
-    // we'll perform the brutal XKillClient().
+    // First try to kill the client gracefully via ICCCM.  If the client does not support
+    // this method, then we'll perform the brutal XKillClient().
     if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
             && (::std::find(supported_protocols, supported_protocols + num_supported_protocols, 
                     prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
