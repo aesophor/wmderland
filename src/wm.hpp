@@ -31,12 +31,13 @@ private:
 
     // XEvent handlers
     static int OnXError(Display* dpy, XErrorEvent* e);
-    void OnMapRequest(Window w);
-    void OnDestroyNotify(Window w);
-    void OnKeyPress();
-    void OnButtonPress();
-    void OnButtonRelease();
-    void OnMotionNotify();
+    void OnCreateNotify(const XCreateWindowEvent& e);
+    void OnDestroyNotify(const XDestroyWindowEvent& e);
+    void OnMapRequest(const XMapRequestEvent& e);
+    void OnKeyPress(const XKeyEvent& e);
+    void OnButtonPress(const XButtonEvent& e);
+    void OnButtonRelease(const XButtonEvent& e);
+    void OnMotionNotify(const XButtonEvent& e);
 
     // Properties manipulation
     void SetNetActiveWindow(Window focused_window);
@@ -55,8 +56,10 @@ private:
  
     Display* dpy_;
     Window root_;
-    XEvent event_;
-    XButtonEvent start_;
+
+    // Window move, resize event cache.
+    XButtonEvent btn_pressed_event_;
+
     Cursor cursor_;
 
     // Properties

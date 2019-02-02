@@ -128,28 +128,32 @@ void WindowManager::Run() {
         system(s.c_str());
     }
 
+    XEvent event;
     for (;;) {
         // Retrieve and dispatch next X event.
-        XNextEvent(dpy_, &event_);
+        XNextEvent(dpy_, &event);
 
-        switch (event_.type) {
-            case MapRequest:
-                OnMapRequest(event_.xmaprequest.window);
+        switch (event.type) {
+            case CreateNotify:
+                OnCreateNotify(event.xcreatewindow);
                 break;
             case DestroyNotify:
-                OnDestroyNotify(event_.xdestroywindow.window);
+                OnDestroyNotify(event.xdestroywindow);
+                break;
+            case MapRequest:
+                OnMapRequest(event.xmaprequest);
                 break;
             case KeyPress:
-                OnKeyPress();
+                OnKeyPress(event.xkey);
                 break;
             case ButtonPress:
-                OnButtonPress();
+                OnButtonPress(event.xbutton);
                 break;
             case ButtonRelease:
-                OnButtonRelease();
+                OnButtonRelease(event.xbutton);
                 break;
             case MotionNotify:
-                OnMotionNotify();
+                OnMotionNotify(event.xbutton);
                 break;
             default:
                 break;
@@ -162,7 +166,47 @@ void WindowManager::Stop() {
 }
 
 
-void WindowManager::OnMapRequest(Window w) {
+void WindowManager::OnCreateNotify(const XCreateWindowEvent& e) {
+
+}
+
+void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
+    Window w = e.window;
+
+    // When a window is destroyed, remove it from the current workspace's client list.    
+    Client* c = Client::mapper_[w];
+    if (!c) return;
+
+    // If the client we are destroying is fullscreen,
+    // make sure to unset the workspace's fullscreen state.
+    if (c->is_fullscreen()) {
+        c->workspace()->set_fullscreen(false);
+    }
+
+    // If the client being destroyed is within current workspace,
+    // remove it from current workspace's client list.
+    if (workspaces_[current_]->Has(w)) {
+        workspaces_[current_]->Remove(w);
+        Tile(workspaces_[current_]);
+        ClearNetActiveWindow();
+
+        // Since the previously active window has been killed, we should
+        // manually set focus to another window.
+        Client* new_focused_client = workspaces_[current_]->GetFocusedClient();
+        if (new_focused_client) {
+            workspaces_[current_]->SetFocusedClient(new_focused_client->window());
+            SetNetActiveWindow(new_focused_client->window());
+        }
+    } else {
+        c->workspace()->Remove(w);
+    }
+
+    c->workspace()->RaiseAllFloatingClients();
+}
+
+void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
+    Window w = e.window;
+
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, w);
     string res_class = string(class_hint.res_class);
     string res_name = string(class_hint.res_name);
@@ -256,58 +300,26 @@ void WindowManager::OnMapRequest(Window w) {
     //}
 }
 
-void WindowManager::OnDestroyNotify(Window w) {
-    // When a window is destroyed, remove it from the current workspace's client list.    
-    Client* c = Client::mapper_[w];
-    if (!c) return;
-
-    // If the client we are destroying is fullscreen,
-    // make sure to unset the workspace's fullscreen state.
-    if (c->is_fullscreen()) {
-        c->workspace()->set_fullscreen(false);
-    }
-
-    // If the client being destroyed is within current workspace,
-    // remove it from current workspace's client list.
-    if (workspaces_[current_]->Has(w)) {
-        workspaces_[current_]->Remove(w);
-        Tile(workspaces_[current_]);
-        ClearNetActiveWindow();
-
-        // Since the previously active window has been killed, we should
-        // manually set focus to another window.
-        Client* new_focused_client = workspaces_[current_]->GetFocusedClient();
-        if (new_focused_client) {
-            workspaces_[current_]->SetFocusedClient(new_focused_client->window());
-            SetNetActiveWindow(new_focused_client->window());
-        }
-    } else {
-        c->workspace()->Remove(w);
-    }
-
-    c->workspace()->RaiseAllFloatingClients();
-}
-
-void WindowManager::OnKeyPress() {
+void WindowManager::OnKeyPress(const XKeyEvent& e) {
     Client* focused_client = workspaces_[current_]->GetFocusedClient();
     Window w = (focused_client) ? focused_client->window() : None;
  
     // Move application to a specific workspace,
     // and goto a specific workspace.
-    if (event_.xkey.state == (Mod4Mask | ShiftMask)
-            && event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-            && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-        MoveWindowToWorkspace(w, event_.xkey.keycode - 10);
+    if (e.state == (Mod4Mask | ShiftMask)
+            && e.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+            && e.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+        MoveWindowToWorkspace(w, e.keycode - 10);
         return;
-    } else if (event_.xkey.state == Mod4Mask
-            && event_.xkey.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-            && event_.xkey.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-        GotoWorkspace(event_.xkey.keycode - 10);
+    } else if (e.state == Mod4Mask
+            && e.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
+            && e.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
+        GotoWorkspace(e.keycode - 10);
         return;
     }
  
-    string modifier = wm_utils::KeymaskToStr(event_.xkey.state);
-    string key = wm_utils::QueryKeysym(dpy_, event_.xkey.keycode, false);
+    string modifier = wm_utils::KeymaskToStr(e.state);
+    string key = wm_utils::QueryKeysym(dpy_, e.keycode, false);
     Action action = config_->GetKeybindAction(modifier, key);
 
     if (action == Action::EXEC) {
@@ -355,8 +367,8 @@ void WindowManager::OnKeyPress() {
     }
 }
 
-void WindowManager::OnButtonPress() {
-    Window w = event_.xbutton.subwindow;
+void WindowManager::OnButtonPress(const XButtonEvent& e) {
+    Window w = e.subwindow;
     if (w == None) return;
 
     Client* c = Client::mapper_[w];
@@ -364,44 +376,44 @@ void WindowManager::OnButtonPress() {
         return;
     } 
 
-    if (event_.xbutton.state == Mod4Mask) {
+    if (e.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
         // and store the result in attr_
         XGetWindowAttributes(dpy_, w, &c->previous_attr());
-        start_ = event_.xbutton;
+        btn_pressed_event_ = e;
 
-        SetCursor(root_, cursors_[event_.xbutton.button]);
+        SetCursor(root_, cursors_[e.button]);
     }
 }
 
-void WindowManager::OnButtonRelease() {
-    if (start_.subwindow == None) return;
+void WindowManager::OnButtonRelease(const XButtonEvent& e) {
+    if (btn_pressed_event_.subwindow == None) return;
 
-    XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, start_.subwindow);
-    XClassHint class_hint = wm_utils::QueryWmClass(dpy_, start_.subwindow);
+    XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, btn_pressed_event_.subwindow);
+    XClassHint class_hint = wm_utils::QueryWmClass(dpy_, btn_pressed_event_.subwindow);
     string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
-    string wm_name = wm_utils::QueryWmName(dpy_, start_.subwindow);
+    string wm_name = wm_utils::QueryWmName(dpy_, btn_pressed_event_.subwindow);
     cookie_->Put(res_class_name + ',' + wm_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
 
-    start_.subwindow = None;
+    btn_pressed_event_.subwindow = None;
     SetCursor(root_, cursors_[LEFT_PTR_CURSOR]);
 }
 
-void WindowManager::OnMotionNotify() {
-    Window w = start_.subwindow;
+void WindowManager::OnMotionNotify(const XButtonEvent& e) {
+    Window w = btn_pressed_event_.subwindow;
     if (w == None) return;
 
     Client* c = Client::mapper_[w];
     if (!c) return;
 
-    int xdiff = event_.xbutton.x - start_.x;
-    int ydiff = event_.xbutton.y - start_.y;
+    int xdiff = e.x - btn_pressed_event_.x;
+    int ydiff = e.y - btn_pressed_event_.y;
 
     XWindowAttributes& attr = c->previous_attr();
-    int new_x = attr.x + ((start_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
-    int new_y = attr.y + ((start_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
-    int new_width = attr.width + ((start_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
-    int new_height = attr.height + ((start_.button == MOUSE_RIGHT_BTN) ? ydiff : 0);
+    int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
+    int new_y = attr.y + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
+    int new_width = attr.width + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
+    int new_height = attr.height + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? ydiff : 0);
 
     if (new_width < MIN_WINDOW_WIDTH) new_width = MIN_WINDOW_WIDTH;
     if (new_height < MIN_WINDOW_HEIGHT) new_height = MIN_WINDOW_HEIGHT;
