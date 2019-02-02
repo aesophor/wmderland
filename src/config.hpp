@@ -45,6 +45,7 @@
 class Config {
 public:
     static Config* GetInstance();
+    virtual ~Config();
 
     tiling::Action GetKeybindAction(std::string modifier, std::string key);
     void SetKeybindAction(std::string modifier_and_key, tiling::Action action);
@@ -66,7 +67,7 @@ public:
 private:
     static Config* instance_;
     Config(std::string filename);
-
+    
     std::unordered_map<std::string, std::string> symtab_;
     void ReplaceSymbols(std::string& s);
 

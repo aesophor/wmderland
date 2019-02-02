@@ -7,11 +7,13 @@
 // When the Window Manager shutdowns, these data will be written
 // back to the file from window_pos_size_map_.
 
-#ifndef COOKIE_HPP_
-#define COOKIE_HPP_
+#ifndef WMDERLAND_COOKIE_HPP_
+#define WMDERLAND_COOKIE_HPP_
 
 #include "util.hpp"
+extern "C" {
 #include <X11/Xutil.h>
+}
 #include <string>
 #include <unordered_map>
 
@@ -19,10 +21,11 @@ class Cookie {
 public:
     static const char kDelimiter = ' ';
     Cookie(const std::string filename);
+    virtual ~Cookie();
 
-    WindowPosSize Get(const std::string& res_class_name);
+    WindowPosSize Get(const std::string& res_class_name) const;
     void Put(const std::string& res_class_name, WindowPosSize window_pos_size);
-    void WriteToFile();
+    void WriteToFile() const;
 
 private:
     std::string filename_;

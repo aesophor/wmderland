@@ -44,10 +44,12 @@ Cookie::Cookie(string filename) : filename_ (filename) {
     file.close();
 }
 
+Cookie::~Cookie() {}
 
-WindowPosSize Cookie::Get(const string& res_class_name) {
+
+WindowPosSize Cookie::Get(const string& res_class_name) const {
     if (window_pos_size_map_.find(res_class_name) != window_pos_size_map_.end()) {
-        return window_pos_size_map_[res_class_name];
+        return window_pos_size_map_.at(res_class_name);
     }
     return WindowPosSize(0, 0, 0, 0);
 }
@@ -57,7 +59,7 @@ void Cookie::Put(const string& res_class_name, WindowPosSize window_pos_size) {
     WriteToFile();
 }
 
-void Cookie::WriteToFile() {
+void Cookie::WriteToFile() const {
     std::ofstream file(filename_);
 
     for (auto wps : window_pos_size_map_) {

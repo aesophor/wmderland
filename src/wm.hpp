@@ -15,7 +15,7 @@
 class WindowManager {
 public:
     static WindowManager* GetInstance();
-    ~WindowManager();
+    virtual ~WindowManager();
     void Run();
 
 private:

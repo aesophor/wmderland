@@ -10,7 +10,7 @@ class Client;
 class Tree {
 public:
     Tree();
-    ~Tree();
+    virtual ~Tree();
 
     TreeNode* GetTreeNode(Client* client) const;
     std::vector<TreeNode*> GetAllLeaves() const;

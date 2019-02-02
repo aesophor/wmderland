@@ -18,40 +18,40 @@ Client::~Client() {
 }
 
 
-void Client::Map() {
+void Client::Map() const {
     XMapWindow(dpy_, window_);
 }
 
-void Client::Unmap() {
+void Client::Unmap() const {
     XUnmapWindow(dpy_, window_);
 }
 
-void Client::Raise() {
+void Client::Raise() const {
     XRaiseWindow(dpy_, window_);
 }
 
-void Client::SetInputFocus() {
+void Client::SetInputFocus() const {
     XSetInputFocus(dpy_, window_, RevertToParent, CurrentTime);
 }
 
-void Client::SetBorderWidth(unsigned int width) {
+void Client::SetBorderWidth(unsigned int width) const {
     XSetWindowBorderWidth(dpy_, window_, width);
 }
 
-void Client::SetBorderColor(unsigned long color) {
+void Client::SetBorderColor(unsigned long color) const {
     XSetWindowBorder(dpy_, window_, color);
 }
 
-XWindowAttributes Client::GetXWindowAttributes() {
+XWindowAttributes Client::GetXWindowAttributes() const {
     return wm_utils::QueryWindowAttributes(dpy_, window_);
 }
 
 
-Window& Client::window() {
+const Window& Client::window() const {
     return window_;
 }
 
-Workspace* Client::workspace() {
+Workspace* Client::workspace() const {
     return workspace_;
 }
 

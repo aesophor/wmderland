@@ -1,13 +1,14 @@
-// A Client is any window that we have decided to manage.
-// It is a wrapper class of Window which provides some 
-// useful information and methods.
+// A Client is any window that we have decided to manage. It is a wrapper class 
+// of Window which provides some useful information and methods.
 
 #ifndef WMDERLAND_CLIENT_HPP_
 #define WMDERLAND_CLIENT_HPP_
 
 #include "workspace.hpp"
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+}
 #include <unordered_map>
 #include <string>
 
@@ -19,19 +20,19 @@ public:
     static std::unordered_map<Window, Client*> mapper_;
 
     Client(Display* dpy, Window window, Workspace* workspace);
-    ~Client();
+    virtual ~Client();
     
-    void Map();
-    void Unmap();
-    void Raise();
-    void SetInputFocus();
-    void SetBorderWidth(unsigned int width);
-    void SetBorderColor(unsigned long color);
-    XWindowAttributes GetXWindowAttributes();
+    void Map() const;
+    void Unmap() const;
+    void Raise() const;
+    void SetInputFocus() const;
+    void SetBorderWidth(unsigned int width) const;
+    void SetBorderColor(unsigned long color) const;
+    XWindowAttributes GetXWindowAttributes() const;
 
-    Window& window();
-    Workspace* workspace();
-    XWindowAttributes& previous_attr();    
+    const Window& window() const;
+    Workspace* workspace() const;
+    XWindowAttributes& previous_attr();
 
     bool is_floating() const;
     bool is_fullscreen() const;

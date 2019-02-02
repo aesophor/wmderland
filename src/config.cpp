@@ -107,6 +107,8 @@ Config::Config(string filename) {
     stringstream(global_vars_["unfocused_color"]) >> hex >> unfocused_color_;
 }
 
+Config::~Config() {}
+
 
 void Config::ReplaceSymbols(string& s) {
     for (auto symtab_record : symtab_) {
@@ -129,7 +131,6 @@ void Config::SetKeybindAction(string modifier_and_key, Action action) {
             }
         }
     }
-
     keybind_rules_[modifier_and_key] = action;
 }
 
