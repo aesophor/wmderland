@@ -6,9 +6,11 @@
 #include "config.hpp"
 #include "cookie.hpp"
 #include "util.hpp"
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+}
 #include <cstring>
 #include <vector>
 

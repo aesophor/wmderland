@@ -1,8 +1,10 @@
 #ifndef WMDERLAND_PROPERTIES_HPP_
 #define WMDERLAND_PROPERTIES_HPP_
 
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+}
 
 namespace atom {
 

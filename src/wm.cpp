@@ -1,3 +1,4 @@
+#include "wm.hpp"
 extern "C" {
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
@@ -7,7 +8,6 @@ extern "C" {
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include "wm.hpp"
 #include "client.hpp"
 #include "tiling.hpp"
 #include "util.hpp"

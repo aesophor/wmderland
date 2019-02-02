@@ -1,10 +1,10 @@
-#include <glog/logging.h>
-#include <algorithm>
-#include <stack>
 #include "workspace.hpp"
 #include "config.hpp"
 #include "tiling.hpp"
 #include "util.hpp"
+#include <glog/logging.h>
+#include <algorithm>
+#include <stack>
 
 using std::pair;
 using std::stack;
