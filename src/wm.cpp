@@ -131,14 +131,11 @@ void WindowManager::Run() {
         XNextEvent(dpy_, &event);
 
         switch (event.type) {
-            case CreateNotify:
-                OnCreateNotify(event.xcreatewindow);
+            case MapRequest:
+                OnMapRequest(event.xmaprequest);
                 break;
             case DestroyNotify:
                 OnDestroyNotify(event.xdestroywindow);
-                break;
-            case MapRequest:
-                OnMapRequest(event.xmaprequest);
                 break;
             case KeyPress:
                 OnKeyPress(event.xkey);
@@ -158,14 +155,6 @@ void WindowManager::Run() {
     }
 }
 
-void WindowManager::Stop() {
-    system("pkill X");
-}
-
-
-void WindowManager::OnCreateNotify(const XCreateWindowEvent& e) {
-
-}
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     Window w = e.window;
@@ -222,7 +211,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
-    if (wm_utils::IsBar(dpy_, w)) {
+    if (wm_utils::QueryWindowProperty(dpy_, w, prop_->net[atom::NET_WM_WINDOW_TYPE], &prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK], 1)) {
         XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, w);
         bar_height_ = attr.height;
         bar_ = w;
@@ -234,18 +223,18 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(res_class_name) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules()[res_class_name]- 1;
+        short target_workspace_id = config_->spawn_rules().at(res_class_name) - 1;
         GotoWorkspace(target_workspace_id);
     } else if (config_->spawn_rules().find(res_class) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules()[res_class] - 1;
+        short target_workspace_id = config_->spawn_rules().at(res_class) - 1;
         GotoWorkspace(target_workspace_id);
     }
 
     // Apply application floating rules (if exists).
     if (config_->float_rules().find(res_class_name) != config_->float_rules().end()) {
-        should_float = config_->float_rules()[res_class_name];
+        should_float = config_->float_rules().at(res_class_name);
     } else if (config_->float_rules().find(res_class) != config_->float_rules().end()) {
-        should_float = config_->float_rules()[res_class];
+        should_float = config_->float_rules().at(res_class);
     }
 
 
@@ -253,7 +242,6 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
 
     if (should_float) {
-        
         if (stored_attr.width > 0 && stored_attr.height > 0) {
             XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
         } else if (hint.min_width > 0 && hint.min_height > 0) {
@@ -279,15 +267,11 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     // but first we have to check if it's already in the list!
     if (!workspaces_[current_]->Has(w)) { 
         workspaces_[current_]->UnsetFocusedClient();
-
-        // XSelectInput() and Borders are automatically done in the constructor of Client class.
         workspaces_[current_]->Add(w, should_float);
+        workspaces_[current_]->SetFocusedClient(w);
+        Tile(workspaces_[current_]);
+        SetNetActiveWindow(w);
     }
-
-    // Set the newly mapped client as the focused one.
-    workspaces_[current_]->SetFocusedClient(w);
-    Tile(workspaces_[current_]);
-    SetNetActiveWindow(w);
 
     pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
     bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net);
@@ -320,11 +304,11 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
     Action action = config_->GetKeybindAction(modifier, key);
 
     if (action == Action::EXEC) {
-        string command = config_->keybind_cmds()[modifier + '+' + key] + '&';
+        string command = config_->keybind_cmds().at(modifier + '+' + key) + '&';
         system(command.c_str());
         return;
     } else if (action == Action::EXIT) {
-        Stop();
+        system("pkill X");
     } else if (action == Action::TILE_H) {
         workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
     } else if (action == Action::TILE_V) {
@@ -365,10 +349,9 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 }
 
 void WindowManager::OnButtonPress(const XButtonEvent& e) {
-    Window w = e.subwindow;
-    if (w == None) return;
+    if (!e.subwindow) return;
 
-    Client* c = Client::mapper_[w];
+    Client* c = Client::mapper_[e.subwindow];
     if (!c || !c->is_floating()) {
         return;
     } 
@@ -376,7 +359,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
     if (e.state == Mod4Mask) {
         // Lookup the attributes (e.g., size and position) of a window
         // and store the result in attr_
-        XGetWindowAttributes(dpy_, w, &c->previous_attr());
+        XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
         btn_pressed_event_ = e;
 
         XDefineCursor(dpy_, root_window_, cursors_[e.button]);
@@ -384,7 +367,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
 }
 
 void WindowManager::OnButtonRelease(const XButtonEvent& e) {
-    if (btn_pressed_event_.subwindow == None) return;
+    if (!btn_pressed_event_.subwindow) return;
 
     XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, btn_pressed_event_.subwindow);
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, btn_pressed_event_.subwindow);
@@ -397,16 +380,14 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
-    Window w = btn_pressed_event_.subwindow;
-    if (w == None) return;
+    if (!btn_pressed_event_.subwindow) return;
 
-    Client* c = Client::mapper_[w];
+    Client* c = Client::mapper_[btn_pressed_event_.subwindow];
     if (!c) return;
+    XWindowAttributes& attr = c->previous_attr();
 
     int xdiff = e.x - btn_pressed_event_.x;
     int ydiff = e.y - btn_pressed_event_.y;
-
-    XWindowAttributes& attr = c->previous_attr();
     int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
     int new_y = attr.y + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
     int new_width = attr.width + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
@@ -414,7 +395,7 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
     if (new_width < MIN_WINDOW_WIDTH) new_width = MIN_WINDOW_WIDTH;
     if (new_height < MIN_WINDOW_HEIGHT) new_height = MIN_WINDOW_HEIGHT;
-    XMoveResizeWindow(dpy_, w, new_x, new_y, new_width, new_height);
+    XMoveResizeWindow(dpy_, btn_pressed_event_.subwindow, new_x, new_y, new_width, new_height);
 }
 
 

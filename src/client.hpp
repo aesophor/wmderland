@@ -23,6 +23,8 @@ public:
     
     void Map();
     void Unmap();
+    void Raise();
+    void SetInputFocus();
     void SetBorderWidth(unsigned int width);
     void SetBorderColor(unsigned long color);
     XWindowAttributes GetXWindowAttributes();
@@ -31,7 +33,6 @@ public:
     Workspace* workspace();
     XWindowAttributes& previous_attr();    
 
-    bool is_bar() const;
     bool is_floating() const;
     bool is_fullscreen() const;
     void set_workspace(Workspace* workspace);
@@ -44,7 +45,6 @@ private:
     Workspace* workspace_;
     XWindowAttributes previous_attr_;
 
-    bool is_bar_;
     bool is_floating_;
     bool is_fullscreen_;
 };

@@ -17,7 +17,6 @@ public:
     static WindowManager* GetInstance();
     ~WindowManager();
     void Run();
-    void Stop();
 
 private:
     static WindowManager* instance_;
@@ -29,9 +28,8 @@ private:
 
     // XEvent handlers
     static int OnXError(Display* dpy, XErrorEvent* e);
-    void OnCreateNotify(const XCreateWindowEvent& e);
-    void OnDestroyNotify(const XDestroyWindowEvent& e);
     void OnMapRequest(const XMapRequestEvent& e);
+    void OnDestroyNotify(const XDestroyWindowEvent& e);
     void OnKeyPress(const XKeyEvent& e);
     void OnButtonPress(const XButtonEvent& e);
     void OnButtonRelease(const XButtonEvent& e);
@@ -57,8 +55,6 @@ private:
 
     // Window move, resize event cache.
     XButtonEvent btn_pressed_event_;
-
-    Cursor cursor_;
 
     // Properties
     Properties* prop_;

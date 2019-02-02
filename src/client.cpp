@@ -9,8 +9,6 @@ std::unordered_map<Window, Client*> Client::mapper_;
 Client::Client(Display* dpy, Window w, Workspace* workspace)
     : dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
     mapper_[window_] = this;
-    is_bar_ = wm_utils::IsBar(dpy, w);
- 
     SetBorderWidth(Config::GetInstance()->border_width());
     SetBorderColor(Config::GetInstance()->focused_color());
 }
@@ -26,6 +24,14 @@ void Client::Map() {
 
 void Client::Unmap() {
     XUnmapWindow(dpy_, window_);
+}
+
+void Client::Raise() {
+    XRaiseWindow(dpy_, window_);
+}
+
+void Client::SetInputFocus() {
+    XSetInputFocus(dpy_, window_, RevertToParent, CurrentTime);
 }
 
 void Client::SetBorderWidth(unsigned int width) {
@@ -53,10 +59,6 @@ XWindowAttributes& Client::previous_attr() {
     return previous_attr_;
 }
 
-
-bool Client::is_bar() const {
-    return is_bar_;
-}
 
 bool Client::is_floating() const {
     return is_floating_;
