@@ -38,12 +38,12 @@ private:
     void OnMotionNotify(const XButtonEvent& e);
 
     // Properties manipulation
-    void SetNetActiveWindow(Window focused_window);
+    void SetNetActiveWindow(Window w);
     void ClearNetActiveWindow();
 
     // Workspace manipulation
-    void GotoWorkspace(short next);
-    void MoveWindowToWorkspace(Window window, short next); 
+    void GotoWorkspace(int next);
+    void MoveWindowToWorkspace(Window window, int next); 
 
     // Client manipulation
     void Center(Window w);
@@ -54,25 +54,20 @@ private:
  
     Display* dpy_;
     Window root_window_;
+    Cursor cursors_[4];
+
+    Properties* prop_;
+    Config* config_;
+    Cookie* cookie_;
+    Workspace* workspaces_[WORKSPACE_COUNT];
+    short current_;
 
     // Window move, resize event cache.
     XButtonEvent btn_pressed_event_;
 
-    // Properties
-    Properties* prop_;
-    Config* config_;
-    Cookie* cookie_;
-
-    // Cursors
-    Cursor cursors_[4];
-
     // Bar
     short bar_height_;
     Window bar_;
-
-    // Workspaces
-    Workspace* workspaces_[WORKSPACE_COUNT];
-    short current_;
 };
 
 #endif

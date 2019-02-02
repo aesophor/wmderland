@@ -156,40 +156,6 @@ void WindowManager::Run() {
 }
 
 
-void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
-    Window w = e.window;
-
-    // When a window is destroyed, remove it from the current workspace's client list.    
-    Client* c = Client::mapper_[w];
-    if (!c) return;
-
-    // If the client we are destroying is fullscreen,
-    // make sure to unset the workspace's fullscreen state.
-    if (c->is_fullscreen()) {
-        c->workspace()->set_fullscreen(false);
-    }
-
-    // If the client being destroyed is within current workspace,
-    // remove it from current workspace's client list.
-    if (workspaces_[current_]->Has(w)) {
-        workspaces_[current_]->Remove(w);
-        Tile(workspaces_[current_]);
-        ClearNetActiveWindow();
-
-        // Since the previously active window has been killed, we should
-        // manually set focus to another window.
-        Client* new_focused_client = workspaces_[current_]->GetFocusedClient();
-        if (new_focused_client) {
-            workspaces_[current_]->SetFocusedClient(new_focused_client->window());
-            SetNetActiveWindow(new_focused_client->window());
-        }
-    } else {
-        c->workspace()->Remove(w);
-    }
-
-    c->workspace()->RaiseAllFloatingClients();
-}
-
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     Window w = e.window;
 
@@ -279,6 +245,36 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
         ToggleFullScreen(w);
     }
+}
+
+void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
+    if (!Client::mapper_[e.window]) return;
+
+    Window w = e.window;
+    Client* c = Client::mapper_[e.window];
+
+    // If the client we are destroying is fullscreen, make sure to unset the workspace's fullscreen state.
+    if (c->is_fullscreen()) {
+        c->workspace()->set_fullscreen(false);
+        c->workspace()->MapAllClients();
+    }
+
+    // If the client being destroyed is within current workspace,
+    // remove it from current workspace's client list.
+    c->workspace()->Remove(w);
+    c->workspace()->Remove(w);
+    Tile(c->workspace());
+    ClearNetActiveWindow();
+
+    // Since the previously active window has been killed, we should
+    // manually set focus to another window.
+    Client* new_focused_client = c->workspace()->GetFocusedClient();
+    if (new_focused_client) {
+        c->workspace()->SetFocusedClient(new_focused_client->window());
+        SetNetActiveWindow(new_focused_client->window());
+    }
+
+    c->workspace()->RaiseAllFloatingClients();
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
@@ -399,8 +395,8 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 }
 
 
-void WindowManager::SetNetActiveWindow(Window focused_window) {
-    Client* c = workspaces_[current_]->GetClient(focused_window);
+void WindowManager::SetNetActiveWindow(Window w) {
+    Client* c = workspaces_[current_]->GetClient(w);
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
             PropModeReplace, (unsigned char*) &(c->window()), 1);
 }
@@ -423,7 +419,7 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
 }
 
 
-void WindowManager::GotoWorkspace(short next) {
+void WindowManager::GotoWorkspace(int next) {
     if (current_ == next) return;
 
     ClearNetActiveWindow();
@@ -440,7 +436,7 @@ void WindowManager::GotoWorkspace(short next) {
     }
 }
 
-void WindowManager::MoveWindowToWorkspace(Window window, short next) {    
+void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
     if (current_ == next) return;
 
     Client* c = Client::mapper_[window];
