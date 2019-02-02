@@ -67,15 +67,35 @@ namespace wm_utils {
         return string((char*) list);
     }
 
+    bool QueryWindowProperty(Display* dpy, Window w, Atom src, Atom* targets, int target_count) {
+        Atom prop, da;
+        unsigned char *prop_ret = nullptr;
+        int di;
+        unsigned long dl;
 
-    unsigned int QueryKeycode(Display* dpy, const string& key_name) {
-        return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
+        if (XGetWindowProperty(dpy, w, src, 0, sizeof(Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
+            if (prop_ret) {
+                prop = ((Atom*) prop_ret)[0];
+
+                for (int i = 0; i < target_count; i++) {
+                    if (prop == targets[i]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
-    string QueryKeysym(Display* dpy, unsigned int keycode, bool shift) {
+
+    string KeysymToStr(Display* dpy, unsigned int keycode, bool shift) {
         return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 
     }
 
+    unsigned int StrToKeycode(Display* dpy, const string& key_name) {
+        return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
+    }
+    
     string KeymaskToStr(int modifier) {
         string modifier_str = "";
 
@@ -163,6 +183,7 @@ namespace wm_utils {
     }
 
 
+
     // Rename this shit
     // We are checking if the window has _NET_WM_STATE_FULLSCREEN
     // if so, we have to set it to fullscreen upon receiving map request.
@@ -173,7 +194,7 @@ namespace wm_utils {
         unsigned long dl;
 
         if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_STATE], 0,
-                    sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
+                    sizeof(Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
             if (prop_ret) {
                 prop = ((Atom*) prop_ret)[0];
                 if (prop == atoms[atom::NET_WM_STATE_FULLSCREEN]) {
@@ -191,9 +212,9 @@ namespace wm_utils {
         unsigned long dl;
 
         if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_WINDOW_TYPE], 0,
-                    sizeof (Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
+                    sizeof(Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
             if (prop_ret) {
-                prop = ((Atom *)prop_ret)[0];
+                prop = ((Atom*) prop_ret)[0];
                 if (prop == atoms[atom::NET_WM_WINDOW_TYPE_DIALOG] ||
                         prop == atoms[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]) {
                     return true;
@@ -202,13 +223,7 @@ namespace wm_utils {
         }
         return false;
     }
-
-
-    bool IsBar(Display* dpy, Window w) {
-        string class_name = string(QueryWmClass(dpy, w).res_class);
-        return string_utils::Contains(class_name, "Polybar");
-    }
-
+ 
 }
 
 

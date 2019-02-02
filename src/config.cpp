@@ -134,51 +134,51 @@ void Config::SetKeybindAction(string modifier_and_key, Action action) {
 }
 
 
-unsigned short Config::gap_width() {
+unsigned short Config::gap_width() const {
     return gap_width_;
 }
 
-unsigned short Config::border_width() {
+unsigned short Config::border_width() const {
     return border_width_;
 }
 
-unsigned short Config::min_window_width() {
+unsigned short Config::min_window_width() const {
     return min_window_width_;
 }
 
-unsigned short Config::min_window_height() {
+unsigned short Config::min_window_height() const {
     return min_window_height_;
 }
 
-unsigned long Config::focused_color() {
+unsigned long Config::focused_color() const {
     return focused_color_;
 }
 
-unsigned long Config::unfocused_color() {
+unsigned long Config::unfocused_color() const {
     return unfocused_color_;
 }
 
 
-unordered_map<string, string> Config::global_vars() {
+const unordered_map<string, string>& Config::global_vars() const {
     return global_vars_;
 }
 
-unordered_map<string, short> Config::spawn_rules() {
+const unordered_map<string, short>& Config::spawn_rules() const {
     return spawn_rules_;
 }
 
-unordered_map<string, bool> Config::float_rules() {
+const unordered_map<string, bool>& Config::float_rules() const {
     return float_rules_;
 }
 
-unordered_map<string, Action> Config::keybind_rules() {
+const unordered_map<string, Action>& Config::keybind_rules() const {
     return keybind_rules_;
 }
 
-unordered_map<string, string> Config::keybind_cmds() {
+const unordered_map<string, string>& Config::keybind_cmds() const {
     return keybind_cmds_;
 }
 
-vector<string> Config::autostart_rules() {
+const vector<string>& Config::autostart_rules() const {
     return autostart_rules_;
 }

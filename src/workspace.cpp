@@ -95,7 +95,7 @@ void Workspace::Move(Window w, Workspace* new_workspace) {
 
 void Workspace::Arrange(int bar_height, int border_width, int gap_width) {
     // If there are no clients to arrange, return at once.
-    if (!client_tree_->current()) return;
+    if (!client_tree_->current() || GetTilingClients().empty()) return;
 
     // Get display resolution.
     pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
@@ -158,7 +158,7 @@ void Workspace::SetTilingDirection(Direction tiling_direction) {
 void Workspace::MapAllClients() {
     for (auto leaf : client_tree_->GetAllLeaves()) {
         if (leaf != client_tree_->root()) {
-            XMapWindow(dpy_, leaf->client()->window());
+            leaf->client()->Map();
         }
     }
 }
@@ -166,14 +166,14 @@ void Workspace::MapAllClients() {
 void Workspace::UnmapAllClients() {
     for (auto leaf : client_tree_->GetAllLeaves()) {
         if (leaf != client_tree_->root()) {
-            XUnmapWindow(dpy_, leaf->client()->window());
+            leaf->client()->Unmap();
         }
     }
 }
 
 void Workspace::RaiseAllFloatingClients() {
     for (auto c : GetFloatingClients()) {
-        XRaiseWindow(dpy_, c->window());
+        c->Raise();
     }
 }
 
@@ -181,8 +181,8 @@ void Workspace::SetFocusedClient(Window w) {
     Client* c = Client::mapper_[w];
     if (c) {
         // Raise the window to the top and set input focus to it.
-        XRaiseWindow(dpy_, w);
-        XSetInputFocus(dpy_, w, RevertToParent, CurrentTime);
+        c->Raise();
+        c->SetInputFocus();
         c->SetBorderColor(Config::GetInstance()->focused_color());
     }
 }
@@ -204,8 +204,7 @@ Client* Workspace::GetFocusedClient() const {
 
 Client* Workspace::GetClient(Window w) const {
     // We'll get the corresponding client using the lightning fast
-    // client mapper which has bigO(1), so we don't have to iterate
-    // through the two dimensional clients_ vector!
+    // client mapper which has bigO(1).
     Client* c = Client::mapper_[w];
     // But we have to check if it belongs to current workspace!
     return (c && c->workspace() == this) ? c : nullptr;
@@ -226,7 +225,9 @@ vector<Client*> Workspace::GetTilingClients() const {
     vector<Client*> tiling_clients;
 
     for (auto leaf : client_tree_->GetAllLeaves()) {
-        tiling_clients.push_back(leaf->client());
+        if (leaf != client_tree_->root() && !leaf->client()->is_floating()) {
+            tiling_clients.push_back(leaf->client());
+        }
     }
     return tiling_clients;
 }

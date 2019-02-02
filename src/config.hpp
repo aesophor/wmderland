@@ -7,10 +7,8 @@
 #include <vector>
 #include <string>
 
-using tiling::Action;
-
 #define WIN_MGR_NAME "Wmderland"
-#define VERSION "0.8.1 Beta"
+#define VERSION "0.9 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 #define WORKSPACE_COUNT 9
@@ -48,22 +46,22 @@ class Config {
 public:
     static Config* GetInstance();
 
-    Action GetKeybindAction(std::string modifier, std::string key);
-    void SetKeybindAction(std::string modifier_and_key, Action action);
+    tiling::Action GetKeybindAction(std::string modifier, std::string key);
+    void SetKeybindAction(std::string modifier_and_key, tiling::Action action);
 
-    unsigned short gap_width();
-    unsigned short border_width();
-    unsigned short min_window_width();
-    unsigned short min_window_height();
-    unsigned long focused_color();
-    unsigned long unfocused_color();
+    unsigned short gap_width() const;
+    unsigned short border_width() const;
+    unsigned short min_window_width() const;
+    unsigned short min_window_height() const;
+    unsigned long focused_color() const;
+    unsigned long unfocused_color() const;
 
-    std::unordered_map<std::string, std::string> global_vars();
-    std::unordered_map<std::string, short> spawn_rules();
-    std::unordered_map<std::string, bool> float_rules();
-    std::unordered_map<std::string, Action> keybind_rules();
-    std::unordered_map<std::string, std::string> keybind_cmds();
-    std::vector<std::string> autostart_rules();
+    const std::unordered_map<std::string, std::string>& global_vars() const;
+    const std::unordered_map<std::string, short>& spawn_rules() const;
+    const std::unordered_map<std::string, bool>& float_rules() const;
+    const std::unordered_map<std::string, tiling::Action>& keybind_rules() const;
+    const std::unordered_map<std::string, std::string>& keybind_cmds() const;
+    const std::vector<std::string>& autostart_rules() const;
 
 private:
     static Config* instance_;
@@ -84,7 +82,7 @@ private:
     std::unordered_map<std::string, std::string> global_vars_;
     std::unordered_map<std::string, short> spawn_rules_;
     std::unordered_map<std::string, bool> float_rules_;
-    std::unordered_map<std::string, Action> keybind_rules_;
+    std::unordered_map<std::string, tiling::Action> keybind_rules_;
     std::unordered_map<std::string, std::string> keybind_cmds_;
     std::vector<std::string> autostart_rules_;
 };
