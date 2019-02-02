@@ -29,8 +29,8 @@ namespace wm_utils {
     XClassHint QueryWmClass(Display* dpy, Window w);
     std::string QueryWmName(Display* dpy, Window w);
 
-    unsigned int QueryKeycode(Display* dpy, const std::string& key_name);
-    std::string QueryKeysym(Display* dpy, unsigned int keycode, bool shift);
+    std::string KeysymToStr(Display* dpy, unsigned int keycode, bool shift);
+    unsigned int StrToKeycode(Display* dpy, const std::string& key_name);
     std::string KeymaskToStr(int modifier);
     int StrToKeymask(const std::string& modifier_str, bool shift);
     tiling::Action StrToAction(const std::string& action_str);

@@ -78,8 +78,8 @@ void WindowManager::InitProperties() {
 }
 
 void WindowManager::InitXEvents() {
-    // Define the key combinations which will send us X events based on
-    // the key combinations that user has defined in config.
+    // Define the key combinations which will send us X events based on the key combinations 
+    // defined in config.
     for (auto r : config_->keybind_rules()) {
         vector<string> modifier_and_key = string_utils::Split(r.first, '+');
         bool shift = string_utils::Contains(r.first, "Shift");
@@ -87,7 +87,7 @@ void WindowManager::InitXEvents() {
         string modifier = modifier_and_key[0];
         string key = modifier_and_key[(shift) ? 2 : 1];
 
-        int keycode = wm_utils::QueryKeycode(dpy_, key);
+        int keycode = wm_utils::StrToKeycode(dpy_, key);
         int mod_mask = wm_utils::StrToKeymask(modifier, shift); 
         XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
@@ -95,7 +95,7 @@ void WindowManager::InitXEvents() {
     // Define the key combinations to goto a specific workspace,
     // as well as moving an application to a specific workspace.
     for (int i = 0; i < 9; i++) {
-        int keycode = wm_utils::QueryKeycode(dpy_, std::to_string(i+1).c_str());
+        int keycode = wm_utils::StrToKeycode(dpy_, std::to_string(i+1).c_str());
         XGrabKey(dpy_, keycode, Mod4Mask, root_window_, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
@@ -316,7 +316,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
     }
  
     string modifier = wm_utils::KeymaskToStr(e.state);
-    string key = wm_utils::QueryKeysym(dpy_, e.keycode, false);
+    string key = wm_utils::KeysymToStr(dpy_, e.keycode, false);
     Action action = config_->GetKeybindAction(modifier, key);
 
     if (action == Action::EXEC) {

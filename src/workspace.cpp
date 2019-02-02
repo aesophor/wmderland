@@ -95,7 +95,7 @@ void Workspace::Move(Window w, Workspace* new_workspace) {
 
 void Workspace::Arrange(int bar_height, int border_width, int gap_width) {
     // If there are no clients to arrange, return at once.
-    if (!client_tree_->current()) return;
+    if (!client_tree_->current() || GetTilingClients().empty()) return;
 
     // Get display resolution.
     pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
@@ -226,7 +226,9 @@ vector<Client*> Workspace::GetTilingClients() const {
     vector<Client*> tiling_clients;
 
     for (auto leaf : client_tree_->GetAllLeaves()) {
-        tiling_clients.push_back(leaf->client());
+        if (leaf != client_tree_->root() && !leaf->client()->is_floating()) {
+            tiling_clients.push_back(leaf->client());
+        }
     }
     return tiling_clients;
 }

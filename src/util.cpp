@@ -68,14 +68,14 @@ namespace wm_utils {
     }
 
 
-    unsigned int QueryKeycode(Display* dpy, const string& key_name) {
-        return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
-    }
-
-    string QueryKeysym(Display* dpy, unsigned int keycode, bool shift) {
+    string KeysymToStr(Display* dpy, unsigned int keycode, bool shift) {
         return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 
     }
 
+    unsigned int StrToKeycode(Display* dpy, const string& key_name) {
+        return XKeysymToKeycode(dpy, XStringToKeysym(key_name.c_str()));
+    }
+    
     string KeymaskToStr(int modifier) {
         string modifier_str = "";
 
