@@ -1,5 +1,5 @@
-#ifndef WM_HPP_
-#define WM_HPP_
+#ifndef WMDERLAND_WM_HPP_
+#define WMDERLAND_WM_HPP_
 
 #include "properties.hpp"
 #include "workspace.hpp"
@@ -14,7 +14,6 @@
 
 class WindowManager {
 public:
-    /* Singleton since only a single WM is required at once. */
     static WindowManager* GetInstance();
     ~WindowManager();
     void Run();
@@ -27,26 +26,26 @@ private:
     void InitProperties();
     void InitXEvents();
     void InitCursors();
-    void SetCursor(Window w, Cursor c);
 
-    /* XEvent handlers */
+    // XEvent handlers
     static int OnXError(Display* dpy, XErrorEvent* e);
-    void OnMapRequest(Window w);
-    void OnDestroyNotify(Window w);
-    void OnKeyPress();
-    void OnButtonPress();
-    void OnButtonRelease();
-    void OnMotionNotify();
+    void OnCreateNotify(const XCreateWindowEvent& e);
+    void OnDestroyNotify(const XDestroyWindowEvent& e);
+    void OnMapRequest(const XMapRequestEvent& e);
+    void OnKeyPress(const XKeyEvent& e);
+    void OnButtonPress(const XButtonEvent& e);
+    void OnButtonRelease(const XButtonEvent& e);
+    void OnMotionNotify(const XButtonEvent& e);
 
-    /* Properties manipulation */
+    // Properties manipulation
     void SetNetActiveWindow(Window focused_window);
     void ClearNetActiveWindow();
 
-    /* Workspace manipulation */
+    // Workspace manipulation
     void GotoWorkspace(short next);
     void MoveWindowToWorkspace(Window window, short next); 
 
-    /* Client manipulation */
+    // Client manipulation
     void Center(Window w);
     void Tile(Workspace* workspace);
     void ToggleFloating(Window w);
@@ -54,25 +53,26 @@ private:
     void KillClient(Window w);
  
     Display* dpy_;
-    Window root_;
-    XEvent event_;
-    XButtonEvent start_;
-    Cursor cursor_;
-    Direction tiling_direction_;
+    Window root_window_;
 
-    /* Properties */
+    // Window move, resize event cache.
+    XButtonEvent btn_pressed_event_;
+
+    Cursor cursor_;
+
+    // Properties
     Properties* prop_;
     Config* config_;
     Cookie* cookie_;
 
-    /* Cursors */
+    // Cursors
     Cursor cursors_[4];
 
-    /* Bar */
+    // Bar
     short bar_height_;
     Window bar_;
 
-    /* Workspaces */
+    // Workspaces
     Workspace* workspaces_[WORKSPACE_COUNT];
     short current_;
 };

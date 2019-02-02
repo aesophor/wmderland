@@ -1,11 +1,13 @@
-#ifndef CONFIG_HPP_
-#define CONFIG_HPP_
+#ifndef WMDERLAND_CONFIG_HPP_
+#define WMDERLAND_CONFIG_HPP_
 
+#include "tiling.hpp"
 #include "util.hpp"
 #include <unordered_map>
 #include <vector>
 #include <string>
 
+using tiling::Action;
 
 #define WIN_MGR_NAME "Wmderland"
 #define VERSION "0.8.1 Beta"

@@ -6,6 +6,7 @@ using std::pair;
 using std::size_t;
 using std::string;
 using std::vector;
+using tiling::Action;
 
 WindowPosSize::WindowPosSize() {
     WindowPosSize(0, 0, 0, 0);
@@ -28,7 +29,7 @@ bool WindowPosSize::operator!=(const WindowPosSize& other) {
 
 namespace wm_utils {
  
-    pair<short, short> GetDisplayResolution(Display* dpy, Window root) {
+    pair<int, int> GetDisplayResolution(Display* dpy, Window root) {
         XWindowAttributes root_attr = QueryWindowAttributes(dpy, root);
         return pair<short, short>(root_attr.width, root_attr.height);
     }
@@ -135,13 +136,13 @@ namespace wm_utils {
 
     Action StrToAction(const string& action_str) {
         if (action_str == "tile_horizontally") {
-            return TILE_H;
+            return Action::TILE_H;
         } else if (action_str == "tile_vertically") {
-            return TILE_V;
+            return Action::TILE_V;
         } else if (action_str == "focus_left") {
-            return FOCUS_LEFT;
+            return Action::FOCUS_LEFT;
         } else if (action_str == "focus_right") {
-            return FOCUS_RIGHT;
+            return Action::FOCUS_RIGHT;
         } else if (action_str == "focus_down") {
             return Action::FOCUS_DOWN;
         } else if (action_str == "focus_up") {
@@ -226,7 +227,7 @@ namespace string_utils {
         return tokens;
     }
 
-    vector<string> Split(const string& s, const char delimiter, short count) {
+    vector<string> Split(const string& s, const char delimiter, int count) {
         vector<string> tokens;
         string::size_type head = 0;
         string::size_type tail = s.find(delimiter, head);

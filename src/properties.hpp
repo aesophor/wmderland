@@ -1,12 +1,12 @@
-#ifndef PROPERTIES_HPP_
-#define PROPERTIES_HPP_
+#ifndef WMDERLAND_PROPERTIES_HPP_
+#define WMDERLAND_PROPERTIES_HPP_
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
 namespace atom {
 
-    /* Default atoms, defined by X */
+    // Default atoms, defined by X
     enum {
         WM_PROTOCOLS,
         WM_DELETE,
@@ -15,7 +15,7 @@ namespace atom {
         WM_ATOM_SIZE
     };
 
-    /* Extended Window Manager Hints (EWMH) atoms, defined by XDG/freedesktop.org */
+    // Extended Window Manager Hints (EWMH) atoms, defined by XDG/freedesktop.org
     enum {
         NET_SUPPORTED,
         NET_WM_NAME,
@@ -34,12 +34,9 @@ namespace atom {
 
 struct Properties {
     Properties(Display* dpy);
-
     Atom utf8string;
-    Atom wm_atoms[atom::WM_ATOM_SIZE];
-    Atom net_atoms[atom::NET_ATOM_SIZE];
-
-    friend class WindowManager;
+    Atom wm[atom::WM_ATOM_SIZE];
+    Atom net[atom::NET_ATOM_SIZE];
 };
 
 #endif

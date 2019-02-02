@@ -1,311 +1,322 @@
+#include <glog/logging.h>
+#include <algorithm>
+#include <stack>
 #include "workspace.hpp"
 #include "config.hpp"
-#include <algorithm>
-#include <string>
-#include <glog/logging.h>
+#include "tiling.hpp"
+#include "util.hpp"
 
 using std::pair;
+using std::stack;
 using std::vector;
+using std::remove;
+using std::remove_if;
+using tiling::Direction;
 
-Workspace::Workspace(Display* dpy, short id) {
-    dpy_ = dpy;
-    id_ = id;
-    has_fullscreen_application_ = false;
-    active_client_pos_ = {-1, -1};
-}
+Workspace::Workspace(Display* dpy, Window root_window, int id)
+    : dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {}
 
 Workspace::~Workspace() {
-    for (auto column : clients_) {
-        for (auto client : column) {
-            delete client;
-        }
-    }
+    delete client_tree_;
 }
 
-
-void Workspace::Add(Window w, Direction tiling_direction, bool is_floating) {
-    switch (tiling_direction) {
-        case HORIZONTAL:
-            AddHorizontal(w, is_floating);
-            break;
-
-        case VERTICAL:
-            AddVertical(w, is_floating);
-            break;
-
-        default:
-            break;
-    }
-}
-
-void Workspace::AddHorizontal(Window w, bool is_floating) {
-    Client* c = new Client(dpy_, w, this);
-    c->set_floating(is_floating);
-
-    // If active_client_pos_.first (i.e., active client's column) == last column in that row,
-    // we push_back() a vector of Client* to create a new column at the end of that row,
-    // and then push_back() the window to that newly created column.
-    //
-    // Otherwise, insert a new column at the next position of active_client_pos_.first,
-    // and then push_back() the window to that newly created column.
-    short last_col = (short) clients_.size() - 1;
-
-    if (active_client_pos_.first == last_col) {
-        clients_.push_back(vector<Client*>());
-        clients_[last_col + 1].push_back(c);
-    } else {
-        clients_.insert(clients_.begin() + active_client_pos_.first + 1, vector<Client*>());
-        clients_[active_client_pos_.first + 1].push_back(c);
-    }
-
-    active_client_pos_.first++;
-    active_client_pos_.second = 0;
-}
-
-void Workspace::AddVertical(Window w, bool is_floating) {
-    if (clients_.size() == 0) {
-        AddHorizontal(w, is_floating);
-        return;
-    }
-
-    Client* c = new Client(dpy_, w, this);
-    c->set_floating(is_floating);
-
-    vector<Client*>& active_client_pos_col = clients_[active_client_pos_.first];
-    short last_row = (short) active_client_pos_col.size() - 1;
-
-    if (active_client_pos_.second == last_row) {
-        active_client_pos_col.push_back(c);
-    } else {
-        active_client_pos_col.insert(active_client_pos_col.begin() + active_client_pos_.second + 1, c);
-    }
-
-    active_client_pos_.second++;
-}
-
-
-void Workspace::Remove(Window w) {
-    vector<Client*>* client_col;
-    Client* c;
-
-    for (short col = 0; col < ColSize(); col++) {
-        short row_count = RowSize(col);
-        for (short row = 0; row < row_count; row++) {
-            if (clients_[col][row]->window() == w) {
-                client_col = &(clients_[col]);
-                c = clients_[col][row];
-            }
-        }
-    }
-
-    if (c == nullptr) return;
-
-    // If that column contains only one client, wipe out that column and delete the client.
-    // Otherwise, simply remove the client from that column.
-    if ((*client_col).size() == 1) {
-        clients_.erase(std::remove(clients_.begin(), clients_.end(), *client_col), clients_.end());
-    } else {
-        (*client_col).erase(std::remove((*client_col).begin(), (*client_col).end(), c), (*client_col).end());
-    }
-
-    delete c;
-
-    // If active_client_pos_'s column is out of range, set it to the last column.
-    if (active_client_pos_.first >= (short) clients_.size()) {
-        active_client_pos_.first = (short) clients_.size() - 1;
-    }
-
-    // If active_client_pos_'s row is out of range, set it to the last row in current column.
-    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
-        active_client_pos_.second = (short) clients_[active_client_pos_.first].size() - 1;
-    } 
-}
-
-
-void Workspace::Move(Window w, Workspace* workspace) {
-    bool is_floating = Client::mapper_[w]->is_floating();
-    Remove(w);
-    workspace->AddHorizontal(w, is_floating);
-}
 
 bool Workspace::Has(Window w) {
-    return Get(w) != nullptr;
+    return GetClient(w) != nullptr;
 }
 
-bool Workspace::IsEmpty() {
-    return clients_.size() == 0;
+void Workspace::Add(Window w, bool is_floating) {
+    Client* c = new Client(dpy_, w, this);
+    c->set_floating(is_floating);
+
+    TreeNode* new_node = new TreeNode(c);
+
+    if (!client_tree_->current()) {
+        // If there are no windows at all, add the node as the root's child.
+        client_tree_->root()->AddChild(new_node);
+    } else {
+        // If the user has not specified any tiling direction on current node, 
+        // then add the new node as its brother.
+        TreeNode* current_node = client_tree_->current();
+        current_node->parent()->InsertChildAfter(new_node, current_node);
+    } 
+
+    client_tree_->set_current(new_node);
 }
 
-short Workspace::ColSize() const {
-    return clients_.size();
-}
+void Workspace::Remove(Window w) {
+    Client* c = GetClient(w);
+    if (!c) return;
 
-short Workspace::RowSize(short col_idx) const {
-    return clients_[col_idx].size();
-}
+    TreeNode* node = client_tree_->GetTreeNode(c);
+    if (!node) return;
 
+    // Get all tiling leaves and find the index of the node we're going to remove.
+    vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
+    nodes.erase(remove_if(nodes.begin(), nodes.end(), [](TreeNode* n) {
+            return n->client()->is_floating(); }), nodes.end());
+    ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
 
-Client* Workspace::Get(Window w) {
-    // We'll get the corresponding client using the lightning fast
-    // client mapper which has bigO(1), so we don't have to iterate
-    // through the two dimensional clients_ vector!
-    Client* c = Client::mapper_[w];
+    // Remove this node from its parent.
+    TreeNode* parent_node = node->parent();
+    parent_node->RemoveChild(node);
+    delete node;
+    delete c;
 
-    // But we have to check if it belongs to current workspace!
-    if (c && c->workspace() == this) {
-        return c;
+    // If its parent has no children left, then remove parent from its grandparent 
+    // (If this parent is not the root).
+    while (parent_node != client_tree_->root() && parent_node->children().empty()) {
+        TreeNode* grandparent_node = parent_node->parent();
+        grandparent_node->RemoveChild(parent_node);
+        delete parent_node;
+        parent_node = grandparent_node;
     }
-    return nullptr;
+
+    // Decide which node shall be set as the new current TreeNode. If there are no
+    // windows left, set current to nullptr.
+    nodes.erase(remove(nodes.begin(), nodes.end(), node), nodes.end());
+
+    if (nodes.empty()) {
+        client_tree_->set_current(nullptr);
+        return;
+    }
+    // If idx is out of bounds, decrement it by one.
+    if (idx > (long) nodes.size() - 1) {
+        idx--;
+    }
+    client_tree_->set_current(nodes[idx]);
 }
 
-Client* Workspace::GetByIndex(pair<short, short> pos) {
-    if (clients_.size() == 0) return nullptr;
-    if (pos.first < 0 || pos.second < 0) return nullptr;
-
-    if (pos.first >= (short) clients_.size()) return nullptr;
-    if (pos.second >= (short) clients_[pos.first].size()) return nullptr;
-    return clients_[pos.first][pos.second];
+void Workspace::Move(Window w, Workspace* new_workspace) {
+    bool is_floating = Client::mapper_[w]->is_floating();
+    Remove(w);
+    new_workspace->Add(w, is_floating);
 }
 
-vector<Client*> Workspace::GetFloatingClients() {
-    vector<Client*> floating_clients;
+void Workspace::Arrange(int bar_height, int border_width, int gap_width) {
+    // If there are no clients to arrange, return at once.
+    if (!client_tree_->current()) return;
 
-    for (size_t col = 0; col < clients_.size(); col++) {
-        for (size_t row = 0; row < clients_[col].size(); row++) {
-            Client* c = clients_[col][row];
-            if (c->is_floating()) {
-                floating_clients.push_back(c);
-            }
+    // Get display resolution.
+    pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    int screen_width = display_resolution.first;
+    int screen_height = display_resolution.second;
+    Tile(client_tree_->root(), 0 + gap_width / 2, bar_height + gap_width / 2, screen_width - gap_width, screen_height - bar_height - gap_width, border_width, gap_width);
+}
+
+void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) {
+    // Retrieve all clients that we should tile.
+    vector<TreeNode*> tiling_children;
+    for (const auto& child : node->children()) {
+        if (child->client() && child->client()->is_floating()) {
+            continue;
+        } else {
+            tiling_children.push_back(child);
         }
     }
 
-    return floating_clients;
-}
-
-vector<vector<Client*> > Workspace::GetTilingClients() {
-    vector<vector<Client*> > tiling_clients;
-
-    for (size_t col = 0; col < clients_.size(); col++) {
-        vector<Client*> tiling_col;
-        
-        for (size_t row = 0; row < clients_[col].size(); row++) {
-            Client* c = clients_[col][row];
-            if (!c->is_floating()) {
-                tiling_col.push_back(c);
-            }
-        }
-
-        if (!tiling_col.empty()) {
-            tiling_clients.push_back(tiling_col);
-        }
-    }
+    Direction dir = node->tiling_direction();
+    int child_x = x;
+    int child_y = y;
+    int child_width = (dir == Direction::HORIZONTAL) ? width / tiling_children.size() : width;
+    int child_height = (dir == Direction::VERTICAL) ? height / tiling_children.size() : height;
     
-    return tiling_clients;
+    for (size_t i = 0; i < tiling_children.size(); i++) {
+        TreeNode* child = tiling_children[i];
+        if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + child_width * i;
+        if (node->tiling_direction() == Direction::VERTICAL) child_y = y + child_height * i;
+
+        if (child->IsLeaf()) {
+            int new_x = child_x + gap_width / 2;
+            int new_y = child_y + gap_width / 2;
+            int new_width = child_width - border_width * 2 - gap_width;
+            int new_height = child_height - border_width * 2 - gap_width;
+            XMoveResizeWindow(dpy_, child->client()->window(), new_x, new_y, new_width, new_height);
+        } else {
+            Tile(child, child_x, child_y, child_width, child_height, border_width, gap_width);
+        }
+    }
+}
+
+void Workspace::SetTilingDirection(Direction tiling_direction) {
+    if (!client_tree_->current()) {
+        client_tree_->root()->set_tiling_direction(tiling_direction);
+    } else if (client_tree_->current()->parent()->children().size() > 0){
+        // If the user has specified a tiling direction on current node, 
+        // then set current node as an internal node, add the original
+        // current node as this internal node's child and add the new node
+        // as this internal node's another child.
+        TreeNode* current_node = client_tree_->current();
+        current_node->set_tiling_direction(tiling_direction);
+        current_node->AddChild(new TreeNode(current_node->client()));
+        current_node->set_client(nullptr);
+        client_tree_->set_current(current_node->children()[0]);
+    }
 }
 
 
 void Workspace::MapAllClients() {
-    for (auto column : clients_) {
-        for (auto client : column) {
-            XMapWindow(dpy_, client->window());
+    for (auto leaf : client_tree_->GetAllLeaves()) {
+        if (leaf != client_tree_->root()) {
+            XMapWindow(dpy_, leaf->client()->window());
         }
     }
 }
 
 void Workspace::UnmapAllClients() {
-    for (auto column : clients_) {
-        for (auto client : column) {
-            XUnmapWindow(dpy_, client->window());
+    for (auto leaf : client_tree_->GetAllLeaves()) {
+        if (leaf != client_tree_->root()) {
+            XUnmapWindow(dpy_, leaf->client()->window());
         }
     }
 }
 
 void Workspace::RaiseAllFloatingClients() {
-    vector<Client*> floating_clients = GetFloatingClients();
-
-    for (auto c : floating_clients) {
-        UnsetFocusClient();
-        SetFocusClient(c->window());
+    for (auto c : GetFloatingClients()) {
+        XRaiseWindow(dpy_, c->window());
     }
 }
 
-void Workspace::SetFocusClient(Window w) {
+void Workspace::SetFocusedClient(Window w) {
     Client* c = Client::mapper_[w];
-
-    // Raise the window to the top and set input focus to it.
     if (c) {
+        // Raise the window to the top and set input focus to it.
         XRaiseWindow(dpy_, w);
         XSetInputFocus(dpy_, w, RevertToParent, CurrentTime);
-
         c->SetBorderColor(Config::GetInstance()->focused_color());
     }
 }
 
-void Workspace::UnsetFocusClient() {
-    Client* c = active_client();
+void Workspace::UnsetFocusedClient() {
+    if (!client_tree_->current()) return;
+
+    Client* c = client_tree_->current()->client();
     if (c) {
         c->SetBorderColor(Config::GetInstance()->unfocused_color());
     }
 }
 
 
-void Workspace::FocusLeft() {
-    if (active_client_pos_.first <= 0) return;
+Client* Workspace::GetFocusedClient() const {
+    if (!client_tree_->current()) return nullptr;
+    return client_tree_->current()->client();
+}
 
-    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
-    active_client_pos_.first--;
+Client* Workspace::GetClient(Window w) const {
+    // We'll get the corresponding client using the lightning fast
+    // client mapper which has bigO(1), so we don't have to iterate
+    // through the two dimensional clients_ vector!
+    Client* c = Client::mapper_[w];
+    // But we have to check if it belongs to current workspace!
+    return (c && c->workspace() == this) ? c : nullptr;
+}
 
-    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
-        active_client_pos_.second = clients_[active_client_pos_.first].size() - 1;
+vector<Client*> Workspace::GetFloatingClients() const {
+    vector<Client*> floating_clients;
+
+    for (auto leaf : client_tree_->GetAllLeaves()) {
+        if (leaf != client_tree_->root() && leaf->client()->is_floating()) {
+            floating_clients.push_back(leaf->client());
+        }
     }
+    return floating_clients;
+}
 
-    SetFocusClient(GetByIndex(active_client_pos_)->window());
+vector<Client*> Workspace::GetTilingClients() const {
+    vector<Client*> tiling_clients;
+
+    for (auto leaf : client_tree_->GetAllLeaves()) {
+        tiling_clients.push_back(leaf->client());
+    }
+    return tiling_clients;
+}
+
+
+void Workspace::FocusLeft() {
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
+        TreeNode* left_sibling = ptr->GetLeftSibling();
+
+        if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && left_sibling) {
+            ptr = left_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().back();
+            }
+            UnsetFocusedClient();
+            SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
+            return;
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
+        }
+    }
 }
 
 void Workspace::FocusRight() {
-    if (active_client_pos_.first >= (short) clients_.size() - 1) return;
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
+        TreeNode* right_sibling = ptr->GetRightSibling();
 
-    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
-    active_client_pos_.first++;
-
-    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size()) {
-        active_client_pos_.second = clients_[active_client_pos_.first].size() - 1;
+        if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && right_sibling) {
+            ptr = right_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().front();
+            }
+            UnsetFocusedClient();
+            SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
+            return;
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
+        }
     }
-
-    SetFocusClient(GetByIndex(active_client_pos_)->window());
 }
 
 void Workspace::FocusUp() {
-    if (active_client_pos_.second <= 0) return;
-    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
-    active_client_pos_.second--;
-    SetFocusClient(GetByIndex(active_client_pos_)->window());
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
+        TreeNode* left_sibling = ptr->GetLeftSibling();
+
+        if (ptr->parent()->tiling_direction() == Direction::VERTICAL && left_sibling) {
+            ptr = left_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().back();
+            }
+            UnsetFocusedClient();
+            SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
+            return;
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
+        }
+    }
 }
 
 void Workspace::FocusDown() {
-    if (active_client_pos_.second >= (short) clients_[active_client_pos_.first].size() - 1) return;
-    GetByIndex(active_client_pos_)->SetBorderColor(Config::GetInstance()->unfocused_color());
-    active_client_pos_.second++;
-    SetFocusClient(GetByIndex(active_client_pos_)->window());
+    for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
+        TreeNode* right_sibling = ptr->GetRightSibling();
+
+        if (ptr->parent()->tiling_direction() == Direction::VERTICAL && right_sibling) {
+            ptr = right_sibling;
+            while (!ptr->IsLeaf()) {
+                ptr = ptr->children().front();
+            }
+            UnsetFocusedClient();
+            SetFocusedClient(ptr->client()->window());
+            client_tree_->set_current(ptr);
+            return;
+        } else if (ptr->parent() == client_tree_->root()) {
+            return;
+        }
+    }
 }
 
 
-short Workspace::id() {
+int Workspace::id() {
     return id_;
 }
 
-bool Workspace::has_fullscreen_application() {
-    return has_fullscreen_application_;
+bool Workspace::is_fullscreen() {
+    return is_fullscreen_;
 }
 
-void Workspace::set_has_fullscreen_application(bool has_fullscreen_application) {
-    has_fullscreen_application_ = has_fullscreen_application;
-}
-
-Client* Workspace::active_client() {
-    return GetByIndex(active_client_pos_);
-}
-
-pair<short, short> Workspace::active_client_pos() {
-    return active_client_pos_;
+void Workspace::set_fullscreen(bool is_fullscreen) {
+    is_fullscreen_ = is_fullscreen;
 }
