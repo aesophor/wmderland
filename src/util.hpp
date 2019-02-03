@@ -11,15 +11,15 @@ extern "C" {
 #include <vector>
 #include "tiling.hpp"
 
-struct WindowPosSize {
-    WindowPosSize();
-    WindowPosSize(int x, int y, int width, int height);
+struct Area {
+    Area();
+    Area(int x, int y, int width, int height);
 
     int x, y;
     int width, height;
 
-    bool operator==(const WindowPosSize& other);
-    bool operator!=(const WindowPosSize& other);
+    bool operator==(const Area& other);
+    bool operator!=(const Area& other);
 };
 
 namespace wm_utils {

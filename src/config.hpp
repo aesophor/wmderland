@@ -70,8 +70,8 @@ private:
     
     std::unordered_map<std::string, std::string> symtab_;
     void ReplaceSymbols(std::string& s);
-
-    /* Global Variables */
+ 
+    // Global variables
     unsigned short gap_width_;
     unsigned short border_width_;
     unsigned short min_window_width_;
@@ -79,13 +79,14 @@ private:
     unsigned long focused_color_;
     unsigned long unfocused_color_;
 
-    /* Rules */
+    // Rules
     std::unordered_map<std::string, std::string> global_vars_;
     std::unordered_map<std::string, short> spawn_rules_;
     std::unordered_map<std::string, bool> float_rules_;
     std::unordered_map<std::string, tiling::Action> keybind_rules_;
     std::unordered_map<std::string, std::string> keybind_cmds_;
     std::vector<std::string> autostart_rules_;
+
 };
 
 #endif

@@ -22,7 +22,7 @@ Cookie::Cookie(string filename) : filename_ (filename) {
         if (!line.empty()) {
             int res_class_name_length;
             string res_class_name;
-            WindowPosSize window_pos_size;
+            Area window_pos_size;
 
             // First, check the length of the res_class_name string, and 
             // use res_class_name_tokens[1].substr() to extract it accurately.
@@ -37,7 +37,7 @@ Cookie::Cookie(string filename) : filename_ (filename) {
             stringstream(pos_size_tokens[2]) >> window_pos_size.width;
             stringstream(pos_size_tokens[3]) >> window_pos_size.height;
 
-            window_pos_size_map_[res_class_name] = window_pos_size;
+            window_area_map_[res_class_name] = window_pos_size;
         }
     }
 
@@ -47,22 +47,22 @@ Cookie::Cookie(string filename) : filename_ (filename) {
 Cookie::~Cookie() {}
 
 
-WindowPosSize Cookie::Get(const string& res_class_name) const {
-    if (window_pos_size_map_.find(res_class_name) != window_pos_size_map_.end()) {
-        return window_pos_size_map_.at(res_class_name);
+Area Cookie::Get(const string& res_class_name) const {
+    if (window_area_map_.find(res_class_name) != window_area_map_.end()) {
+        return window_area_map_.at(res_class_name);
     }
-    return WindowPosSize(0, 0, 0, 0);
+    return Area(0, 0, 0, 0);
 }
 
-void Cookie::Put(const string& res_class_name, WindowPosSize window_pos_size) {
-    window_pos_size_map_[res_class_name] = window_pos_size;
+void Cookie::Put(const string& res_class_name, Area window_pos_size) {
+    window_area_map_[res_class_name] = window_pos_size;
     WriteToFile();
 }
 
 void Cookie::WriteToFile() const {
     std::ofstream file(filename_);
 
-    for (auto wps : window_pos_size_map_) {
+    for (auto wps : window_area_map_) {
         file << wps.first.length() << kDelimiter << wps.first << kDelimiter
             << wps.second.x << kDelimiter << wps.second.y << kDelimiter
             << wps.second.width << kDelimiter << wps.second.height << endl;

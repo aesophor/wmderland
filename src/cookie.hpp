@@ -23,13 +23,13 @@ public:
     Cookie(const std::string filename);
     virtual ~Cookie();
 
-    WindowPosSize Get(const std::string& res_class_name) const;
-    void Put(const std::string& res_class_name, WindowPosSize window_pos_size);
+    Area Get(const std::string& res_class_name) const;
+    void Put(const std::string& res_class_name, Area window_area);
     void WriteToFile() const;
 
 private:
     std::string filename_;
-    std::unordered_map<std::string, WindowPosSize> window_pos_size_map_;
+    std::unordered_map<std::string, Area> window_area_map_;
 };
 
 #endif

@@ -1,3 +1,4 @@
+#include "wm.hpp"
 #include "workspace.hpp"
 #include "config.hpp"
 #include "tiling.hpp"
@@ -12,6 +13,8 @@ using std::vector;
 using std::remove;
 using std::remove_if;
 using tiling::Direction;
+
+class WindowManager;
 
 Workspace::Workspace(Display* dpy, Window root_window, int id)
     : dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {}
@@ -93,15 +96,19 @@ void Workspace::Move(Window w, Workspace* new_workspace) {
     new_workspace->Add(w, is_floating);
 }
 
-void Workspace::Arrange(int bar_height, int border_width, int gap_width) {
-    // If there are no clients to arrange, return at once.
+void Workspace::Arrange(const Area& tiling_area) {
+    // If there are no clients in this workspace or all clients are floating, return at once.
     if (!client_tree_->current() || GetTilingClients().empty()) return;
 
-    // Get display resolution.
-    pair<int, int> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    int screen_width = display_resolution.first;
-    int screen_height = display_resolution.second;
-    Tile(client_tree_->root(), 0 + gap_width / 2, bar_height + gap_width / 2, screen_width - gap_width, screen_height - bar_height - gap_width, border_width, gap_width);
+    int border_width = Config::GetInstance()->border_width();
+    int gap_width = Config::GetInstance()->gap_width();
+
+    int x = tiling_area.x + gap_width / 2;
+    int y = tiling_area.y + gap_width / 2;
+    int width = tiling_area.width - gap_width;
+    int height = tiling_area.height - gap_width;
+
+    Tile(client_tree_->root(), x, y, width, height, border_width, gap_width);
 }
 
 void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) {

@@ -13,6 +13,7 @@ extern "C" {
 #include "util.hpp"
 
 using std::hex;
+using std::find;
 using std::pair;
 using std::string;
 using std::vector;
@@ -40,6 +41,8 @@ WindowManager::WindowManager(Display* dpy)
       prop_(new Properties(dpy_)),
       config_(Config::GetInstance()),
       cookie_(new Cookie(COOKIE_FILE)),
+      display_resolution_(wm_utils::GetDisplayResolution(dpy_, root_window_)),
+      tiling_area_(Area(0, 0, display_resolution_.first, display_resolution_.second)),
       current_(0) {
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
@@ -118,6 +121,33 @@ void WindowManager::InitCursors() {
     XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
 }
 
+bool WindowManager::HasResolutionChanged() {
+    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    return res.first != display_resolution_.first || res.second != display_resolution_.second;
+}
+
+void WindowManager::UpdateResolution() {
+    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    display_resolution_ = std::make_pair(res.first, res.second);
+}
+
+void WindowManager::UpdateTilingArea() {
+    tiling_area_ = Area(0, 0, display_resolution_.first, display_resolution_.second);
+
+    for (auto w : floating_windows_) {
+        XWindowAttributes dock_attr = wm_utils::QueryWindowAttributes(dpy_, w);
+
+        if (dock_attr.y == 0) {
+            // If the dock is at the top of the screen.
+            tiling_area_.y += dock_attr.height;
+            tiling_area_.height -= dock_attr.height;
+        } else if (dock_attr.y + dock_attr.height == tiling_area_.y + tiling_area_.height) {
+            // If the dock is at the bottom of the screen.
+            tiling_area_.height -= dock_attr.height;
+        }
+    }
+}
+
 
 void WindowManager::Run() {
     // Autostart applications specified in config.
@@ -162,7 +192,6 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, w);
     string res_class = string(class_hint.res_class);
     string res_name = string(class_hint.res_name);
-    string res_class_name = res_class + ',' + res_name;
     string wm_name = wm_utils::QueryWmName(dpy_, w);
 
     // KDE Plasma Integration.
@@ -177,10 +206,15 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
-    if (wm_utils::QueryWindowProperty(dpy_, w, prop_->net[atom::NET_WM_WINDOW_TYPE], &prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK], 1)) {
-        XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, w);
-        bar_height_ = attr.height;
-        bar_ = w;
+    if (wm_utils::QueryWindowProperty(dpy_, w, prop_->net[atom::NET_WM_WINDOW_TYPE], &prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK], 1)) { 
+        if (find(floating_windows_.begin(), floating_windows_.end(), w) == floating_windows_.end()) {
+            floating_windows_.push_back(w);
+        }
+        
+        if (HasResolutionChanged()) {
+            UpdateResolution();
+            UpdateTilingArea();
+        }
         return;
     }
  
@@ -188,8 +222,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, prop_->net);
 
     // Apply application spawning rules (if exists).
-    if (config_->spawn_rules().find(res_class_name) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules().at(res_class_name) - 1;
+    if (config_->spawn_rules().find(res_class + ',' + res_name) != config_->spawn_rules().end()) {
+        short target_workspace_id = config_->spawn_rules().at(res_class + ',' + res_name) - 1;
         GotoWorkspace(target_workspace_id);
     } else if (config_->spawn_rules().find(res_class) != config_->spawn_rules().end()) {
         short target_workspace_id = config_->spawn_rules().at(res_class) - 1;
@@ -197,14 +231,14 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     }
 
     // Apply application floating rules (if exists).
-    if (config_->float_rules().find(res_class_name) != config_->float_rules().end()) {
-        should_float = config_->float_rules().at(res_class_name);
+    if (config_->float_rules().find(res_class + ',' + res_name) != config_->float_rules().end()) {
+        should_float = config_->float_rules().at(res_class + ',' + res_name);
     } else if (config_->float_rules().find(res_class) != config_->float_rules().end()) {
         should_float = config_->float_rules().at(res_class);
     }
 
 
-    WindowPosSize stored_attr = cookie_->Get(res_class_name + ',' + wm_name);
+    Area stored_attr = cookie_->Get(res_class + ',' + res_name + ',' + wm_name);
     XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
 
     if (should_float) {
@@ -248,31 +282,29 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 }
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
+    // If we aren't managing this window, return at once.
     if (!Client::mapper_[e.window]) return;
-
-    Window w = e.window;
     Client* c = Client::mapper_[e.window];
 
-    // If the client we are destroying is fullscreen, make sure to unset the workspace's fullscreen state.
+    // If the client being destroyed is in fullscreen mode, make sure to
+    // unset the workspace's fullscreen state.
     if (c->is_fullscreen()) {
         c->workspace()->set_fullscreen(false);
         c->workspace()->MapAllClients();
     }
 
-    // If the client being destroyed is within current workspace,
-    // remove it from current workspace's client list.
-    c->workspace()->Remove(w);
-    Tile(c->workspace());
+    // Remove the corresponding client from the client tree.
+    c->workspace()->Remove(e.window);
     ClearNetActiveWindow();
 
-    // Since the previously active window has been killed, we should
-    // manually set focus to another window.
+    // Transfer focus to another window (if there's still one).
     Client* new_focused_client = c->workspace()->GetFocusedClient();
     if (new_focused_client) {
         c->workspace()->SetFocusedClient(new_focused_client->window());
         SetNetActiveWindow(new_focused_client->window());
     }
 
+    Tile(c->workspace());
     c->workspace()->RaiseAllFloatingClients();
 }
 
@@ -368,7 +400,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
     XClassHint class_hint = wm_utils::QueryWmClass(dpy_, btn_pressed_event_.subwindow);
     string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
     string wm_name = wm_utils::QueryWmName(dpy_, btn_pressed_event_.subwindow);
-    cookie_->Put(res_class_name + ',' + wm_name, WindowPosSize(attr.x, attr.y, attr.width, attr.height));
+    cookie_->Put(res_class_name + ',' + wm_name, Area(attr.x, attr.y, attr.width, attr.height));
 
     btn_pressed_event_.subwindow = None;
     XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
@@ -393,17 +425,6 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
     XMoveResizeWindow(dpy_, btn_pressed_event_.subwindow, new_x, new_y, new_width, new_height);
 }
 
-
-void WindowManager::SetNetActiveWindow(Window w) {
-    Client* c = workspaces_[current_]->GetClient(w);
-    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
-            PropModeReplace, (unsigned char*) &(c->window()), 1);
-}
-
-void WindowManager::ClearNetActiveWindow() {
-    XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW]);
-}
-
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     const int MAX_ERROR_TEXT_LENGTH = 1024;
     char error_text[MAX_ERROR_TEXT_LENGTH];
@@ -415,6 +436,17 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
         << "    Resource ID: " << e->resourceid;
     // The return value is ignored.
     return 0;
+}
+
+
+void WindowManager::SetNetActiveWindow(Window w) {
+    Client* c = workspaces_[current_]->GetClient(w);
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
+            PropModeReplace, (unsigned char*) &(c->window()), 1);
+}
+
+void WindowManager::ClearNetActiveWindow() {
+    XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW]);
 }
 
 
@@ -474,7 +506,8 @@ void WindowManager::Center(Window w) {
 }
 
 void WindowManager::Tile(Workspace* workspace) {
-    workspace->Arrange(bar_height_, config_->border_width(), config_->gap_width());
+    UpdateTilingArea();
+    workspace->Arrange(tiling_area_);
 
     // Make sure floating clients are at the top.
     //workspaces_[current_]->RaiseAllFloatingClients();
@@ -552,4 +585,15 @@ void WindowManager::KillClient(Window w) {
     } else {
         XKillClient(dpy_, w);
     }
+}
+
+const Area& WindowManager::tiling_area() const {
+    return tiling_area_;
+}
+
+void WindowManager::set_tiling_area(int x, int y, int width, int height) {
+    tiling_area_.x = x;
+    tiling_area_.y = y;
+    tiling_area_.width = width;
+    tiling_area_.height = height;
 }

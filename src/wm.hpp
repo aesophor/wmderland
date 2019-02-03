@@ -20,6 +20,9 @@ public:
     virtual ~WindowManager();
     void Run();
 
+    const Area& tiling_area() const;
+    void set_tiling_area(int x, int y, int width, int height);
+
 private:
     static WindowManager* instance_;
     WindowManager(Display* dpy);
@@ -28,15 +31,19 @@ private:
     void InitXEvents();
     void InitCursors();
 
+    bool HasResolutionChanged();
+    void UpdateResolution();
+    void UpdateTilingArea();
+
     // XEvent handlers
-    static int OnXError(Display* dpy, XErrorEvent* e);
     void OnMapRequest(const XMapRequestEvent& e);
     void OnDestroyNotify(const XDestroyWindowEvent& e);
     void OnKeyPress(const XKeyEvent& e);
     void OnButtonPress(const XButtonEvent& e);
     void OnButtonRelease(const XButtonEvent& e);
     void OnMotionNotify(const XButtonEvent& e);
-
+    static int OnXError(Display* dpy, XErrorEvent* e);
+    
     // Properties manipulation
     void SetNetActiveWindow(Window w);
     void ClearNetActiveWindow();
@@ -51,7 +58,7 @@ private:
     void ToggleFloating(Window w);
     void ToggleFullScreen(Window w);
     void KillClient(Window w);
- 
+     
     Display* dpy_;
     Window root_window_;
     Cursor cursors_[4];
@@ -59,15 +66,20 @@ private:
     Properties* prop_;
     Config* config_;
     Cookie* cookie_;
+
+    // The floating windows vector contain windows that should not be tiled but
+    // must be kept on the top, e.g., bar, dock, notifications, etc.
+    std::vector<Window> floating_windows_;
+    std::pair<int, int> display_resolution_;
+    Area tiling_area_;
+
+    // Workspaces contain clients, where a client is a window that can be tiled
+    // by the window manager.
     Workspace* workspaces_[WORKSPACE_COUNT];
     short current_;
 
     // Window move, resize event cache.
     XButtonEvent btn_pressed_event_;
-
-    // Bar
-    short bar_height_;
-    Window bar_;
 };
 
 #endif
