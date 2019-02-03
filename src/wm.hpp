@@ -20,9 +20,6 @@ public:
     virtual ~WindowManager();
     void Run();
 
-    const Area& tiling_area() const;
-    void set_tiling_area(int x, int y, int width, int height);
-
 private:
     static WindowManager* instance_;
     WindowManager(Display* dpy);
@@ -72,17 +69,20 @@ private:
     Config* config_;
     Cookie* cookie_;
 
-    // The floating windows vector contain windows that should not be tiled but
-    // must be kept on the top, e.g., bar, dock, notifications, etc.
-    std::vector<Window> floating_windows_;
     std::pair<int, int> display_resolution_;
     Area tiling_area_;
+
+    // The floating windows vector contain windows that should not be tiled but
+    // must be kept on the top, e.g., bar, dock, notifications, etc.
+    std::vector<Window> docks_and_bars_;
+    std::vector<Window> notifications_;
 
     // Workspaces contain clients, where a client is a window that can be tiled
     // by the window manager.
     Workspace* workspaces_[WORKSPACE_COUNT];
     short current_;
 
+    
     // Window move, resize event cache.
     XButtonEvent btn_pressed_event_;
 };

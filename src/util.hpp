@@ -26,7 +26,8 @@ namespace wm_utils {
     XSizeHints GetWmNormalHints(Display* dpy, Window w);
     XClassHint GetWmClass(Display* dpy, Window w);
     std::string GetWmName(Display* dpy, Window w);
-    bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom atom);
+    Atom* GetPropertyAtoms(Display* dpy, Window w, Atom property, unsigned long* atom_len);
+    bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_atom);
 
     std::string KeysymToStr(Display* dpy, unsigned int keycode, bool shift);
     unsigned int StrToKeycode(Display* dpy, const std::string& key_name);

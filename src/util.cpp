@@ -1,5 +1,6 @@
 #include "util.hpp"
 #include "properties.hpp"
+#include <glog/logging.h>
 #include <sstream>
 
 using std::pair;
@@ -67,19 +68,34 @@ namespace wm_utils {
         return nullptr;
     }
 
-    // Check if the source atom contains the target atom.
-    bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom atom) {
+    // Get the atoms contained in the property of window w. The number of atoms
+    // will be stored in *atom_len.
+    Atom* GetPropertyAtoms(Display* dpy, Window w, Atom property, unsigned long* atom_len) {
         Atom da;
         unsigned char *prop_ret = nullptr;
         int di;
-        unsigned long dl;
-
-        return XGetWindowProperty(dpy, w, property, 0, sizeof(Atom), False,
-                XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success
-                && prop_ret 
-                && ((Atom*) prop_ret)[0] == atom;
+        unsigned long remain;
+        
+        if (XGetWindowProperty(dpy, w, property, 0, sizeof(Atom), False,
+                AnyPropertyType, &da, &di, atom_len, &remain, &prop_ret) == Success && prop_ret) {
+            return (Atom*) prop_ret;
+        }
+        return nullptr;
     }
 
+    // Check if the property of window w contains the target atom.
+    bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_atom) {
+        unsigned long atom_len = 0;
+        Atom* atoms = GetPropertyAtoms(dpy, w, property, &atom_len);
+
+        for (int i = 0; i < (int) atom_len; i++) {
+            if (atoms[i] && atoms[i] == target_atom) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 
     string KeysymToStr(Display* dpy, unsigned int keycode, bool shift) {
         return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 

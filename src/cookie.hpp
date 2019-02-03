@@ -24,7 +24,7 @@ public:
     virtual ~Cookie();
 
     Area Get(const std::string& res_class_name) const;
-    void Put(const std::string& res_class_name, Area window_area);
+    void Put(const std::string& res_class_name, const Area& window_area);
     void WriteToFile() const;
 
 private:

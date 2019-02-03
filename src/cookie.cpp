@@ -54,7 +54,7 @@ Area Cookie::Get(const string& res_class_name) const {
     return Area(0, 0, 0, 0);
 }
 
-void Cookie::Put(const string& res_class_name, Area window_pos_size) {
+void Cookie::Put(const string& res_class_name, const Area& window_pos_size) {
     window_area_map_[res_class_name] = window_pos_size;
     WriteToFile();
 }

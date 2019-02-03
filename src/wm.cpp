@@ -98,7 +98,7 @@ void WindowManager::InitXEvents() {
     // Define the key combinations to goto a specific workspace,
     // as well as moving an application to a specific workspace.
     for (int i = 0; i < 9; i++) {
-        int keycode = wm_utils::StrToKeycode(dpy_, std::to_string(i+1).c_str());
+        int keycode = wm_utils::StrToKeycode(dpy_, std::to_string(i + 1).c_str());
         XGrabKey(dpy_, keycode, Mod4Mask, root_window_, True, GrabModeAsync, GrabModeAsync);
         XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
@@ -134,7 +134,7 @@ void WindowManager::UpdateResolution() {
 void WindowManager::UpdateTilingArea() {
     tiling_area_ = Area(0, 0, display_resolution_.first, display_resolution_.second);
 
-    for (auto w : floating_windows_) {
+    for (auto w : docks_and_bars_) {
         XWindowAttributes dock_attr = wm_utils::GetWindowAttributes(dpy_, w);
 
         if (dock_attr.y == 0) {
@@ -214,8 +214,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
     if (IsDock(w)) {
-        if (find(floating_windows_.begin(), floating_windows_.end(), w) == floating_windows_.end()) {
-            floating_windows_.push_back(w);
+        if (find(docks_and_bars_.begin(), docks_and_bars_.end(), w) == docks_and_bars_.end()) {
+            docks_and_bars_.push_back(w);
         }
         
         if (HasResolutionChanged()) {
@@ -604,7 +604,7 @@ void WindowManager::KillClient(Window w) {
     // First try to kill the client gracefully via ICCCM.  If the client does not support
     // this method, then we'll perform the brutal XKillClient().
     if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
-            && (::std::find(supported_protocols, supported_protocols + num_supported_protocols, 
+            && (find(supported_protocols, supported_protocols + num_supported_protocols, 
                     prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
         XEvent msg;
         memset(&msg, 0, sizeof(msg));
@@ -617,15 +617,4 @@ void WindowManager::KillClient(Window w) {
     } else {
         XKillClient(dpy_, w);
     }
-}
-
-const Area& WindowManager::tiling_area() const {
-    return tiling_area_;
-}
-
-void WindowManager::set_tiling_area(int x, int y, int width, int height) {
-    tiling_area_.x = x;
-    tiling_area_.y = y;
-    tiling_area_.width = width;
-    tiling_area_.height = height;
 }
