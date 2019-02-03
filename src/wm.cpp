@@ -135,7 +135,7 @@ void WindowManager::UpdateTilingArea() {
     tiling_area_ = Area(0, 0, display_resolution_.first, display_resolution_.second);
 
     for (auto w : floating_windows_) {
-        XWindowAttributes dock_attr = wm_utils::QueryWindowAttributes(dpy_, w);
+        XWindowAttributes dock_attr = wm_utils::GetWindowAttributes(dpy_, w);
 
         if (dock_attr.y == 0) {
             // If the dock is at the top of the screen.
@@ -144,6 +144,13 @@ void WindowManager::UpdateTilingArea() {
         } else if (dock_attr.y + dock_attr.height == tiling_area_.y + tiling_area_.height) {
             // If the dock is at the bottom of the screen.
             tiling_area_.height -= dock_attr.height;
+        } else if (dock_attr.x == 0) {
+            // If the dock is at the leftmost of the screen.
+            tiling_area_.x += dock_attr.width;
+            tiling_area_.width -= dock_attr.width;
+        } else if (dock_attr.x + dock_attr.width == tiling_area_.x + tiling_area_.width) {
+            // If the dock is at the rightmost of the screen.
+            tiling_area_.width -= dock_attr.width;
         }
     }
 }
@@ -189,10 +196,10 @@ void WindowManager::Run() {
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     Window w = e.window;
 
-    XClassHint class_hint = wm_utils::QueryWmClass(dpy_, w);
+    XClassHint class_hint = wm_utils::GetWmClass(dpy_, w);
     string res_class = string(class_hint.res_class);
     string res_name = string(class_hint.res_name);
-    string wm_name = wm_utils::QueryWmName(dpy_, w);
+    string wm_name = wm_utils::GetWmName(dpy_, w);
 
     // KDE Plasma Integration.
     // Make this a rule in config later.
@@ -206,7 +213,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
-    if (wm_utils::QueryWindowProperty(dpy_, w, prop_->net[atom::NET_WM_WINDOW_TYPE], &prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK], 1)) { 
+    if (IsDock(w)) {
         if (find(floating_windows_.begin(), floating_windows_.end(), w) == floating_windows_.end()) {
             floating_windows_.push_back(w);
         }
@@ -219,7 +226,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     }
  
     // If this window is a dialog, resize it to floating window width / height and center it.
-    bool should_float = wm_utils::IsDialogOrNotification(dpy_, w, prop_->net);
+    bool should_float = IsDialog(w) || IsNotification(w);
 
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(res_class + ',' + res_name) != config_->spawn_rules().end()) {
@@ -239,7 +246,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
 
     Area stored_attr = cookie_->Get(res_class + ',' + res_name + ',' + wm_name);
-    XSizeHints hint = wm_utils::QueryWmNormalHints(dpy_, w);
+    XSizeHints hint = wm_utils::GetWmNormalHints(dpy_, w);
 
     if (should_float) {
         if (stored_attr.width > 0 && stored_attr.height > 0) {
@@ -274,7 +281,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     }
 
     pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    bool should_fullscreen = wm_utils::IsFullScreen(dpy_, w, prop_->net);
+    bool should_fullscreen = IsFullscreen(w);
     Client* c = Client::mapper_[w];
     if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
         ToggleFullScreen(w);
@@ -396,10 +403,10 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
 void WindowManager::OnButtonRelease(const XButtonEvent& e) {
     if (!btn_pressed_event_.subwindow) return;
 
-    XWindowAttributes attr = wm_utils::QueryWindowAttributes(dpy_, btn_pressed_event_.subwindow);
-    XClassHint class_hint = wm_utils::QueryWmClass(dpy_, btn_pressed_event_.subwindow);
+    XWindowAttributes attr = wm_utils::GetWindowAttributes(dpy_, btn_pressed_event_.subwindow);
+    XClassHint class_hint = wm_utils::GetWmClass(dpy_, btn_pressed_event_.subwindow);
     string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
-    string wm_name = wm_utils::QueryWmName(dpy_, btn_pressed_event_.subwindow);
+    string wm_name = wm_utils::GetWmName(dpy_, btn_pressed_event_.subwindow);
     cookie_->Put(res_class_name + ',' + wm_name, Area(attr.x, attr.y, attr.width, attr.height));
 
     btn_pressed_event_.subwindow = None;
@@ -436,6 +443,31 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
         << "    Resource ID: " << e->resourceid;
     // The return value is ignored.
     return 0;
+}
+
+
+bool WindowManager::IsDock(Window w) {
+    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
+    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK];
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+}
+
+bool WindowManager::IsDialog(Window w) {
+    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
+    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_DIALOG];
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+}
+
+bool WindowManager::IsNotification(Window w) {
+    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
+    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION];
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+}
+
+bool WindowManager::IsFullscreen(Window w) {
+    Atom property = prop_->net[atom::NET_WM_STATE];
+    Atom atom = prop_->net[atom::NET_WM_STATE_FULLSCREEN];
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
 }
 
 
@@ -499,7 +531,7 @@ void WindowManager::Center(Window w) {
     short screen_width = display_resolution.first;
     short screen_height = display_resolution.second;
 
-    XWindowAttributes w_attr = wm_utils::QueryWindowAttributes(dpy_, w);
+    XWindowAttributes w_attr = wm_utils::GetWindowAttributes(dpy_, w);
     int new_x = screen_width / 2 - w_attr.width / 2;
     int new_y = screen_height / 2 - w_attr.height / 2;
     XMoveWindow(dpy_, w, new_x, new_y);

@@ -44,7 +44,7 @@ Config::Config(string filename) {
     SetKeybindAction(DEFAULT_EXIT_KEY, Action::EXIT);
 
     // If the file starts with ~, convert it to full path first.
-    filename = string_utils::ToAbsPath(filename);
+    filename = sys_utils::ToAbsPath(filename);
 
     std::ifstream file(filename);
     string line;

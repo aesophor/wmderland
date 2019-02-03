@@ -11,7 +11,7 @@ using std::stringstream;
 using std::unordered_map;
 
 Cookie::Cookie(string filename) : filename_ (filename) {
-    filename_ = string_utils::ToAbsPath(filename_);
+    filename_ = sys_utils::ToAbsPath(filename_);
 
     std::ifstream file(filename_);
     string line;

@@ -43,7 +43,7 @@ void Client::SetBorderColor(unsigned long color) const {
 }
 
 XWindowAttributes Client::GetXWindowAttributes() const {
-    return wm_utils::QueryWindowAttributes(dpy_, window_);
+    return wm_utils::GetWindowAttributes(dpy_, window_);
 }
 
 

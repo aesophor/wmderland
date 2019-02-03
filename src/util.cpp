@@ -26,62 +26,58 @@ bool Area::operator!=(const Area& other) {
 
 namespace wm_utils {
  
-    pair<int, int> GetDisplayResolution(Display* dpy, Window root) {
-        XWindowAttributes root_attr = QueryWindowAttributes(dpy, root);
-        return pair<short, short>(root_attr.width, root_attr.height);
+    pair<int, int> GetDisplayResolution(Display* dpy, Window root_window) {
+        XWindowAttributes root_window_attr = GetWindowAttributes(dpy, root_window);
+        return pair<short, short>(root_window_attr.width, root_window_attr.height);
     }
 
-    XWindowAttributes QueryWindowAttributes(Display* dpy, Window w) {
+    // Get the XWindowAttributes of window w.
+    XWindowAttributes GetWindowAttributes(Display* dpy, Window w) {
         XWindowAttributes ret;
         XGetWindowAttributes(dpy, w, &ret);
         return ret;
     }
 
-    XSizeHints QueryWmNormalHints(Display* dpy, Window w) {
+    // Get the XSizeHints of window w.
+    XSizeHints GetWmNormalHints(Display* dpy, Window w) {
         XSizeHints hints;
         long msize;
         XGetWMNormalHints(dpy, w, &hints, &msize);
         return hints;
     }
 
-    XClassHint QueryWmClass(Display* dpy, Window w) {
+    // Get the XClassHint (which contains res_class and res_name) of window w.
+    XClassHint GetWmClass(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
         return hint;
     }
 
-    string QueryWmName(Display* dpy, Window w) {
+    // Get the WM_NAME (i.e., the window title) of window w.
+    string GetWmName(Display* dpy, Window w) {
         Atom prop = XInternAtom(dpy, "WM_NAME", False), type;
         int form;
         unsigned long remain, len;
-        unsigned char *list;
+        unsigned char* list;
 
-        if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, AnyPropertyType,
-                    &type,&form,&len,&remain,&list) != Success) {
-            return NULL;
+        if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, 
+                AnyPropertyType, &type, &form, &len, &remain, &list) == Success) {
+            return string((char*) list);
         }
-
-        return string((char*) list);
+        return nullptr;
     }
 
-    bool QueryWindowProperty(Display* dpy, Window w, Atom src, Atom* targets, int target_count) {
-        Atom prop, da;
+    // Check if the source atom contains the target atom.
+    bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom atom) {
+        Atom da;
         unsigned char *prop_ret = nullptr;
         int di;
         unsigned long dl;
 
-        if (XGetWindowProperty(dpy, w, src, 0, sizeof(Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
-            if (prop_ret) {
-                prop = ((Atom*) prop_ret)[0];
-
-                for (int i = 0; i < target_count; i++) {
-                    if (prop == targets[i]) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return XGetWindowProperty(dpy, w, property, 0, sizeof(Atom), False,
+                XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success
+                && prop_ret 
+                && ((Atom*) prop_ret)[0] == atom;
     }
 
 
@@ -100,6 +96,7 @@ namespace wm_utils {
             case Mod4Mask: // Cmd
                 modifier_str = "Mod4";
                 break;
+
             case Mod4Mask | ShiftMask: // Cmd + Shift
                 modifier_str = "Mod4+Shift";
                 break;
@@ -178,50 +175,9 @@ namespace wm_utils {
             return Action::UNDEFINED;
         }
     }
-
-
-
-    // Rename this shit
-    // We are checking if the window has _NET_WM_STATE_FULLSCREEN
-    // if so, we have to set it to fullscreen upon receiving map request.
-    bool IsFullScreen(Display* dpy, Window w, Atom* atoms) {
-        Atom prop, da;
-        unsigned char *prop_ret = nullptr;
-        int di;
-        unsigned long dl;
-
-        if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_STATE], 0,
-                    sizeof(Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
-            if (prop_ret) {
-                prop = ((Atom*) prop_ret)[0];
-                if (prop == atoms[atom::NET_WM_STATE_FULLSCREEN]) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    bool IsDialogOrNotification(Display* dpy, Window w, Atom* atoms) {
-        Atom prop, da;
-        unsigned char *prop_ret = nullptr;
-        int di;
-        unsigned long dl;
-
-        if (XGetWindowProperty(dpy, w, atoms[atom::NET_WM_WINDOW_TYPE], 0,
-                    sizeof(Atom), False, XA_ATOM, &da, &di, &dl, &dl, &prop_ret) == Success) {
-            if (prop_ret) {
-                prop = ((Atom*) prop_ret)[0];
-                if (prop == atoms[atom::NET_WM_WINDOW_TYPE_DIALOG] ||
-                        prop == atoms[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
  
 }
+
 
 
 namespace string_utils {
@@ -283,6 +239,12 @@ namespace string_utils {
         s.erase(s.find_last_not_of(" \n\r\t") + 1);
     }
 
+}
+
+
+
+namespace sys_utils {
+    
     string ToAbsPath(const string& path) {
         string abs_path = path;
 

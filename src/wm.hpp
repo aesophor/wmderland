@@ -30,11 +30,7 @@ private:
     void InitProperties();
     void InitXEvents();
     void InitCursors();
-
-    bool HasResolutionChanged();
-    void UpdateResolution();
-    void UpdateTilingArea();
-
+ 
     // XEvent handlers
     void OnMapRequest(const XMapRequestEvent& e);
     void OnDestroyNotify(const XDestroyWindowEvent& e);
@@ -43,7 +39,16 @@ private:
     void OnButtonRelease(const XButtonEvent& e);
     void OnMotionNotify(const XButtonEvent& e);
     static int OnXError(Display* dpy, XErrorEvent* e);
-    
+
+    bool HasResolutionChanged();
+    void UpdateResolution();
+    void UpdateTilingArea();
+
+    bool IsDock(Window w);
+    bool IsDialog(Window w);
+    bool IsNotification(Window w);
+    bool IsFullscreen(Window w);
+
     // Properties manipulation
     void SetNetActiveWindow(Window w);
     void ClearNetActiveWindow();
