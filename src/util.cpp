@@ -1,6 +1,5 @@
 #include "util.hpp"
 #include "properties.hpp"
-#include <glog/logging.h>
 #include <sstream>
 
 using std::pair;
@@ -77,7 +76,7 @@ namespace wm_utils {
         unsigned long remain;
         
         if (XGetWindowProperty(dpy, w, property, 0, sizeof(Atom), False,
-                AnyPropertyType, &da, &di, atom_len, &remain, &prop_ret) == Success && prop_ret) {
+                XA_ATOM, &da, &di, atom_len, &remain, &prop_ret) == Success && prop_ret) {
             return (Atom*) prop_ret;
         }
         return nullptr;
@@ -88,8 +87,9 @@ namespace wm_utils {
         unsigned long atom_len = 0;
         Atom* atoms = GetPropertyAtoms(dpy, w, property, &atom_len);
 
-        for (int i = 0; i < (int) atom_len; i++) {
+        for (int i = 0; atoms && i < (int) atom_len; i++) {
             if (atoms[i] && atoms[i] == target_atom) {
+                XFree(atoms);
                 return true;
             }
         }
@@ -112,7 +112,6 @@ namespace wm_utils {
             case Mod4Mask: // Cmd
                 modifier_str = "Mod4";
                 break;
-
             case Mod4Mask | ShiftMask: // Cmd + Shift
                 modifier_str = "Mod4+Shift";
                 break;

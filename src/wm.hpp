@@ -46,6 +46,8 @@ private:
     bool IsNotification(Window w);
     bool IsFullscreen(Window w);
 
+    void RaiseAllNotificationWindows();
+
     // Properties manipulation
     void SetNetActiveWindow(Window w);
     void ClearNetActiveWindow();
@@ -58,8 +60,11 @@ private:
     void Center(Window w);
     void Tile(Workspace* workspace);
     void ToggleFloating(Window w);
-    void ToggleFullScreen(Window w);
+    void ToggleFullscreen(Window w);
     void KillClient(Window w);
+
+    void MapDocksAndBars();
+    void UnmapDocksAndBars();
      
     Display* dpy_;
     Window root_window_;

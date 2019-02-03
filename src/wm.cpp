@@ -213,6 +213,12 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
+    if (IsNotification(w)) {
+        notifications_.push_back(w);
+        LOG(INFO) << "Intercepted noti win.";
+        return;
+    }
+
     if (IsDock(w)) {
         if (find(docks_and_bars_.begin(), docks_and_bars_.end(), w) == docks_and_bars_.end()) {
             docks_and_bars_.push_back(w);
@@ -223,10 +229,10 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             UpdateTilingArea();
         }
         return;
-    }
- 
+    } 
+     
     // If this window is a dialog, resize it to floating window width / height and center it.
-    bool should_float = IsDialog(w) || IsNotification(w);
+    bool should_float = IsDialog(w);
 
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(res_class + ',' + res_name) != config_->spawn_rules().end()) {
@@ -284,8 +290,10 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     bool should_fullscreen = IsFullscreen(w);
     Client* c = Client::mapper_[w];
     if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
-        ToggleFullScreen(w);
+        ToggleFullscreen(w);
     }
+
+    RaiseAllNotificationWindows();
 }
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
@@ -298,6 +306,11 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     if (c->is_fullscreen()) {
         c->workspace()->set_fullscreen(false);
         c->workspace()->MapAllClients();
+        MapDocksAndBars();
+    }
+
+    if (IsNotification(e.window)) {
+        notifications_.erase(remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
     }
 
     // Remove the corresponding client from the client tree.
@@ -372,7 +385,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
             ToggleFloating(w);
             break;
         case Action::TOGGLE_FULLSCREEN:
-            ToggleFullScreen(w);
+            ToggleFullscreen(w);
             break;
         case Action::KILL:
             KillClient(w);
@@ -380,6 +393,8 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         default:
             break;
     }
+
+    RaiseAllNotificationWindows();
 }
 
 void WindowManager::OnButtonPress(const XButtonEvent& e) {
@@ -470,6 +485,12 @@ bool WindowManager::IsFullscreen(Window w) {
     return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
 }
 
+void WindowManager::RaiseAllNotificationWindows() {
+    for (auto w : notifications_) {
+        XRaiseWindow(dpy_, w);
+    }
+}
+
 
 void WindowManager::SetNetActiveWindow(Window w) {
     Client* c = workspaces_[current_]->GetClient(w);
@@ -511,8 +532,9 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     }
 
     XUnmapWindow(dpy_, window);
-    workspaces_[current_]->Move(window, workspaces_[next]);
 
+    workspaces_[next]->UnsetFocusedClient();
+    workspaces_[current_]->Move(window, workspaces_[next]);
     Client* focused_client = workspaces_[current_]->GetFocusedClient();
 
     if (!focused_client) {
@@ -558,7 +580,7 @@ void WindowManager::ToggleFloating(Window w) {
     Tile(workspaces_[current_]);
 }
 
-void WindowManager::ToggleFullScreen(Window w) {
+void WindowManager::ToggleFullscreen(Window w) {
     Client* c = Client::mapper_[w];
     if (!c) return;
 
@@ -580,6 +602,7 @@ void WindowManager::ToggleFullScreen(Window w) {
         c->set_fullscreen(true);
 
         workspaces_[current_]->UnmapAllClients();
+        UnmapDocksAndBars();
         XMapWindow(dpy_, w);
     } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
         XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
@@ -592,6 +615,7 @@ void WindowManager::ToggleFullScreen(Window w) {
         c->set_fullscreen(false);
 
         workspaces_[current_]->MapAllClients();
+        MapDocksAndBars();
     }
 
     XRaiseWindow(dpy_, w);
@@ -616,5 +640,17 @@ void WindowManager::KillClient(Window w) {
         CHECK(XSendEvent(dpy_, w, false, 0, &msg));
     } else {
         XKillClient(dpy_, w);
+    }
+}
+
+void WindowManager::MapDocksAndBars() {
+    for (auto w : docks_and_bars_) {
+        XMapWindow(dpy_, w);
+    }
+}
+
+void WindowManager::UnmapDocksAndBars() {
+    for (auto w : docks_and_bars_) {
+        XUnmapWindow(dpy_, w);
     }
 }
