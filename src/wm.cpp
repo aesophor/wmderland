@@ -171,6 +171,9 @@ void WindowManager::Run() {
             case MapRequest:
                 OnMapRequest(event.xmaprequest);
                 break;
+            case MapNotify:
+                OnMapNotify(event.xmap);
+                break;
             case DestroyNotify:
                 OnDestroyNotify(event.xdestroywindow);
                 break;
@@ -192,6 +195,12 @@ void WindowManager::Run() {
     }
 }
 
+void WindowManager::OnMapNotify(const XMapEvent& e) {
+    if (IsNotification(e.window)
+            && find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
+        notifications_.push_back(e.window);
+    }
+}
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     Window w = e.window;
@@ -200,7 +209,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     string res_class = string(class_hint.res_class);
     string res_name = string(class_hint.res_name);
     string wm_name = wm_utils::GetWmName(dpy_, w);
-
+ 
     // KDE Plasma Integration.
     // Make this a rule in config later.
     if (res_class == "plasmashell") {
@@ -213,11 +222,10 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Bars should not have border or be added to a workspace.
     // We check if w is a bar by inspecting its WM_CLASS.
-    if (IsNotification(w)) {
-        notifications_.push_back(w);
-        LOG(INFO) << "Intercepted noti win.";
-        return;
-    }
+    //if (IsNotification(w)) {
+    //    notifications_.push_back(w);
+    //    return;
+    //}
 
     if (IsDock(w)) {
         if (find(docks_and_bars_.begin(), docks_and_bars_.end(), w) == docks_and_bars_.end()) {

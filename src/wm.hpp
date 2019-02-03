@@ -30,6 +30,7 @@ private:
  
     // XEvent handlers
     void OnMapRequest(const XMapRequestEvent& e);
+    void OnMapNotify(const XMapEvent& e);
     void OnDestroyNotify(const XDestroyWindowEvent& e);
     void OnKeyPress(const XKeyEvent& e);
     void OnButtonPress(const XButtonEvent& e);
@@ -65,7 +66,7 @@ private:
 
     void MapDocksAndBars();
     void UnmapDocksAndBars();
-     
+
     Display* dpy_;
     Window root_window_;
     Cursor cursors_[4];
