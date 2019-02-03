@@ -603,7 +603,8 @@ void WindowManager::ToggleFullscreen(Window w) {
 
         workspaces_[current_]->UnmapAllClients();
         UnmapDocksAndBars();
-        XMapWindow(dpy_, w);
+        c->Map();
+        c->SetInputFocus();
     } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
         XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
                 PropModeReplace, (unsigned char*) 0, 0);
