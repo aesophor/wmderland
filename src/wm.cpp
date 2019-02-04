@@ -196,10 +196,12 @@ void WindowManager::Run() {
 }
 
 void WindowManager::OnMapNotify(const XMapEvent& e) {
-    if (IsNotification(e.window)
-            && find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
+    Window w = e.window;
+
+    if (IsNotification(w)
+            && find(notifications_.begin(), notifications_.end(), w) == notifications_.end()) {
         notifications_.push_back(e.window);
-    }
+    } 
 }
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
@@ -220,13 +222,6 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     // Just map the window now. We'll discuss other things later.
     XMapWindow(dpy_, w);
 
-    // Bars should not have border or be added to a workspace.
-    // We check if w is a bar by inspecting its WM_CLASS.
-    //if (IsNotification(w)) {
-    //    notifications_.push_back(w);
-    //    return;
-    //}
-
     if (IsDock(w)) {
         if (find(docks_and_bars_.begin(), docks_and_bars_.end(), w) == docks_and_bars_.end()) {
             docks_and_bars_.push_back(w);
@@ -237,8 +232,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             UpdateTilingArea();
         }
         return;
-    } 
-     
+    }
+
     // If this window is a dialog, resize it to floating window width / height and center it.
     bool should_float = IsDialog(w);
 
@@ -514,6 +509,7 @@ void WindowManager::ClearNetActiveWindow() {
 void WindowManager::GotoWorkspace(int next) {
     if (current_ == next) return;
 
+    MapDocksAndBars();
     ClearNetActiveWindow();
 
     workspaces_[current_]->UnmapAllClients();
@@ -525,6 +521,14 @@ void WindowManager::GotoWorkspace(int next) {
         workspaces_[current_]->SetFocusedClient(focused_client->window());
         SetNetActiveWindow(focused_client->window());
         Tile(workspaces_[current_]);
+
+        // Restore fullscreen application.
+        if (focused_client->is_fullscreen()) {
+            int screen_width = display_resolution_.first;
+            int screen_height = display_resolution_.second;
+            XMoveResizeWindow(dpy_, focused_client->window(), 0, 0, screen_width, screen_height);
+            UnmapDocksAndBars();
+        }
     }
 }
 
@@ -537,6 +541,8 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     if (c->is_fullscreen()) {
         workspaces_[current_]->set_fullscreen(false);
         c->set_fullscreen(false);
+        c->workspace()->MapAllClients();
+        MapDocksAndBars();
     }
 
     XUnmapWindow(dpy_, window);
