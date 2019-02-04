@@ -1,8 +1,9 @@
+#include "action.hpp"
+#include "config.hpp"
+#include "util.hpp"
 #include <glog/logging.h>
 #include <fstream>
 #include <sstream>
-#include "config.hpp"
-#include "util.hpp"
 
 using std::hex;
 using std::pair;
@@ -10,7 +11,6 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
-using tiling::Action;
 
 Config* Config::instance_;
 
@@ -31,16 +31,16 @@ Config::Config(string filename) {
     unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
 
     // Load the default keybinds.
-    SetKeybindAction(DEFAULT_TILE_H_KEY, Action::TILE_H);
-    SetKeybindAction(DEFAULT_TILE_V_KEY, Action::TILE_V);
-    SetKeybindAction(DEFAULT_FOCUS_LEFT_KEY, Action::FOCUS_LEFT);
-    SetKeybindAction(DEFAULT_FOCUS_RIGHT_KEY, Action::FOCUS_RIGHT);
-    SetKeybindAction(DEFAULT_FOCUS_DOWN_KEY, Action::FOCUS_DOWN);
-    SetKeybindAction(DEFAULT_FOCUS_UP_KEY, Action::FOCUS_UP);
-    SetKeybindAction(DEFAULT_TOGGLE_FLOATING_KEY, Action::TOGGLE_FLOATING);
-    SetKeybindAction(DEFAULT_TOGGLE_FULLSCREEN_KEY, Action::TOGGLE_FULLSCREEN);
-    SetKeybindAction(DEFAULT_KILL_KEY, Action::KILL);
-    SetKeybindAction(DEFAULT_EXIT_KEY, Action::EXIT);
+    SetKeybindActions(DEFAULT_TILE_H_KEY, "tile_horizontally");
+    SetKeybindActions(DEFAULT_TILE_V_KEY, "tile_vertically");
+    SetKeybindActions(DEFAULT_FOCUS_LEFT_KEY, "focus_left");
+    SetKeybindActions(DEFAULT_FOCUS_RIGHT_KEY, "focus_right");
+    SetKeybindActions(DEFAULT_FOCUS_DOWN_KEY, "focus_down");
+    SetKeybindActions(DEFAULT_FOCUS_UP_KEY, "focus_up");
+    SetKeybindActions(DEFAULT_TOGGLE_FLOATING_KEY, "toggle_floating");
+    SetKeybindActions(DEFAULT_TOGGLE_FULLSCREEN_KEY, "toggle_fullscreen");
+    SetKeybindActions(DEFAULT_KILL_KEY, "kill");
+    SetKeybindActions(DEFAULT_EXIT_KEY, "exit");
 
     // If the file starts with ~, convert it to full path first.
     filename = sys_utils::ToAbsPath(filename);
@@ -52,45 +52,46 @@ Config::Config(string filename) {
         string_utils::Strip(line);
 
         if (!line.empty() && line.at(0) != ';') {
-            ReplaceSymbols(line);
-            vector<string> tokens = string_utils::Split(line, ' ');
-            string& first_token = tokens[0];
+            vector<string> tokens = string_utils::Split(ReplaceSymbols(line), ' ');
+            ConfigKeyword keyword = Config::StrToConfigKeyword(tokens[0]);
 
-            if (first_token == "set") {
-                string key = tokens[1];
-                string value = tokens[3];
-                if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
-                    symtab_[key] = value;
-                } else {
-                    global_vars_[key] = value;
+            switch (keyword) {
+                case ConfigKeyword::SET: {
+                    string key = tokens[1];
+                    string value = tokens[3];
+                    if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
+                        symtab_[key] = value;
+                    } else {
+                        global_vars_[key] = value;
+                    }
+                    break;
+                } case ConfigKeyword::ASSIGN: {
+                    string wm_class_name = tokens[1];
+                    string workspace_id = tokens[3];
+                    short workspace_id_short;
+                    stringstream(workspace_id) >> workspace_id_short;
+                    spawn_rules_[wm_class_name] = workspace_id_short;
+                    break;
+                } case ConfigKeyword::FLOATING: {
+                    string wm_class_name = tokens[1];
+                    string should_float = tokens[2];
+                    bool should_float_bool;
+                    stringstream(should_float) >> std::boolalpha >> should_float_bool;
+                    float_rules_[wm_class_name] = should_float_bool;
+                    break;
+                } case ConfigKeyword::BINDSYM: {
+                    string modifier_and_key = tokens[1];
+                    string action_series_str = string_utils::Split(line, ' ', 2)[2];
+                    SetKeybindActions(modifier_and_key, action_series_str);
+                    break;
+                } case ConfigKeyword::EXEC: {
+                    string cmd = string_utils::Split(line, ' ', 1)[1];
+                    autostart_rules_.push_back(cmd);
+                    break;
+                } default: {
+                    LOG(INFO) << "Unrecognized symbol: " << tokens[0] << ". Ignoring...";
+                    break;
                 }
-            } else if (first_token == "assign") {
-                string wm_class_name = tokens[1];
-                string workspace_id = tokens[3];
-                short workspace_id_short;
-                stringstream(workspace_id) >> workspace_id_short;
-                spawn_rules_[wm_class_name] = workspace_id_short;
-            } else if (first_token == "floating") {
-                string wm_class_name = tokens[1];
-                string should_float = tokens[2];
-                bool should_float_bool;
-                stringstream(should_float) >> std::boolalpha >> should_float_bool;
-                float_rules_[wm_class_name] = should_float_bool;
-            } else if (first_token == "bindsym") {
-                string modifier_and_key = tokens[1];
-                string action_str = string_utils::Split(line, ' ', 2)[2];
-                SetKeybindAction(modifier_and_key, wm_utils::StrToAction(action_str));
-
-                if (string_utils::StartsWith(action_str, "exec")) {
-                    SetKeybindAction(modifier_and_key, wm_utils::StrToAction(action_str));
-                    string command = string_utils::Split(action_str, ' ', 1)[1];
-                    keybind_cmds_[modifier_and_key] = command;
-                }
-            } else if (first_token == "exec") {
-                string cmd = string_utils::Split(line, ' ', 1)[1];
-                autostart_rules_.push_back(cmd);
-            } else {
-                LOG(INFO) << "Unrecognized symbol: " << first_token << ". Ignoring...";
             }
         }
     }
@@ -106,18 +107,45 @@ Config::Config(string filename) {
     stringstream(global_vars_["unfocused_color"]) >> hex >> unfocused_color_;
 }
 
-Config::~Config() {}
+Config::~Config() {
+    for (auto rule : keybind_rules_) {
+        for (auto action : rule.second) {
+            delete action;
+        }
+    }
+}
 
 
-Action Config::GetKeybindAction(const string& modifier, const string& key) const {
+const vector<Action*>& Config::GetKeybindActions(const string& modifier, const string& key) const {
     return keybind_rules_.at(modifier + '+' + key);
 }
 
-void Config::SetKeybindAction(const string& modifier_and_key, Action action) {
-    keybind_rules_[modifier_and_key] = action;
+void Config::SetKeybindActions(const string& modifier_and_key, const string& action_series_str) {
+    keybind_rules_[modifier_and_key].clear();
+
+    for (auto& action_str : string_utils::Split(action_series_str, ';')) {
+        string_utils::Strip(action_str);
+        keybind_rules_[modifier_and_key].push_back(new Action(action_str));
+    }
 }
 
-void Config::ReplaceSymbols(string& s) const {
+ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
+    if (s == "set") {
+        return ConfigKeyword::SET;
+    } else if (s == "assign") {
+        return ConfigKeyword::ASSIGN;
+    } else if (s == "floating") {
+        return ConfigKeyword::FLOATING;
+    } else if (s == "bindsym") {
+        return ConfigKeyword::BINDSYM;
+    } else if (s == "exec") {
+        return ConfigKeyword::EXEC;
+    } else {
+        return ConfigKeyword::UNDEFINED;
+    }
+}
+
+const string& Config::ReplaceSymbols(string& s) {
     for (auto symtab_record : symtab_) {
         string_utils::Replace(s, symtab_record.first, symtab_record.second);
     }
@@ -161,7 +189,7 @@ const unordered_map<string, bool>& Config::float_rules() const {
     return float_rules_;
 }
 
-const unordered_map<string, Action>& Config::keybind_rules() const {
+const unordered_map<string, vector<Action*>>& Config::keybind_rules() const {
     return keybind_rules_;
 }
 

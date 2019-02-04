@@ -10,6 +10,16 @@ extern "C" {
 #include <string>
 #include <vector>
 
+namespace tiling {
+
+    enum Direction {
+        UNSPECIFIED,
+        HORIZONTAL,
+        VERTICAL
+    };
+ 
+}
+
 struct Area {
     Area();
     Area(int x, int y, int width, int height);
@@ -18,31 +28,6 @@ struct Area {
 
     int x, y, width, height;
 };
-
-namespace tiling {
-
-    enum Direction {
-        UNSPECIFIED,
-        HORIZONTAL,
-        VERTICAL
-    };
-
-    enum Action {
-        TILE_H,
-        TILE_V,
-        FOCUS_LEFT,
-        FOCUS_RIGHT,
-        FOCUS_DOWN,
-        FOCUS_UP,
-        TOGGLE_FLOATING,
-        TOGGLE_FULLSCREEN,
-        KILL,
-        EXIT,
-        EXEC,
-        UNDEFINED
-    };
-
-}
 
 namespace wm_utils {
     std::pair<int, int> GetDisplayResolution(Display* dpy, Window root_window);
@@ -53,11 +38,10 @@ namespace wm_utils {
     Atom* GetPropertyAtoms(Display* dpy, Window w, Atom property, unsigned long* atom_len);
     bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_atom);
 
-    std::string KeysymToStr(Display* dpy, unsigned int keycode, bool shift);
+    std::string KeysymToStr(Display* dpy, unsigned int keycode);
     unsigned int StrToKeycode(Display* dpy, const std::string& key_name);
     std::string KeymaskToStr(int modifier);
     int StrToKeymask(const std::string& modifier_str, bool shift);
-    tiling::Action StrToAction(const std::string& action_str);
 }
 
 namespace string_utils {

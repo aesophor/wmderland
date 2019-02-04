@@ -2,7 +2,7 @@
 ; syntax: set <Key> = <Value>
 ;         set $<Variable> = <Value>
 ; -------------------------------------------------------------
-set gap_width = 15
+set gap_width = 12
 set border_width = 3
 set min_window_width = 100
 set min_window_height = 100
@@ -37,6 +37,7 @@ assign Transmission -> 9
 ; syntax: floating <class>{,<instance>} true
 ; -------------------------------------------------------------
 floating systemsettings true
+floating SimpleScreenRecorder true
 floating feh true
 floating mpv true
 floating Peek true
@@ -54,6 +55,26 @@ floating Vigilante true
 ; syntax: bindsym <Modifier>+<Key> action
 ;         bindsym <Modifier>+<Key> exec command
 ; -------------------------------------------------------------
+bindsym $Mod+1 goto_workspace 1
+bindsym $Mod+2 goto_workspace 2
+bindsym $Mod+3 goto_workspace 3
+bindsym $Mod+4 goto_workspace 4
+bindsym $Mod+5 goto_workspace 5
+bindsym $Mod+6 goto_workspace 6
+bindsym $Mod+7 goto_workspace 7
+bindsym $Mod+8 goto_workspace 8
+bindsym $Mod+9 goto_workspace 9
+
+bindsym $Mod+Shift+1 moveto_workspace 1
+bindsym $Mod+Shift+2 moveto_workspace 2
+bindsym $Mod+Shift+3 moveto_workspace 3
+bindsym $Mod+Shift+4 moveto_workspace 4
+bindsym $Mod+Shift+5 moveto_workspace 5
+bindsym $Mod+Shift+6 moveto_workspace 6
+bindsym $Mod+Shift+7 moveto_workspace 7
+bindsym $Mod+Shift+8 moveto_workspace 8
+bindsym $Mod+Shift+9 moveto_workspace 9
+
 bindsym $Mod+g tile_horizontally
 bindsym $Mod+v tile_vertically
 bindsym $Mod+h focus_left
@@ -65,9 +86,8 @@ bindsym $Mod+f toggle_fullscreen
 bindsym $Mod+Shift+q kill
 bindsym $Mod+Shift+Escape exit
 
-
 bindsym $Mod+d exec rofi -show drun
-bindsym $Mod+Return exec urxvt
+bindsym $Mod+Return goto_workspace 1; exec urxvt
 
 
 ; Autostart
@@ -76,7 +96,7 @@ bindsym $Mod+Return exec urxvt
 exec wmctrl -c Plasma
 exec displayctl
 exec dispad
-exec compton --config ~/.config/compton/compton.conf &
+exec compton --config ~/.config/compton/compton.conf
 exec pulseaudio --start --log-target=syslog
 exec mpd
 exec ~/.config/polybar/launch.sh

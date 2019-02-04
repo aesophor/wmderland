@@ -1,6 +1,7 @@
 #ifndef WMDERLAND_CONFIG_HPP_
 #define WMDERLAND_CONFIG_HPP_
 
+#include "action.hpp"
 #include "util.hpp"
 #include <unordered_map>
 #include <vector>
@@ -41,13 +42,22 @@
 #define DEFAULT_KILL_KEY "Mod4+Shift+q"
 #define DEFAULT_EXIT_KEY "Mod4+Shift+Escape"
 
+enum class ConfigKeyword {
+    SET,
+    ASSIGN,
+    FLOATING,
+    BINDSYM,
+    EXEC,
+    UNDEFINED
+};
+
 class Config {
 public:
     static Config* GetInstance();
     virtual ~Config();
 
-    tiling::Action GetKeybindAction(const std::string& modifier, const std::string& key) const;
-    void SetKeybindAction(const std::string& modifier_and_key, tiling::Action action);
+    const std::vector<Action*>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
+    void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
 
     unsigned short gap_width() const;
     unsigned short border_width() const;
@@ -59,7 +69,7 @@ public:
     const std::unordered_map<std::string, std::string>& global_vars() const;
     const std::unordered_map<std::string, short>& spawn_rules() const;
     const std::unordered_map<std::string, bool>& float_rules() const;
-    const std::unordered_map<std::string, tiling::Action>& keybind_rules() const;
+    const std::unordered_map<std::string, std::vector<Action*>>& keybind_rules() const;
     const std::unordered_map<std::string, std::string>& keybind_cmds() const;
     const std::vector<std::string>& autostart_rules() const;
 
@@ -67,7 +77,8 @@ private:
     static Config* instance_;
     Config(std::string filename);
     
-    void ReplaceSymbols(std::string& s) const;
+    static ConfigKeyword StrToConfigKeyword(const std::string& s);
+    const std::string& ReplaceSymbols(std::string& s);
     std::unordered_map<std::string, std::string> symtab_;
 
     // Global variables
@@ -82,7 +93,7 @@ private:
     std::unordered_map<std::string, std::string> global_vars_;
     std::unordered_map<std::string, short> spawn_rules_;
     std::unordered_map<std::string, bool> float_rules_;
-    std::unordered_map<std::string, tiling::Action> keybind_rules_;
+    std::unordered_map<std::string, std::vector<Action*>> keybind_rules_;
     std::unordered_map<std::string, std::string> keybind_cmds_;
     std::vector<std::string> autostart_rules_;
 };

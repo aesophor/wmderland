@@ -13,13 +13,13 @@ extern "C" {
 
 using std::hex;
 using std::find;
+using std::stoi;
 using std::pair;
 using std::string;
 using std::vector;
 using std::stringstream;
 using std::unordered_map;
 using tiling::Direction;
-using tiling::Action;
 
 WindowManager* WindowManager::instance_;
 
@@ -334,68 +334,68 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
     Client* focused_client = workspaces_[current_]->GetFocusedClient();
-    Window w = (focused_client) ? focused_client->window() : None;
- 
-    // Move application to a specific workspace,
-    // and goto a specific workspace.
-    if (e.state == (Mod4Mask | ShiftMask)
-            && e.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-            && e.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-        MoveWindowToWorkspace(w, e.keycode - 10);
-        return;
-    } else if (e.state == Mod4Mask
-            && e.keycode >= XKeysymToKeycode(dpy_, XStringToKeysym("1"))
-            && e.keycode <= XKeysymToKeycode(dpy_, XStringToKeysym("9"))) {
-        GotoWorkspace(e.keycode - 10);
-        return;
-    }
- 
-    string modifier = wm_utils::KeymaskToStr(e.state);
-    string key = wm_utils::KeysymToStr(dpy_, e.keycode, false);
-    Action action = config_->GetKeybindAction(modifier, key);
 
-    if (action == Action::EXEC) {
-        string command = config_->keybind_cmds().at(modifier + '+' + key) + '&';
-        system(command.c_str());
-        return;
-    } else if (action == Action::EXIT) {
-        system("pkill X");
-    } else if (action == Action::TILE_H) {
-        workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
-    } else if (action == Action::TILE_V) {
-        workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
-    }
+    const vector<Action*>& actions = config_->GetKeybindActions(
+            wm_utils::KeymaskToStr(e.state),
+            wm_utils::KeysymToStr(dpy_, e.keycode)
+    );
 
-    if (w == None) return;
-
-    switch (action) {
-        case Action::FOCUS_LEFT:
-            workspaces_[current_]->FocusLeft();
-            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
-            break;
-        case Action::FOCUS_RIGHT:
-            workspaces_[current_]->FocusRight();
-            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
-            break;
-        case Action::FOCUS_DOWN:
-            workspaces_[current_]->FocusDown();
-            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
-            break;
-        case Action::FOCUS_UP:
-            workspaces_[current_]->FocusUp();
-            SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
-            break;
-        case Action::TOGGLE_FLOATING:
-            ToggleFloating(w);
-            break;
-        case Action::TOGGLE_FULLSCREEN:
-            ToggleFullscreen(w);
-            break;
-        case Action::KILL:
-            KillClient(w);
-            break;
-        default:
-            break;
+    for (auto action : actions) {
+        switch (action->type()) {
+            case ActionType::TILE_H:
+                workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
+                break;
+            case ActionType::TILE_V:
+                workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
+                break;
+            case ActionType::FOCUS_LEFT:
+                if (!focused_client) continue;
+                workspaces_[current_]->FocusLeft();
+                SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+                break;
+            case ActionType::FOCUS_RIGHT:
+                if (!focused_client) continue;
+                workspaces_[current_]->FocusRight();
+                SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+                break;
+            case ActionType::FOCUS_UP:
+                if (!focused_client) continue;
+                workspaces_[current_]->FocusUp();
+                SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+                break;
+            case ActionType::FOCUS_DOWN:
+                if (!focused_client) continue;
+                workspaces_[current_]->FocusDown();
+                SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+                break;
+            case ActionType::TOGGLE_FLOATING:
+                if (!focused_client) continue;
+                ToggleFloating(focused_client->window());
+                break;
+            case ActionType::TOGGLE_FULLSCREEN:
+                if (!focused_client) continue;
+                ToggleFullscreen(focused_client->window());
+                break;
+            case ActionType::GOTO_WORKSPACE:
+                GotoWorkspace(stoi(action->arguments()) - 1);
+                break;
+            case ActionType::MOVE_APP_TO_WORKSPACE:
+                if (!focused_client) continue;
+                MoveWindowToWorkspace(focused_client->window(), stoi(action->arguments()) - 1);
+                break;
+            case ActionType::KILL:
+                if (!focused_client) continue;
+                KillClient(focused_client->window());
+                break;
+            case ActionType::EXIT:
+                system("pkill X");
+                break;
+            case ActionType::EXEC:
+                system((action->arguments() + '&').c_str());
+                break;
+            default:
+                break;
+        }
     }
 
     RaiseAllNotificationWindows();

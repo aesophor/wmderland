@@ -1,12 +1,10 @@
 #include "util.hpp"
-#include "properties.hpp"
 #include <sstream>
 
 using std::pair;
 using std::size_t;
 using std::string;
 using std::vector;
-using tiling::Action;
 
 Area::Area() {
     Area(0, 0, 0, 0);
@@ -97,8 +95,8 @@ namespace wm_utils {
     }
     
 
-    string KeysymToStr(Display* dpy, unsigned int keycode, bool shift) {
-        return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, shift))); 
+    string KeysymToStr(Display* dpy, unsigned int keycode) {
+        return string(XKeysymToString(XkbKeycodeToKeysym(dpy, keycode, 0, false))); 
     }
 
     unsigned int StrToKeycode(Display* dpy, const string& key_name) {
@@ -163,34 +161,6 @@ namespace wm_utils {
         }
     }
 
-    Action StrToAction(const string& action_str) {
-        if (action_str == "tile_horizontally") {
-            return Action::TILE_H;
-        } else if (action_str == "tile_vertically") {
-            return Action::TILE_V;
-        } else if (action_str == "focus_left") {
-            return Action::FOCUS_LEFT;
-        } else if (action_str == "focus_right") {
-            return Action::FOCUS_RIGHT;
-        } else if (action_str == "focus_down") {
-            return Action::FOCUS_DOWN;
-        } else if (action_str == "focus_up") {
-            return Action::FOCUS_UP;
-        } else if (action_str == "toggle_floating") {
-            return Action::TOGGLE_FLOATING;
-        } else if (action_str == "toggle_fullscreen") {
-            return Action::TOGGLE_FULLSCREEN;
-        } else if (action_str == "kill") {
-            return Action::KILL;
-        } else if (action_str == "exit") {
-            return Action::EXIT;
-        } else if (string_utils::StartsWith(action_str, "exec")) {
-            return Action::EXEC;
-        } else {
-            return Action::UNDEFINED;
-        }
-    }
- 
 }
 
 
