@@ -241,7 +241,7 @@ namespace string_utils {
         return s.find(keyword) != string::npos;
     }
 
-    void Replace(string& s, const string keyword, const string newword) {
+    void Replace(string& s, const string& keyword, const string& newword) {
         string::size_type pos = s.find(keyword);
 
         while(pos != std::string::npos) {
@@ -250,8 +250,10 @@ namespace string_utils {
         }
     }
 
-    void Trim(string& s) {
-        s.erase(s.find_last_not_of(" \n\r\t") + 1);
+    void Strip(string& s) {
+        static const char* whitespace_chars = " \n\r\t";
+        s.erase(0, s.find_first_not_of(whitespace_chars));
+        s.erase(s.find_last_not_of(whitespace_chars) + 1);
     }
 
 }

@@ -1,7 +1,6 @@
 #ifndef WMDERLAND_UTIL_HPP_
 #define WMDERLAND_UTIL_HPP_
 
-#include "tiling.hpp"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -19,6 +18,31 @@ struct Area {
 
     int x, y, width, height;
 };
+
+namespace tiling {
+
+    enum Direction {
+        UNSPECIFIED,
+        HORIZONTAL,
+        VERTICAL
+    };
+
+    enum Action {
+        TILE_H,
+        TILE_V,
+        FOCUS_LEFT,
+        FOCUS_RIGHT,
+        FOCUS_DOWN,
+        FOCUS_UP,
+        TOGGLE_FLOATING,
+        TOGGLE_FULLSCREEN,
+        KILL,
+        EXIT,
+        EXEC,
+        UNDEFINED
+    };
+
+}
 
 namespace wm_utils {
     std::pair<int, int> GetDisplayResolution(Display* dpy, Window root_window);
@@ -41,8 +65,8 @@ namespace string_utils {
     std::vector<std::string> Split(const std::string& s, const char delimiter, int count);
     bool StartsWith(const std::string& s, const std::string& keyword);
     bool Contains(const std::string& s, const std::string& keyword);
-    void Replace(std::string& s, const std::string keyword, const std::string newword);
-    void Trim(std::string& s);
+    void Replace(std::string& s, const std::string& keyword, const std::string& newword);
+    void Strip(std::string& s);
 }
 
 namespace sys_utils {

@@ -1,7 +1,6 @@
 #ifndef WMDERLAND_CONFIG_HPP_
 #define WMDERLAND_CONFIG_HPP_
 
-#include "tiling.hpp"
 #include "util.hpp"
 #include <unordered_map>
 #include <vector>
@@ -47,8 +46,8 @@ public:
     static Config* GetInstance();
     virtual ~Config();
 
-    tiling::Action GetKeybindAction(std::string modifier, std::string key);
-    void SetKeybindAction(std::string modifier_and_key, tiling::Action action);
+    tiling::Action GetKeybindAction(const std::string& modifier, const std::string& key) const;
+    void SetKeybindAction(const std::string& modifier_and_key, tiling::Action action);
 
     unsigned short gap_width() const;
     unsigned short border_width() const;
@@ -68,9 +67,9 @@ private:
     static Config* instance_;
     Config(std::string filename);
     
+    void ReplaceSymbols(std::string& s) const;
     std::unordered_map<std::string, std::string> symtab_;
-    void ReplaceSymbols(std::string& s);
- 
+
     // Global variables
     unsigned short gap_width_;
     unsigned short border_width_;
@@ -86,7 +85,6 @@ private:
     std::unordered_map<std::string, tiling::Action> keybind_rules_;
     std::unordered_map<std::string, std::string> keybind_cmds_;
     std::vector<std::string> autostart_rules_;
-
 };
 
 #endif

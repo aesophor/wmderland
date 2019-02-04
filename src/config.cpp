@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include "config.hpp"
-#include "tiling.hpp"
 #include "util.hpp"
 
 using std::hex;
@@ -50,7 +49,7 @@ Config::Config(string filename) {
     string line;
 
     while (std::getline(file, line)) {
-        string_utils::Trim(line);
+        string_utils::Strip(line);
 
         if (!line.empty() && line.at(0) != ';') {
             ReplaceSymbols(line);
@@ -110,28 +109,18 @@ Config::Config(string filename) {
 Config::~Config() {}
 
 
-void Config::ReplaceSymbols(string& s) {
+Action Config::GetKeybindAction(const string& modifier, const string& key) const {
+    return keybind_rules_.at(modifier + '+' + key);
+}
+
+void Config::SetKeybindAction(const string& modifier_and_key, Action action) {
+    keybind_rules_[modifier_and_key] = action;
+}
+
+void Config::ReplaceSymbols(string& s) const {
     for (auto symtab_record : symtab_) {
         string_utils::Replace(s, symtab_record.first, symtab_record.second);
     }
-}
-
-
-Action Config::GetKeybindAction(string modifier, string key) {
-    return keybind_rules_[modifier + '+' + key];
-}
-
-void Config::SetKeybindAction(string modifier_and_key, Action action) {
-    // Check if this action has already been registered
-    // by another modifier_and_key. If found, remove it.
-    if (action != Action::EXEC) {
-        for (auto& r : keybind_rules_) {
-            if (r.second == action) {
-                keybind_rules_.erase(r.first);
-            }
-        }
-    }
-    keybind_rules_[modifier_and_key] = action;
 }
 
 

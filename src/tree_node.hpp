@@ -2,7 +2,6 @@
 #define WMDERLAND_TREE_NODE_HPP_
 
 #include <vector>
-#include "tiling.hpp"
 #include "util.hpp"
 
 class Client;

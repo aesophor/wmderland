@@ -17,7 +17,7 @@ Cookie::Cookie(string filename) : filename_ (filename) {
     string line;
 
     while (std::getline(file, line)) {
-        string_utils::Trim(line);
+        string_utils::Strip(line);
 
         if (!line.empty()) {
             int res_class_name_length;

@@ -1,7 +1,6 @@
 #include "wm.hpp"
 #include "workspace.hpp"
 #include "config.hpp"
-#include "tiling.hpp"
 #include "util.hpp"
 #include <glog/logging.h>
 #include <algorithm>

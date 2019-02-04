@@ -9,7 +9,6 @@ extern "C" {
 }
 #include <vector>
 #include "client.hpp"
-#include "tiling.hpp"
 #include "tree.hpp"
 #include "util.hpp"
 

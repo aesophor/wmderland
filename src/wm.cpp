@@ -9,7 +9,6 @@ extern "C" {
 #include <sstream>
 #include <algorithm>
 #include "client.hpp"
-#include "tiling.hpp"
 #include "util.hpp"
 
 using std::hex;
@@ -159,7 +158,7 @@ void WindowManager::UpdateTilingArea() {
 void WindowManager::Run() {
     // Autostart applications specified in config.
     for (auto s : config_->autostart_rules()) {
-        system(s.c_str());
+        system((s + '&').c_str());
     }
 
     XEvent event;
