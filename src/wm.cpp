@@ -286,6 +286,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         workspaces_[current_]->Add(w, should_float);
         workspaces_[current_]->SetFocusedClient(w);
         Tile(workspaces_[current_]);
+        UpdateWindowWmState(w, 1);
         SetNetActiveWindow(w);
     }
 
@@ -318,6 +319,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 
     // Remove the corresponding client from the client tree.
     c->workspace()->Remove(e.window);
+    UpdateWindowWmState(e.window, 0);
     ClearNetActiveWindow();
 
     // Transfer focus to another window (if there's still one).
@@ -494,6 +496,17 @@ void WindowManager::RaiseAllNotificationWindows() {
     }
 }
 
+
+void WindowManager::UpdateWindowWmState(Window w, unsigned long state) {
+    // Set full WM_STATE according to
+    // http://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html#WM_STATE_Property
+    // WithdrawnState: 0
+    // NormalState: 1
+    // IconicState: 3
+    unsigned long wmstate[] = { state, None };
+    XChangeProperty(dpy_, w,  prop_->wm[atom::WM_STATE], prop_->wm[atom::WM_STATE], 32, 
+            PropModeReplace, (unsigned char*) wmstate, 2);
+}
 
 void WindowManager::SetNetActiveWindow(Window w) {
     Client* c = workspaces_[current_]->GetClient(w);

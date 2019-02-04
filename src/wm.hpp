@@ -50,6 +50,7 @@ private:
     void RaiseAllNotificationWindows();
 
     // Properties manipulation
+    void UpdateWindowWmState(Window w, unsigned long state);
     void SetNetActiveWindow(Window w);
     void ClearNetActiveWindow();
 

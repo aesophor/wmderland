@@ -20,11 +20,11 @@ namespace atom {
     // Extended Window Manager Hints (EWMH) atoms, defined by XDG/freedesktop.org
     enum {
         NET_SUPPORTED,
+        NET_SUPPORTING_WM_CHECK,
+        NET_ACTIVE_WINDOW,
         NET_WM_NAME,
         NET_WM_STATE,
-        NET_SUPPORTING_WM_CHECK,
         NET_WM_STATE_FULLSCREEN,
-        NET_ACTIVE_WINDOW,
         NET_WM_WINDOW_TYPE,
         NET_WM_WINDOW_TYPE_DOCK,
         NET_WM_WINDOW_TYPE_DIALOG,

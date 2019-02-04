@@ -9,11 +9,11 @@ Properties::Properties(Display* dpy) {
     wm[atom::WM_TAKE_FOCUS] = XInternAtom(dpy, "WM_TAKE_FOCUS", false);
     
     net[atom::NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", false);
+    net[atom::NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", false);
+    net[atom::NET_ACTIVE_WINDOW] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", false);
     net[atom::NET_WM_NAME] = XInternAtom(dpy, "_NET_WM_NAME", false);
     net[atom::NET_WM_STATE] = XInternAtom(dpy, "_NET_WM_STATE", false);
-    net[atom::NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", false);
     net[atom::NET_WM_STATE_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", false);
-    net[atom::NET_ACTIVE_WINDOW] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", false);
     net[atom::NET_WM_WINDOW_TYPE] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", false);
     net[atom::NET_WM_WINDOW_TYPE_DOCK] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", false);
     net[atom::NET_WM_WINDOW_TYPE_DIALOG] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", false);
