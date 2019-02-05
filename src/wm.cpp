@@ -296,7 +296,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
             wm_utils::KeysymToStr(dpy_, e.keycode) // key str, e.g., "q"
     );
 
-    for (auto action : actions) {
+    for (auto action : actions) { 
         switch (action.type()) {
             case ActionType::TILE_H:
                 workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
