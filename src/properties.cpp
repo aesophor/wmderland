@@ -11,6 +11,10 @@ Properties::Properties(Display* dpy) {
     net[atom::NET_SUPPORTED] = XInternAtom(dpy, "_NET_SUPPORTED", false);
     net[atom::NET_SUPPORTING_WM_CHECK] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", false);
     net[atom::NET_ACTIVE_WINDOW] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", false);
+    net[atom::NET_NUMBER_OF_DESKTOPS] = XInternAtom(dpy, "_NET_NUMBER_OF_DESKTOPS", false);
+    net[atom::NET_CURRENT_DESKTOP] = XInternAtom(dpy, "_NET_CURRENT_DESKTOP", false);
+    net[atom::NET_DESKTOP_VIEWPORT] = XInternAtom(dpy, "_NET_DESKTOP_VIEWPORT", false);
+    net[atom::NET_DESKTOP_NAMES] = XInternAtom(dpy, "_NET_DESKTOP_NAMES", false);
     net[atom::NET_WM_NAME] = XInternAtom(dpy, "_NET_WM_NAME", false);
     net[atom::NET_WM_STATE] = XInternAtom(dpy, "_NET_WM_STATE", false);
     net[atom::NET_WM_STATE_FULLSCREEN] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", false);

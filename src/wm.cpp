@@ -73,10 +73,31 @@ void WindowManager::InitProperties() {
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_WM_NAME], prop_->utf8string, 8,
             PropModeReplace, (unsigned char*) WIN_MGR_NAME, sizeof(WIN_MGR_NAME));
 
-    // Set NET_SUPPORTED to support polybar's xwindow module. However, whenever window
-    // focus changes, we still have to set _NET_WM_ACTIVE_WINDOW manually!
+    // Set _NET_SUPPORTED to indicate which atoms are supported by this window manager.    
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_SUPPORTED], XA_ATOM, 32,
             PropModeReplace, (unsigned char*) prop_->net, atom::NET_ATOM_SIZE);
+
+    // Set _NET_NUMBER_OF_DESKTOP, _NET_CURRENT_DESKTOP, _NET_DESKTOP_VIEWPORT and _NET_DESKTOP_NAMES
+    // to support polybar's xworkspace module.
+    unsigned long workspace_count = WORKSPACE_COUNT;
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_NUMBER_OF_DESKTOPS], XA_CARDINAL, 32, 
+            PropModeReplace, (unsigned char *) &workspace_count, 1);
+
+    unsigned long current_workspace = current_;
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CURRENT_DESKTOP], XA_CARDINAL, 32, 
+            PropModeReplace, (unsigned char *) &current_workspace, 1);
+
+    unsigned long desktop_viewport_cord[2] = { 0, 0 };
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_DESKTOP_VIEWPORT], XA_CARDINAL, 32, 
+            PropModeReplace, (unsigned char *) desktop_viewport_cord, 2);
+
+    char* names[WORKSPACE_COUNT] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+    //for (int i = 0; i < WORKSPACE_COUNT; i++) {
+    //    strcpy(names[i], std::to_string(i + 1).c_str());
+    //}
+    XTextProperty text_prop;
+    Xutf8TextListToTextProperty(dpy_, names, WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
+    XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
 void WindowManager::InitXEvents() {
@@ -548,6 +569,10 @@ void WindowManager::GotoWorkspace(int next) {
             UnmapDocksAndBars();
         }
     }
+
+    unsigned long current_workspace = current_;
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CURRENT_DESKTOP], XA_CARDINAL, 32, 
+            PropModeReplace, (unsigned char *) &current_workspace, 1);
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
