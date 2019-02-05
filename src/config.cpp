@@ -31,15 +31,6 @@ Config::Config(string filename) {
     unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
 
     // Load the default keybinds.
-    SetKeybindActions(DEFAULT_TILE_H_KEY, "tile_horizontally");
-    SetKeybindActions(DEFAULT_TILE_V_KEY, "tile_vertically");
-    SetKeybindActions(DEFAULT_FOCUS_LEFT_KEY, "focus_left");
-    SetKeybindActions(DEFAULT_FOCUS_RIGHT_KEY, "focus_right");
-    SetKeybindActions(DEFAULT_FOCUS_DOWN_KEY, "focus_down");
-    SetKeybindActions(DEFAULT_FOCUS_UP_KEY, "focus_up");
-    SetKeybindActions(DEFAULT_TOGGLE_FLOATING_KEY, "toggle_floating");
-    SetKeybindActions(DEFAULT_TOGGLE_FULLSCREEN_KEY, "toggle_fullscreen");
-    SetKeybindActions(DEFAULT_KILL_KEY, "kill");
     SetKeybindActions(DEFAULT_EXIT_KEY, "exit");
     
     // If the file starts with ~, convert it to full path first.
@@ -89,7 +80,7 @@ Config::Config(string filename) {
                     autostart_rules_.push_back(cmd);
                     break;
                 } default: {
-                    LOG(INFO) << "Unrecognized symbol: " << tokens[0] << ". Ignoring...";
+                    LOG(INFO) << "Ignored unrecognized symbol in config: " << tokens[0];
                     break;
                 }
             }

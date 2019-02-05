@@ -31,15 +31,6 @@
 #define DEFAULT_UNFOCUSED_COLOR 0xff41485f
 
 #define VARIABLE_PREFIX "$"
-#define DEFAULT_TILE_H_KEY "Mod4+g"
-#define DEFAULT_TILE_V_KEY "Mod4+h"
-#define DEFAULT_FOCUS_LEFT_KEY "Mod4+h"
-#define DEFAULT_FOCUS_RIGHT_KEY "Mod4+l"
-#define DEFAULT_FOCUS_DOWN_KEY "Mod4+j"
-#define DEFAULT_FOCUS_UP_KEY "Mod4+k"
-#define DEFAULT_TOGGLE_FLOATING_KEY "Mod4+o"
-#define DEFAULT_TOGGLE_FULLSCREEN_KEY "Mod4+f"
-#define DEFAULT_KILL_KEY "Mod4+Shift+q"
 #define DEFAULT_EXIT_KEY "Mod4+Shift+Escape"
 
 enum class ConfigKeyword {

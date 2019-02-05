@@ -94,14 +94,6 @@ void WindowManager::InitXEvents() {
         XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
 
-    // Define the key combinations to goto a specific workspace,
-    // as well as moving an application to a specific workspace.
-    for (int i = 0; i < 9; i++) {
-        int keycode = wm_utils::StrToKeycode(dpy_, std::to_string(i + 1).c_str());
-        XGrabKey(dpy_, keycode, Mod4Mask, root_window_, True, GrabModeAsync, GrabModeAsync);
-        XGrabKey(dpy_, keycode, Mod4Mask | ShiftMask, root_window_, True, GrabModeAsync, GrabModeAsync);
-    }
-
     // Define which mouse clicks will send us X events.
     XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
