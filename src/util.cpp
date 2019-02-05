@@ -12,6 +12,7 @@ Area::Area() {
 
 Area::Area(int x, int y, int width, int height) : x(x), y(y), width(width), height(height) {}
 
+
 bool Area::operator==(const Area& other) {
     return (x == other.x) && (y == other.y) && (width == other.width) && (height == other.height);
 }

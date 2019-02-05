@@ -23,6 +23,7 @@ namespace tiling {
 struct Area {
     Area();
     Area(int x, int y, int width, int height);
+
     bool operator==(const Area& other);
     bool operator!=(const Area& other);
 

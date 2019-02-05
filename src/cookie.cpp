@@ -47,9 +47,11 @@ Cookie::Cookie(string filename) : filename_ (filename) {
 Cookie::~Cookie() {}
 
 
-Area Cookie::Get(const string& res_class_name) const {
-    if (window_area_map_.find(res_class_name) != window_area_map_.end()) {
-        return window_area_map_.at(res_class_name);
+Area Cookie::Get(const XClassHint& class_hint, const std::string& wm_name) const {
+    string key = string(class_hint.res_class) + ',' + string(class_hint.res_name) + ',' + wm_name;
+
+    if (window_area_map_.find(key) != window_area_map_.end()) {
+        return window_area_map_.at(key);
     }
     return Area(0, 0, 0, 0);
 }

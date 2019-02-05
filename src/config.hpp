@@ -8,10 +8,11 @@
 #include <string>
 
 #define WIN_MGR_NAME "Wmderland"
-#define VERSION "0.9 Beta"
+#define VERSION "0.9.1 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 #define WORKSPACE_COUNT 9
+#define WORKSPACE_ID_NULL -1
 
 #define MOUSE_LEFT_BTN 1
 #define MOUSE_RIGHT_BTN 3
@@ -37,6 +38,7 @@ enum class ConfigKeyword {
     SET,
     ASSIGN,
     FLOATING,
+    PROHIBIT,
     BINDSYM,
     EXEC,
     UNDEFINED
@@ -46,7 +48,10 @@ class Config {
 public:
     static Config* GetInstance();
     virtual ~Config();
-
+    
+    int GetSpawnWorkspaceId(const XClassHint& class_hint) const;
+    bool ShouldFloat(const XClassHint& class_hint) const;
+    bool ShouldProhibit(const XClassHint& class_hint) const;
     const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
     void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
 
@@ -57,9 +62,9 @@ public:
     unsigned long focused_color() const;
     unsigned long unfocused_color() const;
 
-    const std::unordered_map<std::string, std::string>& global_vars() const;
     const std::unordered_map<std::string, short>& spawn_rules() const;
     const std::unordered_map<std::string, bool>& float_rules() const;
+    const std::unordered_map<std::string, bool>& prohibit_rules() const;
     const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
     const std::vector<std::string>& autostart_rules() const;
 
@@ -80,9 +85,9 @@ private:
     unsigned long unfocused_color_;
 
     // Rules
-    std::unordered_map<std::string, std::string> global_vars_; // border width, color, etc.
     std::unordered_map<std::string, short> spawn_rules_; // spawn certain apps in certain workspaces.
     std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
+    std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
     std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
     std::vector<std::string> autostart_rules_; // launch certain apps when wm starts.
 };

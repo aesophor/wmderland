@@ -22,6 +22,8 @@ Config* Config::GetInstance() {
 }
 
 Config::Config(string filename) {
+    unordered_map<string, string> global_vars;
+
     // Load the default global values.
     gap_width_ = DEFAULT_GAP_WIDTH;
     border_width_ = DEFAULT_BORDER_WIDTH;
@@ -53,7 +55,7 @@ Config::Config(string filename) {
                     if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
                         symtab_[key] = value;
                     } else {
-                        global_vars_[key] = value;
+                        global_vars[key] = value;
                     }
                     break;
                 } case ConfigKeyword::ASSIGN: {
@@ -65,10 +67,17 @@ Config::Config(string filename) {
                     break;
                 } case ConfigKeyword::FLOATING: {
                     string wm_class_name = tokens[1];
-                    string should_float = tokens[2];
-                    bool should_float_bool;
-                    stringstream(should_float) >> std::boolalpha >> should_float_bool;
-                    float_rules_[wm_class_name] = should_float_bool;
+                    string should_float_str = tokens[2];
+                    bool should_float;
+                    stringstream(should_float_str) >> std::boolalpha >> should_float;
+                    float_rules_[wm_class_name] = should_float;
+                    break;
+                } case ConfigKeyword::PROHIBIT: {
+                    string wm_class_name = tokens[1];
+                    string should_prohibit_str = tokens[2];
+                    bool should_prohibit;
+                    stringstream(should_prohibit_str) >> std::boolalpha >> should_prohibit;
+                    prohibit_rules_[wm_class_name] = should_prohibit;
                     break;
                 } case ConfigKeyword::BINDSYM: {
                     string modifier_and_key = tokens[1];
@@ -90,16 +99,55 @@ Config::Config(string filename) {
     file.close();
 
     // Override default global values with the values specified in config.
-    stringstream(global_vars_["gap_width"]) >> gap_width_;
-    stringstream(global_vars_["border_width"]) >> border_width_;
-    stringstream(global_vars_["min_window_width"]) >> min_window_width_;
-    stringstream(global_vars_["min_window_height"]) >> min_window_height_;
-    stringstream(global_vars_["focused_color"]) >> hex >> focused_color_;
-    stringstream(global_vars_["unfocused_color"]) >> hex >> unfocused_color_;
+    stringstream(global_vars["gap_width"]) >> gap_width_;
+    stringstream(global_vars["border_width"]) >> border_width_;
+    stringstream(global_vars["min_window_width"]) >> min_window_width_;
+    stringstream(global_vars["min_window_height"]) >> min_window_height_;
+    stringstream(global_vars["focused_color"]) >> hex >> focused_color_;
+    stringstream(global_vars["unfocused_color"]) >> hex >> unfocused_color_;
 }
 
 Config::~Config() {}
 
+
+int Config::GetSpawnWorkspaceId(const XClassHint& class_hint) const {
+    string res_class = string(class_hint.res_class);
+    string res_name = string(class_hint.res_name);
+
+    if (spawn_rules_.find(res_class + ',' + res_name) != spawn_rules_.end()) {
+        return spawn_rules_.at(res_class + ',' + res_name) - 1;
+    } else if (spawn_rules_.find(res_class) != spawn_rules_.end()) {
+        return spawn_rules_.at(res_class) - 1;
+    } else {
+        return WORKSPACE_ID_NULL;
+    }
+}
+
+bool Config::ShouldFloat(const XClassHint& class_hint) const {
+    string res_class = string(class_hint.res_class);
+    string res_name = string(class_hint.res_name);
+
+    if (float_rules_.find(res_class + ',' + res_name) != float_rules_.end()) {
+        return float_rules_.at(res_class + ',' + res_name);
+    } else if (float_rules_.find(res_class) != float_rules_.end()) {
+        return float_rules_.at(res_class);
+    } else {
+        return false;
+    }
+}
+
+bool Config::ShouldProhibit(const XClassHint& class_hint) const {
+    string res_class = string(class_hint.res_class);
+    string res_name = string(class_hint.res_name);
+
+    if (prohibit_rules_.find(res_class + ',' + res_name) != prohibit_rules_.end()) {
+        return prohibit_rules_.at(res_class + ',' + res_name);
+    } else if (prohibit_rules_.find(res_class) != prohibit_rules_.end()) {
+        return prohibit_rules_.at(res_class);
+    } else {
+        return false;
+    }
+}
 
 const vector<Action>& Config::GetKeybindActions(const string& modifier, const string& key) const {
     return keybind_rules_.at(modifier + '+' + key);
@@ -121,6 +169,8 @@ ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
         return ConfigKeyword::ASSIGN;
     } else if (s == "floating") {
         return ConfigKeyword::FLOATING;
+    } else if (s == "prohibit") {
+        return ConfigKeyword::PROHIBIT;
     } else if (s == "bindsym") {
         return ConfigKeyword::BINDSYM;
     } else if (s == "exec") {
@@ -163,16 +213,16 @@ unsigned long Config::unfocused_color() const {
 }
 
 
-const unordered_map<string, string>& Config::global_vars() const {
-    return global_vars_;
-}
-
 const unordered_map<string, short>& Config::spawn_rules() const {
     return spawn_rules_;
 }
 
 const unordered_map<string, bool>& Config::float_rules() const {
     return float_rules_;
+}
+
+const unordered_map<string, bool>& Config::prohibit_rules() const {
+    return prohibit_rules_;
 }
 
 const unordered_map<string, vector<Action>>& Config::keybind_rules() const {

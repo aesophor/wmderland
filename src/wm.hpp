@@ -39,8 +39,8 @@ private:
     static int OnXError(Display* dpy, XErrorEvent* e);
 
     bool HasResolutionChanged();
-    void UpdateResolution();
     void UpdateTilingArea();
+    void RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints);
 
     bool IsDock(Window w);
     bool IsDialog(Window w);

@@ -117,13 +117,10 @@ bool WindowManager::HasResolutionChanged() {
     return res.first != display_resolution_.first || res.second != display_resolution_.second;
 }
 
-void WindowManager::UpdateResolution() {
+void WindowManager::UpdateTilingArea() {
     pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
     display_resolution_ = std::make_pair(res.first, res.second);
-}
-
-void WindowManager::UpdateTilingArea() {
-    tiling_area_ = Area(0, 0, display_resolution_.first, display_resolution_.second);
+    tiling_area_ = { 0, 0, res.first, res.second };
 
     for (auto w : docks_and_bars_) {
         XWindowAttributes dock_attr = wm_utils::GetWindowAttributes(dpy_, w);
@@ -143,6 +140,30 @@ void WindowManager::UpdateTilingArea() {
             // If the dock is at the rightmost of the screen.
             tiling_area_.width -= dock_attr.width;
         }
+    }
+}
+
+void WindowManager::RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints) {
+    // Set window size. (Priority: cookie > hints)
+    if (cookie_area.width > 0 && cookie_area.height > 0) {
+        XResizeWindow(dpy_, w, cookie_area.width, cookie_area.height);
+    } else if (hints.min_width > 0 && hints.min_height > 0) {
+        XResizeWindow(dpy_, w, hints.min_width, hints.min_height);
+    } else if (hints.base_width > 0 && hints.base_height > 0) {
+        XResizeWindow(dpy_, w, hints.base_width, hints.base_height);
+    } else if (hints.width > 0 && hints.height > 0) {
+        XResizeWindow(dpy_, w, hints.width, hints.height);
+    } else {
+        XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+    }
+
+    // Set window position. (Priority: cookie > hints)
+    if (cookie_area.x > 0 && cookie_area.y > 0) {
+        XMoveWindow(dpy_, w, cookie_area.x, cookie_area.y);
+    } else if (hints.x > 0 && hints.y > 0) {
+        XMoveWindow(dpy_, w, hints.x, hints.y);
+    } else {
+        Center(w);
     }
 }
 
@@ -186,6 +207,74 @@ void WindowManager::Run() {
     }
 }
 
+
+void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
+    if (HasResolutionChanged()) {
+        UpdateTilingArea();
+    }
+
+    XClassHint class_hint = wm_utils::GetWmClass(dpy_, e.window);
+
+    // If the config says that this window should be prohibited, then
+    // we should kill this window and return immediately.
+    if (config_->ShouldProhibit(class_hint)) {
+        XKillClient(dpy_, e.window);
+        return;
+    }
+    
+    // If this window is a dock, then add it to the docks_and_bars_ vector,
+    // map it and return immediately.
+    if (IsDock(e.window)
+            && find(docks_and_bars_.begin(), docks_and_bars_.end(), e.window) == docks_and_bars_.end()) {
+            docks_and_bars_.push_back(e.window);
+            UpdateTilingArea();
+            Tile(workspaces_[current_]);
+            XMapWindow(dpy_, e.window);
+            return;
+    }
+
+    // If everything is fine, then it means we should manage this window.
+    // Float this window if it's a dialog or if such rule exists.
+    bool should_float = IsDialog(e.window) || config_->ShouldFloat(class_hint);
+
+    // Spawn this window at the specified workspace if such rule exists,
+    // otherwise spawn it in current workspace.
+    int target_workspace_id = config_->GetSpawnWorkspaceId(class_hint);
+    if (target_workspace_id == WORKSPACE_ID_NULL) target_workspace_id = current_;
+
+    // Add this window to the target workspace.
+    if (!workspaces_[target_workspace_id]->Has(e.window)) {
+        workspaces_[target_workspace_id]->UnsetFocusedClient();
+        workspaces_[target_workspace_id]->Add(e.window, should_float);
+        Tile(workspaces_[target_workspace_id]);
+        UpdateWindowWmState(e.window, 1);
+
+        if (target_workspace_id == current_) {
+            XMapWindow(dpy_, e.window);
+            SetNetActiveWindow(e.window);
+            workspaces_[target_workspace_id]->SetFocusedClient(e.window);
+        }
+    }
+    
+    if (target_workspace_id == current_) {
+        Area cookie_area = cookie_->Get(class_hint, wm_utils::GetWmName(dpy_, e.window));
+        XSizeHints hints = wm_utils::GetWmNormalHints(dpy_, e.window);
+
+        if (should_float) {
+            RestoreWindowPosSize(e.window, cookie_area, hints);
+        }
+
+        pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
+        bool should_fullscreen = IsFullscreen(e.window);
+        Client* c = Client::mapper_[e.window];
+        if (c && ((should_fullscreen && !c->is_fullscreen()) || (hints.min_width == resolution.first && hints.min_height == resolution.second))) {
+            ToggleFullscreen(e.window);
+        }
+    }
+
+    RaiseAllNotificationWindows();
+}
+
 void WindowManager::OnMapNotify(const XMapEvent& e) {
     Window w = e.window;
 
@@ -195,109 +284,13 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
     } 
 }
 
-void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
-    Window w = e.window;
-
-    XClassHint class_hint = wm_utils::GetWmClass(dpy_, w);
-    string res_class = string(class_hint.res_class);
-    string res_name = string(class_hint.res_name);
-    string wm_name = wm_utils::GetWmName(dpy_, w);
- 
-    // KDE Plasma Integration.
-    // Make this a rule in config later.
-    if (res_class == "plasmashell") {
-        XKillClient(dpy_, w);
-        return;
-    }
-
-    // Just map the window now. We'll discuss other things later.
-    
-    if (IsDock(w)) {
-        if (find(docks_and_bars_.begin(), docks_and_bars_.end(), w) == docks_and_bars_.end()) {
-            docks_and_bars_.push_back(w);
-        }
-        
-        if (HasResolutionChanged()) {
-            UpdateResolution();
-            UpdateTilingArea();
-        }
-        return;
-    }
-
-    // If this window is a dialog, resize it to floating window width / height and center it.
-    bool should_float = IsDialog(w);
-
-    short target_workspace_id = -1;
-    // Apply application spawning rules (if exists).
-    if (config_->spawn_rules().find(res_class + ',' + res_name) != config_->spawn_rules().end()) {
-        target_workspace_id = config_->spawn_rules().at(res_class + ',' + res_name) - 1;
-    } else if (config_->spawn_rules().find(res_class) != config_->spawn_rules().end()) {
-        target_workspace_id = config_->spawn_rules().at(res_class) - 1;
-    }
-
-    if (target_workspace_id == -1) target_workspace_id = current_;
-
-    
-    // Regular applications should be added to workspace client list,
-    // but first we have to check if it's already in the list!
-    if (!workspaces_[target_workspace_id]->Has(w)) { 
-        workspaces_[target_workspace_id]->UnsetFocusedClient();
-        workspaces_[target_workspace_id]->Add(w, should_float);
-        Tile(workspaces_[target_workspace_id]);
-        UpdateWindowWmState(w, 1);
-
-        if (target_workspace_id == current_) {
-            XMapWindow(dpy_, w);
-            workspaces_[target_workspace_id]->SetFocusedClient(w);
-            SetNetActiveWindow(w);
-        }
-    }
-
-    // Apply application floating rules (if exists).
-    if (config_->float_rules().find(res_class + ',' + res_name) != config_->float_rules().end()) {
-        should_float = config_->float_rules().at(res_class + ',' + res_name);
-    } else if (config_->float_rules().find(res_class) != config_->float_rules().end()) {
-        should_float = config_->float_rules().at(res_class);
-    }
-    
-    if (target_workspace_id == current_) {
-        Area stored_attr = cookie_->Get(res_class + ',' + res_name + ',' + wm_name);
-        XSizeHints hint = wm_utils::GetWmNormalHints(dpy_, w);
-
-        if (should_float) {
-            if (stored_attr.width > 0 && stored_attr.height > 0) {
-                XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
-            } else if (hint.min_width > 0 && hint.min_height > 0) {
-                XResizeWindow(dpy_, w, hint.min_width, hint.min_height);
-            } else if (hint.base_width > 0 && hint.base_height > 0) {
-                XResizeWindow(dpy_, w, hint.base_width, hint.base_height);
-            } else if (hint.width > 0 && hint.height > 0) {
-                XResizeWindow(dpy_, w, hint.width, hint.height);
-            } else {
-                XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-            }
-
-            if (stored_attr.x > 0 && stored_attr.y > 0) {
-                XMoveWindow(dpy_, w, stored_attr.x, stored_attr.y);
-            } else if (hint.x > 0 && hint.y > 0) {
-                XMoveWindow(dpy_, w, hint.x, hint.y);
-            } else {
-                Center(w);
-            }
-        }
-
-        pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-        bool should_fullscreen = IsFullscreen(w);
-        Client* c = Client::mapper_[w];
-        if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
-            ToggleFullscreen(w);
-        }
-    }
-
-    RaiseAllNotificationWindows();
-}
-
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
+    if (find(docks_and_bars_.begin(), docks_and_bars_.end(), e.window) != docks_and_bars_.end()) {
+        docks_and_bars_.erase(remove(docks_and_bars_.begin(), docks_and_bars_.end(), e.window), docks_and_bars_.end());
+        UpdateTilingArea();
+        Tile(workspaces_[current_]);
+    }
+
     // If we aren't managing this window, return at once.
     if (!Client::mapper_[e.window]) return;
     Client* c = Client::mapper_[e.window];
@@ -347,22 +340,22 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
                 break;
             case ActionType::FOCUS_LEFT:
-                if (!focused_client) continue;
+                if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusLeft();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::FOCUS_RIGHT:
-                if (!focused_client) continue;
+                if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusRight();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::FOCUS_UP:
-                if (!focused_client) continue;
+                if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusUp();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::FOCUS_DOWN:
-                if (!focused_client) continue;
+                if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusDown();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;

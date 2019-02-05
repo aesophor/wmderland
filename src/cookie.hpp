@@ -23,7 +23,7 @@ public:
     Cookie(const std::string filename);
     virtual ~Cookie();
 
-    Area Get(const std::string& res_class_name) const;
+    Area Get(const XClassHint& class_hint, const std::string& wm_name) const;
     void Put(const std::string& res_class_name, const Area& window_area);
     void WriteToFile() const;
 
