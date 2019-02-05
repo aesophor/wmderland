@@ -148,7 +148,7 @@ void WindowManager::UpdateTilingArea() {
 
 
 void WindowManager::Run() {
-    // Autostart applications specified in config.
+    // Automatically start the applications specified in config in background.
     for (auto s : config_->autostart_rules()) {
         system((s + '&').c_str());
     }
@@ -243,11 +243,12 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     if (!workspaces_[target_workspace_id]->Has(w)) { 
         workspaces_[target_workspace_id]->UnsetFocusedClient();
         workspaces_[target_workspace_id]->Add(w, should_float);
+        Tile(workspaces_[target_workspace_id]);
         UpdateWindowWmState(w, 1);
 
         if (target_workspace_id == current_) {
+            XMapWindow(dpy_, w);
             workspaces_[target_workspace_id]->SetFocusedClient(w);
-            Tile(workspaces_[target_workspace_id]);
             SetNetActiveWindow(w);
         }
     }
@@ -260,8 +261,6 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     }
     
     if (target_workspace_id == current_) {
-        XMapWindow(dpy_, w);
-
         Area stored_attr = cookie_->Get(res_class + ',' + res_name + ',' + wm_name);
         XSizeHints hint = wm_utils::GetWmNormalHints(dpy_, w);
 
@@ -322,7 +321,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 
     // Transfer focus to another window (if there's still one).
     Client* new_focused_client = c->workspace()->GetFocusedClient();
-    if (new_focused_client) {
+    if (c->workspace() == workspaces_[current_] && new_focused_client) {
         c->workspace()->SetFocusedClient(new_focused_client->window());
         SetNetActiveWindow(new_focused_client->window());
     }
@@ -335,8 +334,8 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
     Client* focused_client = workspaces_[current_]->GetFocusedClient();
 
     const vector<Action>& actions = config_->GetKeybindActions(
-            wm_utils::KeymaskToStr(e.state), // modifier str
-            wm_utils::KeysymToStr(dpy_, e.keycode) // key str
+            wm_utils::KeymaskToStr(e.state), // modifier str, e.g., "Mod4+Shift"
+            wm_utils::KeysymToStr(dpy_, e.keycode) // key str, e.g., "q"
     );
 
     for (auto action : actions) {
