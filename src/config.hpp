@@ -56,7 +56,7 @@ public:
     static Config* GetInstance();
     virtual ~Config();
 
-    const std::vector<Action*>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
+    const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
     void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
 
     unsigned short gap_width() const;
@@ -69,8 +69,7 @@ public:
     const std::unordered_map<std::string, std::string>& global_vars() const;
     const std::unordered_map<std::string, short>& spawn_rules() const;
     const std::unordered_map<std::string, bool>& float_rules() const;
-    const std::unordered_map<std::string, std::vector<Action*>>& keybind_rules() const;
-    const std::unordered_map<std::string, std::string>& keybind_cmds() const;
+    const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
     const std::vector<std::string>& autostart_rules() const;
 
 private:
@@ -90,12 +89,11 @@ private:
     unsigned long unfocused_color_;
 
     // Rules
-    std::unordered_map<std::string, std::string> global_vars_;
-    std::unordered_map<std::string, short> spawn_rules_;
-    std::unordered_map<std::string, bool> float_rules_;
-    std::unordered_map<std::string, std::vector<Action*>> keybind_rules_;
-    std::unordered_map<std::string, std::string> keybind_cmds_;
-    std::vector<std::string> autostart_rules_;
+    std::unordered_map<std::string, std::string> global_vars_; // border width, color, etc.
+    std::unordered_map<std::string, short> spawn_rules_; // spawn certain apps in certain workspaces.
+    std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
+    std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
+    std::vector<std::string> autostart_rules_; // launch certain apps when wm starts.
 };
 
 #endif

@@ -41,7 +41,7 @@ Config::Config(string filename) {
     SetKeybindActions(DEFAULT_TOGGLE_FULLSCREEN_KEY, "toggle_fullscreen");
     SetKeybindActions(DEFAULT_KILL_KEY, "kill");
     SetKeybindActions(DEFAULT_EXIT_KEY, "exit");
-
+    
     // If the file starts with ~, convert it to full path first.
     filename = sys_utils::ToAbsPath(filename);
 
@@ -107,16 +107,10 @@ Config::Config(string filename) {
     stringstream(global_vars_["unfocused_color"]) >> hex >> unfocused_color_;
 }
 
-Config::~Config() {
-    for (auto rule : keybind_rules_) {
-        for (auto action : rule.second) {
-            delete action;
-        }
-    }
-}
+Config::~Config() {}
 
 
-const vector<Action*>& Config::GetKeybindActions(const string& modifier, const string& key) const {
+const vector<Action>& Config::GetKeybindActions(const string& modifier, const string& key) const {
     return keybind_rules_.at(modifier + '+' + key);
 }
 
@@ -125,7 +119,7 @@ void Config::SetKeybindActions(const string& modifier_and_key, const string& act
 
     for (auto& action_str : string_utils::Split(action_series_str, ';')) {
         string_utils::Strip(action_str);
-        keybind_rules_[modifier_and_key].push_back(new Action(action_str));
+        keybind_rules_[modifier_and_key].push_back(Action(action_str));
     }
 }
 
@@ -149,6 +143,7 @@ const string& Config::ReplaceSymbols(string& s) {
     for (auto symtab_record : symtab_) {
         string_utils::Replace(s, symtab_record.first, symtab_record.second);
     }
+    return s;
 }
 
 
@@ -189,12 +184,8 @@ const unordered_map<string, bool>& Config::float_rules() const {
     return float_rules_;
 }
 
-const unordered_map<string, vector<Action*>>& Config::keybind_rules() const {
+const unordered_map<string, vector<Action>>& Config::keybind_rules() const {
     return keybind_rules_;
-}
-
-const unordered_map<string, string>& Config::keybind_cmds() const {
-    return keybind_cmds_;
 }
 
 const vector<string>& Config::autostart_rules() const {

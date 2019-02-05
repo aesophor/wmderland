@@ -219,8 +219,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     }
 
     // Just map the window now. We'll discuss other things later.
-    XMapWindow(dpy_, w);
-
+    
     if (IsDock(w)) {
         if (find(docks_and_bars_.begin(), docks_and_bars_.end(), w) == docks_and_bars_.end()) {
             docks_and_bars_.push_back(w);
@@ -236,13 +235,29 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     // If this window is a dialog, resize it to floating window width / height and center it.
     bool should_float = IsDialog(w);
 
+    short target_workspace_id = -1;
     // Apply application spawning rules (if exists).
     if (config_->spawn_rules().find(res_class + ',' + res_name) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules().at(res_class + ',' + res_name) - 1;
-        GotoWorkspace(target_workspace_id);
+        target_workspace_id = config_->spawn_rules().at(res_class + ',' + res_name) - 1;
     } else if (config_->spawn_rules().find(res_class) != config_->spawn_rules().end()) {
-        short target_workspace_id = config_->spawn_rules().at(res_class) - 1;
-        GotoWorkspace(target_workspace_id);
+        target_workspace_id = config_->spawn_rules().at(res_class) - 1;
+    }
+
+    if (target_workspace_id == -1) target_workspace_id = current_;
+
+    
+    // Regular applications should be added to workspace client list,
+    // but first we have to check if it's already in the list!
+    if (!workspaces_[target_workspace_id]->Has(w)) { 
+        workspaces_[target_workspace_id]->UnsetFocusedClient();
+        workspaces_[target_workspace_id]->Add(w, should_float);
+        UpdateWindowWmState(w, 1);
+
+        if (target_workspace_id == current_) {
+            workspaces_[target_workspace_id]->SetFocusedClient(w);
+            Tile(workspaces_[target_workspace_id]);
+            SetNetActiveWindow(w);
+        }
     }
 
     // Apply application floating rules (if exists).
@@ -251,49 +266,41 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     } else if (config_->float_rules().find(res_class) != config_->float_rules().end()) {
         should_float = config_->float_rules().at(res_class);
     }
-
-
-    Area stored_attr = cookie_->Get(res_class + ',' + res_name + ',' + wm_name);
-    XSizeHints hint = wm_utils::GetWmNormalHints(dpy_, w);
-
-    if (should_float) {
-        if (stored_attr.width > 0 && stored_attr.height > 0) {
-            XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
-        } else if (hint.min_width > 0 && hint.min_height > 0) {
-            XResizeWindow(dpy_, w, hint.min_width, hint.min_height);
-        } else if (hint.base_width > 0 && hint.base_height > 0) {
-            XResizeWindow(dpy_, w, hint.base_width, hint.base_height);
-        } else if (hint.width > 0 && hint.height > 0) {
-            XResizeWindow(dpy_, w, hint.width, hint.height);
-        } else {
-            XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-        }
-
-        if (stored_attr.x > 0 && stored_attr.y > 0) {
-            XMoveWindow(dpy_, w, stored_attr.x, stored_attr.y);
-        } else if (hint.x > 0 && hint.y > 0) {
-            XMoveWindow(dpy_, w, hint.x, hint.y);
-        } else {
-            Center(w);
-        }
-    }
     
-    // Regular applications should be added to workspace client list,
-    // but first we have to check if it's already in the list!
-    if (!workspaces_[current_]->Has(w)) { 
-        workspaces_[current_]->UnsetFocusedClient();
-        workspaces_[current_]->Add(w, should_float);
-        workspaces_[current_]->SetFocusedClient(w);
-        Tile(workspaces_[current_]);
-        UpdateWindowWmState(w, 1);
-        SetNetActiveWindow(w);
-    }
+    if (target_workspace_id == current_) {
+        XMapWindow(dpy_, w);
 
-    pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    bool should_fullscreen = IsFullscreen(w);
-    Client* c = Client::mapper_[w];
-    if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
-        ToggleFullscreen(w);
+        Area stored_attr = cookie_->Get(res_class + ',' + res_name + ',' + wm_name);
+        XSizeHints hint = wm_utils::GetWmNormalHints(dpy_, w);
+
+        if (should_float) {
+            if (stored_attr.width > 0 && stored_attr.height > 0) {
+                XResizeWindow(dpy_, w, stored_attr.width, stored_attr.height);
+            } else if (hint.min_width > 0 && hint.min_height > 0) {
+                XResizeWindow(dpy_, w, hint.min_width, hint.min_height);
+            } else if (hint.base_width > 0 && hint.base_height > 0) {
+                XResizeWindow(dpy_, w, hint.base_width, hint.base_height);
+            } else if (hint.width > 0 && hint.height > 0) {
+                XResizeWindow(dpy_, w, hint.width, hint.height);
+            } else {
+                XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+            }
+
+            if (stored_attr.x > 0 && stored_attr.y > 0) {
+                XMoveWindow(dpy_, w, stored_attr.x, stored_attr.y);
+            } else if (hint.x > 0 && hint.y > 0) {
+                XMoveWindow(dpy_, w, hint.x, hint.y);
+            } else {
+                Center(w);
+            }
+        }
+
+        pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
+        bool should_fullscreen = IsFullscreen(w);
+        Client* c = Client::mapper_[w];
+        if (c && ((should_fullscreen && !c->is_fullscreen()) || (hint.min_width == resolution.first && hint.min_height == resolution.second))) {
+            ToggleFullscreen(w);
+        }
     }
 
     RaiseAllNotificationWindows();
@@ -335,13 +342,13 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
     Client* focused_client = workspaces_[current_]->GetFocusedClient();
 
-    const vector<Action*>& actions = config_->GetKeybindActions(
-            wm_utils::KeymaskToStr(e.state),
-            wm_utils::KeysymToStr(dpy_, e.keycode)
+    const vector<Action>& actions = config_->GetKeybindActions(
+            wm_utils::KeymaskToStr(e.state), // modifier str
+            wm_utils::KeysymToStr(dpy_, e.keycode) // key str
     );
 
     for (auto action : actions) {
-        switch (action->type()) {
+        switch (action.type()) {
             case ActionType::TILE_H:
                 workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
                 break;
@@ -377,11 +384,11 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 ToggleFullscreen(focused_client->window());
                 break;
             case ActionType::GOTO_WORKSPACE:
-                GotoWorkspace(stoi(action->arguments()) - 1);
+                GotoWorkspace(stoi(action.arguments()) - 1);
                 break;
             case ActionType::MOVE_APP_TO_WORKSPACE:
                 if (!focused_client) continue;
-                MoveWindowToWorkspace(focused_client->window(), stoi(action->arguments()) - 1);
+                MoveWindowToWorkspace(focused_client->window(), stoi(action.arguments()) - 1);
                 break;
             case ActionType::KILL:
                 if (!focused_client) continue;
@@ -391,7 +398,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 system("pkill X");
                 break;
             case ActionType::EXEC:
-                system((action->arguments() + '&').c_str());
+                system((action.arguments() + '&').c_str());
                 break;
             default:
                 break;
@@ -410,8 +417,6 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
     } 
 
     if (e.state == Mod4Mask) {
-        // Lookup the attributes (e.g., size and position) of a window
-        // and store the result in attr_
         XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
         btn_pressed_event_ = e;
 

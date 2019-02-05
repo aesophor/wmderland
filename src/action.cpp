@@ -7,7 +7,10 @@ using std::vector;
 Action::Action(const string& s) {
     vector<string> tokens = string_utils::Split(s, ' ', 1);
     type_ = Action::StrToActionType(tokens[0]);
-    arguments_ = tokens[1];
+
+    if (tokens.size() > 1) {
+        arguments_ = tokens[1];
+    }
 }
 
 Action::Action(ActionType type) : type_(type) {}
