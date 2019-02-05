@@ -232,3 +232,4 @@ const unordered_map<string, vector<Action>>& Config::keybind_rules() const {
 const vector<string>& Config::autostart_rules() const {
     return autostart_rules_;
 }
+
