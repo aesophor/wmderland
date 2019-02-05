@@ -112,62 +112,6 @@ void WindowManager::InitCursors() {
     XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
 }
 
-bool WindowManager::HasResolutionChanged() {
-    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    return res.first != display_resolution_.first || res.second != display_resolution_.second;
-}
-
-void WindowManager::UpdateTilingArea() {
-    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    display_resolution_ = std::make_pair(res.first, res.second);
-    tiling_area_ = { 0, 0, res.first, res.second };
-
-    for (auto w : docks_and_bars_) {
-        XWindowAttributes dock_attr = wm_utils::GetWindowAttributes(dpy_, w);
-
-        if (dock_attr.y == 0) {
-            // If the dock is at the top of the screen.
-            tiling_area_.y += dock_attr.height;
-            tiling_area_.height -= dock_attr.height;
-        } else if (dock_attr.y + dock_attr.height == tiling_area_.y + tiling_area_.height) {
-            // If the dock is at the bottom of the screen.
-            tiling_area_.height -= dock_attr.height;
-        } else if (dock_attr.x == 0) {
-            // If the dock is at the leftmost of the screen.
-            tiling_area_.x += dock_attr.width;
-            tiling_area_.width -= dock_attr.width;
-        } else if (dock_attr.x + dock_attr.width == tiling_area_.x + tiling_area_.width) {
-            // If the dock is at the rightmost of the screen.
-            tiling_area_.width -= dock_attr.width;
-        }
-    }
-}
-
-void WindowManager::RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints) {
-    // Set window size. (Priority: cookie > hints)
-    if (cookie_area.width > 0 && cookie_area.height > 0) {
-        XResizeWindow(dpy_, w, cookie_area.width, cookie_area.height);
-    } else if (hints.min_width > 0 && hints.min_height > 0) {
-        XResizeWindow(dpy_, w, hints.min_width, hints.min_height);
-    } else if (hints.base_width > 0 && hints.base_height > 0) {
-        XResizeWindow(dpy_, w, hints.base_width, hints.base_height);
-    } else if (hints.width > 0 && hints.height > 0) {
-        XResizeWindow(dpy_, w, hints.width, hints.height);
-    } else {
-        XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-    }
-
-    // Set window position. (Priority: cookie > hints)
-    if (cookie_area.x > 0 && cookie_area.y > 0) {
-        XMoveWindow(dpy_, w, cookie_area.x, cookie_area.y);
-    } else if (hints.x > 0 && hints.y > 0) {
-        XMoveWindow(dpy_, w, hints.x, hints.y);
-    } else {
-        Center(w);
-    }
-}
-
-
 void WindowManager::Run() {
     // Automatically start the applications specified in config in background.
     for (auto s : config_->autostart_rules()) {
@@ -478,6 +422,75 @@ bool WindowManager::IsFullscreen(Window w) {
     return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
 }
 
+
+bool WindowManager::HasResolutionChanged() {
+    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    return res.first != display_resolution_.first || res.second != display_resolution_.second;
+}
+
+void WindowManager::UpdateTilingArea() {
+    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    display_resolution_ = std::make_pair(res.first, res.second);
+    tiling_area_ = { 0, 0, res.first, res.second };
+
+    for (auto w : docks_and_bars_) {
+        XWindowAttributes dock_attr = wm_utils::GetWindowAttributes(dpy_, w);
+
+        if (dock_attr.y == 0) {
+            // If the dock is at the top of the screen.
+            tiling_area_.y += dock_attr.height;
+            tiling_area_.height -= dock_attr.height;
+        } else if (dock_attr.y + dock_attr.height == tiling_area_.y + tiling_area_.height) {
+            // If the dock is at the bottom of the screen.
+            tiling_area_.height -= dock_attr.height;
+        } else if (dock_attr.x == 0) {
+            // If the dock is at the leftmost of the screen.
+            tiling_area_.x += dock_attr.width;
+            tiling_area_.width -= dock_attr.width;
+        } else if (dock_attr.x + dock_attr.width == tiling_area_.x + tiling_area_.width) {
+            // If the dock is at the rightmost of the screen.
+            tiling_area_.width -= dock_attr.width;
+        }
+    }
+}
+
+void WindowManager::RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints) {
+    // Set window size. (Priority: cookie > hints)
+    if (cookie_area.width > 0 && cookie_area.height > 0) {
+        XResizeWindow(dpy_, w, cookie_area.width, cookie_area.height);
+    } else if (hints.min_width > 0 && hints.min_height > 0) {
+        XResizeWindow(dpy_, w, hints.min_width, hints.min_height);
+    } else if (hints.base_width > 0 && hints.base_height > 0) {
+        XResizeWindow(dpy_, w, hints.base_width, hints.base_height);
+    } else if (hints.width > 0 && hints.height > 0) {
+        XResizeWindow(dpy_, w, hints.width, hints.height);
+    } else {
+        XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+    }
+
+    // Set window position. (Priority: cookie > hints)
+    if (cookie_area.x > 0 && cookie_area.y > 0) {
+        XMoveWindow(dpy_, w, cookie_area.x, cookie_area.y);
+    } else if (hints.x > 0 && hints.y > 0) {
+        XMoveWindow(dpy_, w, hints.x, hints.y);
+    } else {
+        Center(w);
+    }
+}
+
+
+void WindowManager::MapDocksAndBars() {
+    for (auto w : docks_and_bars_) {
+        XMapWindow(dpy_, w);
+    }
+}
+
+void WindowManager::UnmapDocksAndBars() {
+    for (auto w : docks_and_bars_) {
+        XUnmapWindow(dpy_, w);
+    }
+}
+
 void WindowManager::RaiseAllNotificationWindows() {
     for (auto w : notifications_) {
         XRaiseWindow(dpy_, w);
@@ -577,13 +590,10 @@ void WindowManager::Center(Window w) {
 void WindowManager::Tile(Workspace* workspace) {
     UpdateTilingArea();
     workspace->Arrange(tiling_area_);
-
-    // Make sure floating clients are at the top.
-    //workspaces_[current_]->RaiseAllFloatingClients();
 }
 
 void WindowManager::ToggleFloating(Window w) {
-    Client* c = workspaces_[current_]->GetFocusedClient();
+    Client* c = Client::mapper_[w];
     if (!c) return;
 
     // TODO: Fix floating and fullscreen.
@@ -656,17 +666,5 @@ void WindowManager::KillClient(Window w) {
         CHECK(XSendEvent(dpy_, w, false, 0, &msg));
     } else {
         XKillClient(dpy_, w);
-    }
-}
-
-void WindowManager::MapDocksAndBars() {
-    for (auto w : docks_and_bars_) {
-        XMapWindow(dpy_, w);
-    }
-}
-
-void WindowManager::UnmapDocksAndBars() {
-    for (auto w : docks_and_bars_) {
-        XUnmapWindow(dpy_, w);
     }
 }

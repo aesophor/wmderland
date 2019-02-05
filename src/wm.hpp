@@ -38,15 +38,19 @@ private:
     void OnMotionNotify(const XButtonEvent& e);
     static int OnXError(Display* dpy, XErrorEvent* e);
 
-    bool HasResolutionChanged();
-    void UpdateTilingArea();
-    void RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints);
-
     bool IsDock(Window w);
     bool IsDialog(Window w);
     bool IsNotification(Window w);
     bool IsFullscreen(Window w);
 
+    // Resolution and tiling area
+    bool HasResolutionChanged();
+    void UpdateTilingArea();
+    void RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints);
+
+    // Docks, bars and notifications
+    void MapDocksAndBars();
+    void UnmapDocksAndBars();
     void RaiseAllNotificationWindows();
 
     // Properties manipulation
@@ -64,10 +68,7 @@ private:
     void ToggleFloating(Window w);
     void ToggleFullscreen(Window w);
     void KillClient(Window w);
-
-    void MapDocksAndBars();
-    void UnmapDocksAndBars();
-
+    
     Display* dpy_;
     Window root_window_;
     Cursor cursors_[4];
@@ -89,7 +90,6 @@ private:
     Workspace* workspaces_[WORKSPACE_COUNT];
     short current_;
 
-    
     // Window move, resize event cache.
     XButtonEvent btn_pressed_event_;
 };
