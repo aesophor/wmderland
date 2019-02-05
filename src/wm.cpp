@@ -286,21 +286,25 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
             case ActionType::FOCUS_LEFT:
                 if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusLeft();
+                workspaces_[current_]->RaiseAllFloatingClients();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::FOCUS_RIGHT:
                 if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusRight();
+                workspaces_[current_]->RaiseAllFloatingClients();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::FOCUS_UP:
                 if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusUp();
+                workspaces_[current_]->RaiseAllFloatingClients();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::FOCUS_DOWN:
                 if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->FocusDown();
+                workspaces_[current_]->RaiseAllFloatingClients();
                 SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
             case ActionType::TOGGLE_FLOATING:
