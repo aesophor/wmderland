@@ -5,18 +5,18 @@
 #include <string>
 
 using std::cout;
-using std::string;
+using std::endl;
 
-string version() {
-    return string(WIN_MGR_NAME) + " " + VERSION + "\n"
-        + "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
-        + "This is free software, see the source for copying conditions.  There is No\n"
-        + "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\n";
+void print_version() {
+    cout << WIN_MGR_NAME << " " << VERSION << endl
+        << "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>" << endl
+        << "This is free software, see the source for copying conditions.  There is No" << endl
+        << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE" << endl;
 }
 
 int main(int argc, char* args[]) {
     if (argc > 1 && (!strcmp(args[1], "-v") || !strcmp(args[1], "--version"))) {
-        cout << version();
+        print_version();
         return EXIT_SUCCESS;
     }
 

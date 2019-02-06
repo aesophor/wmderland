@@ -22,7 +22,7 @@ Cookie::Cookie(string filename) : filename_ (filename) {
         if (!line.empty()) {
             int res_class_name_length;
             string res_class_name;
-            Area window_pos_size;
+            Area window_area;
 
             // First, check the length of the res_class_name string, and 
             // use res_class_name_tokens[1].substr() to extract it accurately.
@@ -32,12 +32,12 @@ Cookie::Cookie(string filename) : filename_ (filename) {
 
             string pos_size_str = res_class_name_tokens[1].substr(res_class_name_length + 1, string::npos);
             vector<string> pos_size_tokens = string_utils::Split(pos_size_str, kDelimiter);
-            stringstream(pos_size_tokens[0]) >> window_pos_size.x;
-            stringstream(pos_size_tokens[1]) >> window_pos_size.y;
-            stringstream(pos_size_tokens[2]) >> window_pos_size.width;
-            stringstream(pos_size_tokens[3]) >> window_pos_size.height;
+            stringstream(pos_size_tokens[0]) >> window_area.x;
+            stringstream(pos_size_tokens[1]) >> window_area.y;
+            stringstream(pos_size_tokens[2]) >> window_area.width;
+            stringstream(pos_size_tokens[3]) >> window_area.height;
 
-            window_area_map_[res_class_name] = window_pos_size;
+            window_area_map_[res_class_name] = window_area;
         }
     }
 
@@ -56,8 +56,8 @@ Area Cookie::Get(const XClassHint& class_hint, const std::string& wm_name) const
     return Area(0, 0, 0, 0);
 }
 
-void Cookie::Put(const string& res_class_name, const Area& window_pos_size) {
-    window_area_map_[res_class_name] = window_pos_size;
+void Cookie::Put(const string& res_class_name, const Area& window_area) {
+    window_area_map_[res_class_name] = window_area;
     WriteToFile();
 }
 

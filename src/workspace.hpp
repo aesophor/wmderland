@@ -19,41 +19,43 @@ public:
     Workspace(Display* dpy, Window root_window_, int id);
     virtual ~Workspace();
 
-    bool Has(Window w);
-    void Add(Window w, bool is_floating);
-    void Remove(Window w);
-    void Move(Window w, Workspace* new_workspace);
-    void Arrange(const Area& tiling_area);
-    void SetTilingDirection(tiling::Direction tiling_direction);
+    bool Has(Window w) const;
+    void Add(Window w, bool is_floating) const;
+    void Remove(Window w) const;
+    void Move(Window w, Workspace* new_workspace) const;
+    void Arrange(const Area& tiling_area) const;
+    void SetTilingDirection(tiling::Direction tiling_direction) const;
 
-    void MapAllClients();
-    void UnmapAllClients();
-    void RaiseAllFloatingClients();
-    void SetFocusedClient(Window w);
-    void UnsetFocusedClient();
+    void MapAllClients() const;
+    void UnmapAllClients() const;
+    void RaiseAllFloatingClients() const;
+    void SetFocusedClient(Window w) const;
+    void UnsetFocusedClient() const;
 
     Client* GetFocusedClient() const;
     Client* GetClient(Window w) const;
     std::vector<Client*> GetFloatingClients() const;
     std::vector<Client*> GetTilingClients() const;
 
-    void FocusLeft();
-    void FocusRight();
-    void FocusUp();
-    void FocusDown();
+    void FocusLeft() const;
+    void FocusRight() const;
+    void FocusUp() const;
+    void FocusDown() const;
     
-    int id();
-    bool is_fullscreen();
+    int id() const;
+    const char* name() const;
+    bool is_fullscreen() const;
     void set_fullscreen(bool is_fullscreen);
 
 private:
-    void Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width);
+    void Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) const;
 
     Display* dpy_;
     Window root_window_;
     Tree* client_tree_;
     
     int id_;
+    std::string name_;
     bool is_fullscreen_;
 };
 

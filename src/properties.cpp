@@ -21,6 +21,7 @@ Properties::Properties(Display* dpy) {
     net[atom::NET_WM_WINDOW_TYPE] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", false);
     net[atom::NET_WM_WINDOW_TYPE_DOCK] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", false);
     net[atom::NET_WM_WINDOW_TYPE_DIALOG] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", false);
+    net[atom::NET_WM_WINDOW_TYPE_SPLASH] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_SPLASH", false);
     net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", false);
     net[atom::NET_CLIENT_LIST] = XInternAtom(dpy, "_NET_CLIENT_LIST", false);
 };

@@ -91,12 +91,9 @@ void WindowManager::InitProperties() {
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_DESKTOP_VIEWPORT], XA_CARDINAL, 32, 
             PropModeReplace, (unsigned char *) desktop_viewport_cord, 2);
 
-    char* names[WORKSPACE_COUNT] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
-    //for (int i = 0; i < WORKSPACE_COUNT; i++) {
-    //    strcpy(names[i], std::to_string(i + 1).c_str());
-    //}
+    const char* names[WORKSPACE_COUNT] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
     XTextProperty text_prop;
-    Xutf8TextListToTextProperty(dpy_, names, WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
+    Xutf8TextListToTextProperty(dpy_, (char**) names, WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
     XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
@@ -200,7 +197,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // If everything is fine, then it means we should manage this window.
     // Float this window if it's a dialog or if such rule exists.
-    bool should_float = IsDialog(e.window) || config_->ShouldFloat(class_hint);
+    bool should_float = IsDialog(e.window) || IsSplash(e.window) || config_->ShouldFloat(class_hint);
 
     // Spawn this window at the specified workspace if such rule exists,
     // otherwise spawn it in current workspace.
@@ -432,6 +429,12 @@ bool WindowManager::IsDock(Window w) {
 bool WindowManager::IsDialog(Window w) {
     Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
     Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_DIALOG];
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+}
+
+bool WindowManager::IsSplash(Window w) {
+    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
+    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_SPLASH];
     return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
 }
 

@@ -23,12 +23,12 @@ Workspace::~Workspace() {
 }
 
 
-bool Workspace::Has(Window w) {
+bool Workspace::Has(Window w) const {
     return GetClient(w) != nullptr;
 }
 
-void Workspace::Add(Window w, bool is_floating) {
-    Client* c = new Client(dpy_, w, this);
+void Workspace::Add(Window w, bool is_floating) const {
+    Client* c = new Client(dpy_, w, (Workspace*) this);
     c->set_floating(is_floating);
 
     TreeNode* new_node = new TreeNode(c);
@@ -46,7 +46,7 @@ void Workspace::Add(Window w, bool is_floating) {
     client_tree_->set_current(new_node);
 }
 
-void Workspace::Remove(Window w) {
+void Workspace::Remove(Window w) const {
     Client* c = GetClient(w);
     if (!c) return;
 
@@ -89,13 +89,17 @@ void Workspace::Remove(Window w) {
     client_tree_->set_current(nodes[idx]);
 }
 
-void Workspace::Move(Window w, Workspace* new_workspace) {
-    bool is_floating = Client::mapper_[w]->is_floating();
-    Remove(w);
-    new_workspace->Add(w, is_floating);
+void Workspace::Move(Window w, Workspace* new_workspace) const {
+    Client* c = GetClient(w);
+
+    if (c) {
+        bool is_floating = c->is_floating();
+        Remove(w);
+        new_workspace->Add(w, is_floating);
+    }
 }
 
-void Workspace::Arrange(const Area& tiling_area) {
+void Workspace::Arrange(const Area& tiling_area) const {
     // If there are no clients in this workspace or all clients are floating, return at once.
     if (!client_tree_->current() || GetTilingClients().empty()) return;
 
@@ -110,7 +114,7 @@ void Workspace::Arrange(const Area& tiling_area) {
     Tile(client_tree_->root(), x, y, width, height, border_width, gap_width);
 }
 
-void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) {
+void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) const {
     // Retrieve all clients that we should tile.
     vector<TreeNode*> tiling_children;
     for (const auto& child : node->children()) {
@@ -144,7 +148,7 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int bo
     }
 }
 
-void Workspace::SetTilingDirection(Direction tiling_direction) {
+void Workspace::SetTilingDirection(Direction tiling_direction) const {
     if (!client_tree_->current()) {
         client_tree_->root()->set_tiling_direction(tiling_direction);
     } else if (client_tree_->current()->parent()->children().size() > 0){
@@ -161,7 +165,7 @@ void Workspace::SetTilingDirection(Direction tiling_direction) {
 }
 
 
-void Workspace::MapAllClients() {
+void Workspace::MapAllClients() const {
     for (auto leaf : client_tree_->GetAllLeaves()) {
         if (leaf != client_tree_->root()) {
             leaf->client()->Map();
@@ -169,7 +173,7 @@ void Workspace::MapAllClients() {
     }
 }
 
-void Workspace::UnmapAllClients() {
+void Workspace::UnmapAllClients() const {
     for (auto leaf : client_tree_->GetAllLeaves()) {
         if (leaf != client_tree_->root()) {
             leaf->client()->Unmap();
@@ -177,14 +181,14 @@ void Workspace::UnmapAllClients() {
     }
 }
 
-void Workspace::RaiseAllFloatingClients() {
+void Workspace::RaiseAllFloatingClients() const {
     for (auto c : GetFloatingClients()) {
         c->Raise();
     }
 }
 
-void Workspace::SetFocusedClient(Window w) {
-    Client* c = Client::mapper_[w];
+void Workspace::SetFocusedClient(Window w) const {
+    Client* c = GetClient(w);
     if (c) {
         // Raise the window to the top and set input focus to it.
         c->Raise();
@@ -193,7 +197,7 @@ void Workspace::SetFocusedClient(Window w) {
     }
 }
 
-void Workspace::UnsetFocusedClient() {
+void Workspace::UnsetFocusedClient() const {
     if (!client_tree_->current()) return;
 
     Client* c = client_tree_->current()->client();
@@ -239,7 +243,7 @@ vector<Client*> Workspace::GetTilingClients() const {
 }
 
 
-void Workspace::FocusLeft() {
+void Workspace::FocusLeft() const {
     for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* left_sibling = ptr->GetLeftSibling();
 
@@ -258,7 +262,7 @@ void Workspace::FocusLeft() {
     }
 }
 
-void Workspace::FocusRight() {
+void Workspace::FocusRight() const {
     for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* right_sibling = ptr->GetRightSibling();
 
@@ -277,7 +281,7 @@ void Workspace::FocusRight() {
     }
 }
 
-void Workspace::FocusUp() {
+void Workspace::FocusUp() const {
     for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* left_sibling = ptr->GetLeftSibling();
 
@@ -296,7 +300,7 @@ void Workspace::FocusUp() {
     }
 }
 
-void Workspace::FocusDown() {
+void Workspace::FocusDown() const {
     for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* right_sibling = ptr->GetRightSibling();
 
@@ -316,11 +320,15 @@ void Workspace::FocusDown() {
 }
 
 
-int Workspace::id() {
+int Workspace::id() const {
     return id_;
 }
 
-bool Workspace::is_fullscreen() {
+const char* Workspace::name() const {
+    return name_.c_str();
+}
+
+bool Workspace::is_fullscreen() const {
     return is_fullscreen_;
 }
 

@@ -40,6 +40,7 @@ private:
 
     bool IsDock(Window w);
     bool IsDialog(Window w);
+    bool IsSplash(Window w);
     bool IsNotification(Window w);
     bool IsFullscreen(Window w);
 
