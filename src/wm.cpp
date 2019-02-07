@@ -19,7 +19,6 @@ using std::pair;
 using std::string;
 using std::vector;
 using std::unique_ptr;
-using std::make_unique;
 using std::stringstream;
 using std::unordered_map;
 using tiling::Direction;
@@ -40,9 +39,9 @@ unique_ptr<WindowManager> WindowManager::GetInstance() {
 WindowManager::WindowManager(Display* dpy) 
     : dpy_(dpy), 
       root_window_(DefaultRootWindow(dpy_)),
-      prop_(make_unique<Properties>(dpy_)),
-      config_(make_unique<Config>(CONFIG_FILE)),
-      cookie_(make_unique<Cookie>(COOKIE_FILE)),
+      prop_(unique_ptr<Properties>(new Properties(dpy_))),
+      config_(unique_ptr<Config>(new Config(CONFIG_FILE))),
+      cookie_(unique_ptr<Cookie>(new Cookie(COOKIE_FILE))),
       display_resolution_(wm_utils::GetDisplayResolution(dpy_, root_window_)),
       tiling_area_(Area(0, 0, display_resolution_.first, display_resolution_.second)),
       current_(0) {
