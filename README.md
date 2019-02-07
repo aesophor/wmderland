@@ -19,10 +19,11 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
 ## Installation
-1. Build and install from source (the executable will be copied to /usr/local/bin/)
+1. Build and install from source (make sure you have **GLOG** installed, see Build Requirements)
 ```
-$ git clone https://github.com/aesophor/Wmderland
-$ cd Wmderland && make && sudo make install
+$ git clone https://github.com/aesophor/Wmderland && cd Wmderland
+$ cmake . && make
+$ sudo cp Wmderland /usr/local/bin/Wmderland
 ```
 
 2. Copy the configuration file (IMPORTANT!)
