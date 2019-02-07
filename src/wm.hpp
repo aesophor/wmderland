@@ -23,7 +23,7 @@ public:
 private:
     static WindowManager* instance_;
     WindowManager(Display* dpy);
-    void InitWorkspaces(short count);
+    void InitWorkspaces(int count);
     void InitProperties();
     void InitXEvents();
     void InitCursors();
@@ -75,7 +75,7 @@ private:
     Cursor cursors_[4];
 
     std::unique_ptr<Properties> prop_;
-    std::shared_ptr<Config> config_;
+    std::unique_ptr<Config> config_;
     std::unique_ptr<Cookie> cookie_;
 
     std::pair<int, int> display_resolution_;

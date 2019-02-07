@@ -46,7 +46,7 @@ enum class ConfigKeyword {
 
 class Config {
 public:
-    static Config* GetInstance();
+    Config(std::string filename);
     virtual ~Config();
     
     int GetSpawnWorkspaceId(const XClassHint& class_hint) const;
@@ -69,9 +69,6 @@ public:
     const std::vector<std::string>& autostart_rules() const;
 
 private:
-    static Config* instance_;
-    Config(std::string filename);
-    
     static ConfigKeyword StrToConfigKeyword(const std::string& s);
     const std::string& ReplaceSymbols(std::string& s);
     std::unordered_map<std::string, std::string> symtab_;

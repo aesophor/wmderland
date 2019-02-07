@@ -6,6 +6,7 @@
 
 #include "client.hpp"
 #include "tree.hpp"
+#include "config.hpp"
 #include "util.hpp"
 extern "C" {
 #include <X11/Xlib.h>
@@ -17,7 +18,7 @@ class Client;
 
 class Workspace {
 public:
-    Workspace(Display* dpy, Window root_window_, int id);
+    Workspace(Display* dpy, Window root_window_, Config* config, int id);
     virtual ~Workspace();
 
     bool Has(Window w) const;
@@ -43,6 +44,7 @@ public:
     void FocusUp() const;
     void FocusDown() const;
     
+    Config* config() const;
     int id() const;
     const char* name() const;
     bool is_fullscreen() const;
@@ -53,6 +55,7 @@ private:
 
     Display* dpy_;
     Window root_window_;
+    Config* config_;
     std::unique_ptr<Tree> client_tree_;
     
     int id_;

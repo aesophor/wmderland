@@ -9,8 +9,8 @@ std::unordered_map<Window, Client*> Client::mapper_;
 Client::Client(Display* dpy, Window w, Workspace* workspace)
     : dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
     mapper_[window_] = this;
-    SetBorderWidth(Config::GetInstance()->border_width());
-    SetBorderColor(Config::GetInstance()->focused_color());
+    SetBorderWidth(workspace->config()->border_width());
+    SetBorderColor(workspace->config()->focused_color());
 }
 
 Client::~Client() {

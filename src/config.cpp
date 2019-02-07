@@ -12,15 +12,6 @@ using std::vector;
 using std::stringstream;
 using std::unordered_map;
 
-Config* Config::instance_;
-
-Config* Config::GetInstance() {
-    if (!instance_) {
-        instance_ = new Config(CONFIG_FILE);
-    }
-    return instance_;
-}
-
 Config::Config(string filename) {
     unordered_map<string, string> global_vars;
 

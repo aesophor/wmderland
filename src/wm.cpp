@@ -41,7 +41,7 @@ WindowManager::WindowManager(Display* dpy)
     : dpy_(dpy), 
       root_window_(DefaultRootWindow(dpy_)),
       prop_(make_unique<Properties>(dpy_)),
-      config_(Config::GetInstance()),
+      config_(make_unique<Config>(CONFIG_FILE)),
       cookie_(make_unique<Cookie>(COOKIE_FILE)),
       display_resolution_(wm_utils::GetDisplayResolution(dpy_, root_window_)),
       tiling_area_(Area(0, 0, display_resolution_.first, display_resolution_.second)),
@@ -53,16 +53,13 @@ WindowManager::WindowManager(Display* dpy)
 }
 
 WindowManager::~WindowManager() {
-    for (auto const w : workspaces_) {
-        delete w;
-    }
     XCloseDisplay(dpy_);
 }
 
 
-void WindowManager::InitWorkspaces(short count) {
-    for (short i = 0; i < count; i++) {
-        workspaces_[i] = new Workspace(dpy_, root_window_, i);
+void WindowManager::InitWorkspaces(int count) {
+    for (int i = 0; i < count; i++) {
+        workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
     }
 }
 

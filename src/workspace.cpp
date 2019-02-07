@@ -1,6 +1,5 @@
 #include "wm.hpp"
 #include "workspace.hpp"
-#include "config.hpp"
 #include "util.hpp"
 #include <algorithm>
 #include <stack>
@@ -10,12 +9,18 @@ using std::stack;
 using std::vector;
 using std::remove;
 using std::remove_if;
+using std::shared_ptr;
 using tiling::Direction;
 
 class WindowManager;
 
-Workspace::Workspace(Display* dpy, Window root_window, int id)
-    : dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {}
+Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
+    : dpy_(dpy),
+      root_window_(root_window),
+      config_(config),
+      client_tree_(new Tree()),
+      id_(id),
+      is_fullscreen_(false) {}
 
 Workspace::~Workspace() {}
 
@@ -38,7 +43,7 @@ void Workspace::Add(Window w, bool is_floating) const {
         // then add the new node as its brother.
         TreeNode* current_node = client_tree_->current();
         current_node->parent()->InsertChildAfter(new_node, current_node);
-    } 
+    }
 
     client_tree_->set_current(new_node);
 }
@@ -100,8 +105,8 @@ void Workspace::Arrange(const Area& tiling_area) const {
     // If there are no clients in this workspace or all clients are floating, return at once.
     if (!client_tree_->current() || GetTilingClients().empty()) return;
 
-    int border_width = Config::GetInstance()->border_width();
-    int gap_width = Config::GetInstance()->gap_width();
+    int border_width = config_->border_width();
+    int gap_width = config_->gap_width();
 
     int x = tiling_area.x + gap_width / 2;
     int y = tiling_area.y + gap_width / 2;
@@ -190,7 +195,7 @@ void Workspace::SetFocusedClient(Window w) const {
         // Raise the window to the top and set input focus to it.
         c->Raise();
         c->SetInputFocus();
-        c->SetBorderColor(Config::GetInstance()->focused_color());
+        c->SetBorderColor(config_->focused_color());
     }
 }
 
@@ -199,7 +204,7 @@ void Workspace::UnsetFocusedClient() const {
 
     Client* c = client_tree_->current()->client();
     if (c) {
-        c->SetBorderColor(Config::GetInstance()->unfocused_color());
+        c->SetBorderColor(config_->unfocused_color());
     }
 }
 
@@ -316,6 +321,10 @@ void Workspace::FocusDown() const {
     }
 }
 
+
+Config* Workspace::config() const {
+    return config_;
+}
 
 int Workspace::id() const {
     return id_;
