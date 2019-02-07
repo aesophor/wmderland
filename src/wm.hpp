@@ -74,9 +74,9 @@ private:
     Window root_window_;
     Cursor cursors_[4];
 
-    Properties* prop_;
-    Config* config_;
-    Cookie* cookie_;
+    std::unique_ptr<Properties> prop_;
+    std::shared_ptr<Config> config_;
+    std::unique_ptr<Cookie> cookie_;
 
     std::pair<int, int> display_resolution_;
     Area tiling_area_;

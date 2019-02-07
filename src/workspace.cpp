@@ -2,7 +2,6 @@
 #include "workspace.hpp"
 #include "config.hpp"
 #include "util.hpp"
-#include <glog/logging.h>
 #include <algorithm>
 #include <stack>
 
@@ -18,9 +17,7 @@ class WindowManager;
 Workspace::Workspace(Display* dpy, Window root_window, int id)
     : dpy_(dpy), root_window_(root_window), client_tree_(new Tree()), id_(id), is_fullscreen_(false) {}
 
-Workspace::~Workspace() {
-    delete client_tree_;
-}
+Workspace::~Workspace() {}
 
 
 bool Workspace::Has(Window w) const {

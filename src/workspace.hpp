@@ -4,13 +4,14 @@
 #ifndef WMDERLAND_WORKSPACE_HPP_
 #define WMDERLAND_WORKSPACE_HPP_
 
-extern "C" {
-#include <X11/Xlib.h>
-}
-#include <vector>
 #include "client.hpp"
 #include "tree.hpp"
 #include "util.hpp"
+extern "C" {
+#include <X11/Xlib.h>
+}
+#include <memory>
+#include <vector>
 
 class Client;
 
@@ -52,7 +53,7 @@ private:
 
     Display* dpy_;
     Window root_window_;
-    Tree* client_tree_;
+    std::unique_ptr<Tree> client_tree_;
     
     int id_;
     std::string name_;
