@@ -554,6 +554,7 @@ void WindowManager::GotoWorkspace(int next) {
     workspaces_[next]->MapAllClients();
     current_ = next;
 
+    workspaces_[current_]->UnsetFocusedClient();
     Client* focused_client = workspaces_[current_]->GetFocusedClient();
     if (focused_client) {
         workspaces_[current_]->SetFocusedClient(focused_client->window());
