@@ -5,20 +5,19 @@
 #include <memory>
 #include <string>
 
-using std::cout;
-using std::endl;
+using std::string;
 using std::unique_ptr;
 
-void print_version() {
-    cout << WIN_MGR_NAME << " " << VERSION << endl
-        << "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>" << endl
-        << "This is free software, see the source for copying conditions.  There is No" << endl
-        << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE" << endl;
+string version() {
+    return WIN_MGR_NAME " " VERSION "\n"
+        "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
+        "This is free software, see the source for copying conditions.  There is No\n"
+        "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\n";
 }
 
 int main(int argc, char* args[]) {
     if (argc > 1 && (!strcmp(args[1], "-v") || !strcmp(args[1], "--version"))) {
-        print_version();
+        std::cout << version();
         return EXIT_SUCCESS;
     }
 
