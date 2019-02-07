@@ -1,15 +1,16 @@
 #include "wm.hpp"
+#include "client.hpp"
+#include "util.hpp"
 extern "C" {
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
 }
 #include <glog/logging.h>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include "client.hpp"
-#include "util.hpp"
 
 using std::hex;
 using std::find;
@@ -17,13 +18,14 @@ using std::stoi;
 using std::pair;
 using std::string;
 using std::vector;
+using std::unique_ptr;
 using std::stringstream;
 using std::unordered_map;
 using tiling::Direction;
 
 WindowManager* WindowManager::instance_;
 
-WindowManager* WindowManager::GetInstance() {
+unique_ptr<WindowManager> WindowManager::GetInstance() {
     // If the instance is not yet initialized, we'll try to open a display
     // to X server. If it fails (i.e., dpy is None), then we return nullptr
     // to the caller. Otherwise we return an instance of WindowManager.
@@ -31,7 +33,7 @@ WindowManager* WindowManager::GetInstance() {
         Display* dpy;
         instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : nullptr;
     }
-    return instance_;
+    return unique_ptr<WindowManager>(instance_);
 }
 
 WindowManager::WindowManager(Display* dpy) 

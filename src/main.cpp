@@ -2,10 +2,12 @@
 #include "config.hpp"
 #include <glog/logging.h>
 #include <iostream>
+#include <memory>
 #include <string>
 
 using std::cout;
 using std::endl;
+using std::unique_ptr;
 
 void print_version() {
     cout << WIN_MGR_NAME << " " << VERSION << endl
@@ -26,7 +28,7 @@ int main(int argc, char* args[]) {
     // WindowManager is a singleton class. If XOpenDisplay() fails during 
     // WindowManager::GetInstance(), it will return None (in xlib, None is
     // the universal null resource ID or atom.)
-    WindowManager* wm = WindowManager::GetInstance();
+    unique_ptr<WindowManager> wm = WindowManager::GetInstance();
     
     if (!wm) {
         LOG(INFO) << "Failed to open display to X server.";
@@ -34,6 +36,5 @@ int main(int argc, char* args[]) {
     }
 
     wm->Run();
-    delete wm;
     return EXIT_SUCCESS;
 }

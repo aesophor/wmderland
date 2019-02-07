@@ -11,12 +11,12 @@ extern "C" {
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 }
-#include <cstring>
+#include <memory>
 #include <vector>
 
 class WindowManager {
 public:
-    static WindowManager* GetInstance();
+    static std::unique_ptr<WindowManager> GetInstance();
     virtual ~WindowManager();
     void Run();
 
