@@ -19,13 +19,13 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
 ## Installation
-1. Build and install from source (requires **GLOG**, see Build Requirements)
+1. Clone the repo
 ```
 $ git clone https://github.com/aesophor/Wmderland
 $ cd Wmderland
 ```
 
-2. Run CMake
+2. Build from source (requires **GLOG**, see Build Requirements)
 ```
 $ mkdir build
 $ cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL
