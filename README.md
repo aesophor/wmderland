@@ -13,26 +13,33 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib)
 I started this project because I want experience with OOP in C++ and Xlib. I know there's already [lots of WM out there](https://wiki.archlinux.org/index.php/Window_manager), but I'm writing this for my personal use and study.
 
 ## Build Requirements
-* g++
-* make
+* g++ (requires c++11)
+* cmake
 * Xlib headers
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
 ## Installation
 1. Build and install from source (make sure you have **GLOG** installed, see Build Requirements)
 ```
-$ git clone https://github.com/aesophor/Wmderland && cd Wmderland
-$ cmake . && make
-$ sudo cp Wmderland /usr/local/bin/Wmderland
+$ git clone https://github.com/aesophor/Wmderland
+$ cd Wmderland
 ```
 
-2. Copy the configuration file (IMPORTANT!)
+2. Run CMake and copy the executable to /usr/local/bin
+```
+$ mkdir build
+$ cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL
+$ make
+$ sudo cp Wmderland /usr/local/bin
+```
+
+3. Copy the config file (**IMPORTANT**)
 ```
 $ mkdir -p ~/.config/Wmderland
 $ cp example/config ~/.config/Wmderland/.
 ```
 
-3. Add this line to your ~/.xinitrc
+4. Add this line to your ~/.xinitrc
 ```
 # Fix Non-reparenting window managers / Grey window /
 # Programs not drawing properly
@@ -42,7 +49,7 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 exec Wmderland
 ```
 
-4. Initialize an X session
+5. Initialize an X session
 ```
 $ startx
 ```
