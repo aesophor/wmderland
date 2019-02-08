@@ -30,7 +30,7 @@ $ cd Wmderland
 $ mkdir build
 $ cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL
 $ make
-$ sudo cp Wmderland /usr/local/bin
+$ sudo make install
 ```
 
 3. Copy the config file (**IMPORTANT**)

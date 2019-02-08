@@ -25,3 +25,6 @@ find_package(glog REQUIRED)
 FILE(GLOB cpp_sources src/*.cpp)
 add_executable(Wmderland ${cpp_sources})
 target_link_libraries(Wmderland X11 glog)
+
+# Install rule
+install (TARGETS Wmderland DESTINATION bin)
