@@ -67,10 +67,11 @@ $ startx
 * Wine applications will not hang on close (fixed in commit [`a816f31`](https://github.com/aesophor/Wmderland/commit/a816f312d4f6b06865d36bbb565be95475d71719#comments))
 
 ## Todo List
-* \_NET_WM_WINDOW_TYPE_SPLASH should be floating by default
+* Config rules window format should be res_class,res_name,wm_name like cookie
+* Web browser windows should go fullscreen as video goes fullscreen
 * WINE Steam is extremely buggy
+* Improve floating behaviors
 * Two borders
-* Improve stability
 
 ## Other Screenshots
 Floating windows
