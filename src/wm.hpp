@@ -36,6 +36,7 @@ private:
     void OnButtonPress(const XButtonEvent& e);
     void OnButtonRelease(const XButtonEvent& e);
     void OnMotionNotify(const XButtonEvent& e);
+    void OnPropertyNotify(const XPropertyEvent& e);
     static int OnXError(Display* dpy, XErrorEvent* e);
 
     bool IsDock(Window w);

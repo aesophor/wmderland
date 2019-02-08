@@ -21,19 +21,23 @@ int main(int argc, char* args[]) {
         return EXIT_SUCCESS;
     }
 
-    // Initialize google's c++ logging library.
-    google::InitGoogleLogging(args[0]);
+    try {
+        // Initialize google's c++ logging library.
+        google::InitGoogleLogging(args[0]);
 
-    // WindowManager is a singleton class. If XOpenDisplay() fails during 
-    // WindowManager::GetInstance(), it will return None (in xlib, None is
-    // the universal null resource ID or atom.)
-    unique_ptr<WindowManager> wm = WindowManager::GetInstance();
-    
-    if (!wm) {
-        LOG(INFO) << "Failed to open display to X server.";
+        // WindowManager is a singleton class. If XOpenDisplay() fails during 
+        // WindowManager::GetInstance(), it will return None (in xlib, None is
+        // the universal null resource ID or atom.)
+        unique_ptr<WindowManager> wm = WindowManager::GetInstance();
+        if (!wm) {
+            LOG(INFO) << "Failed to open display to X server.";
+            return EXIT_FAILURE;
+        }
+        wm->Run();
+    } catch (const std::exception& ex) {
+        LOG(ERROR) << ex.what();
         return EXIT_FAILURE;
     }
 
-    wm->Run();
     return EXIT_SUCCESS;
 }

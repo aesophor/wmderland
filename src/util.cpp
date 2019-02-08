@@ -67,7 +67,8 @@ namespace wm_utils {
     }
 
     // Get the atoms contained in the property of window w. The number of atoms
-    // will be stored in *atom_len.
+    // will be stored in *atom_len. XFree() should be called manually on the returned
+    // Atom ptr.
     Atom* GetPropertyAtoms(Display* dpy, Window w, Atom property, unsigned long* atom_len) {
         Atom da;
         unsigned char *prop_ret = nullptr;

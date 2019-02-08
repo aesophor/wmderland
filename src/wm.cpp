@@ -158,6 +158,9 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify(event.xbutton);
                 break;
+            case PropertyNotify:
+                OnPropertyNotify(event.xproperty);
+                break;
             default:
                 break;
         }
@@ -384,6 +387,17 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
     new_width = (new_width < MIN_WINDOW_WIDTH) ? MIN_WINDOW_WIDTH : new_width;
     new_height = (new_height < MIN_WINDOW_HEIGHT) ? MIN_WINDOW_HEIGHT : new_height;
     XMoveResizeWindow(dpy_, btn_pressed_event_.subwindow, new_x, new_y, new_width, new_height);
+}
+
+void WindowManager::OnPropertyNotify(const XPropertyEvent& e) { 
+    Client* c = Client::mapper_[e.window];
+    if (!c) return;
+
+    if (e.atom == prop_->net[atom::NET_WM_STATE]) {
+        if (c->is_fullscreen() != IsFullscreen(e.window)) {
+            ToggleFullscreen(e.window);
+        }
+    }
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
