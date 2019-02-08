@@ -246,6 +246,25 @@ vector<Client*> Workspace::GetTilingClients() const {
 }
 
 
+void Workspace::Focus(ActionType focus_action_type) const {
+    switch (focus_action_type) {
+        case ActionType::FOCUS_LEFT:
+            FocusLeft();
+            break;
+        case ActionType::FOCUS_RIGHT:
+            FocusRight();
+            break;
+        case ActionType::FOCUS_UP:
+            FocusUp();
+            break;
+        case ActionType::FOCUS_DOWN:
+            FocusDown();
+            break;
+        default:
+            break;
+    }
+}
+
 void Workspace::FocusLeft() const {
     for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
         TreeNode* left_sibling = ptr->GetLeftSibling();

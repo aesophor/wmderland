@@ -34,16 +34,12 @@ public:
     void SetFocusedClient(Window w) const;
     void UnsetFocusedClient() const;
 
+    void Focus(ActionType focus_action_type) const;
     Client* GetFocusedClient() const;
     Client* GetClient(Window w) const;
     std::vector<Client*> GetFloatingClients() const;
     std::vector<Client*> GetTilingClients() const;
 
-    void FocusLeft() const;
-    void FocusRight() const;
-    void FocusUp() const;
-    void FocusDown() const;
-    
     Config* config() const;
     int id() const;
     const char* name() const;
@@ -52,6 +48,10 @@ public:
 
 private:
     void Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) const;
+    void FocusLeft() const;
+    void FocusRight() const;
+    void FocusUp() const;
+    void FocusDown() const;
 
     Display* dpy_;
     Window root_window_;
