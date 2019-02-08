@@ -14,18 +14,18 @@ I started this project because I want experience with OOP in C++ and Xlib. I kno
 
 ## Build Requirements
 * g++ (requires c++11)
-* cmake
+* CMake
 * Xlib headers
 * [glog](https://github.com/google/glog) (Google's c++ logging library)
 
 ## Installation
-1. Build and install from source (make sure you have **GLOG** installed, see Build Requirements)
+1. Build and install from source (requires **GLOG**, see Build Requirements)
 ```
 $ git clone https://github.com/aesophor/Wmderland
 $ cd Wmderland
 ```
 
-2. Run CMake and copy the executable to /usr/local/bin
+2. Run CMake
 ```
 $ mkdir build
 $ cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL
