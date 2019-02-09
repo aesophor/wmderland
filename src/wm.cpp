@@ -44,7 +44,8 @@ WindowManager::WindowManager(Display* dpy)
       cookie_(new Cookie(COOKIE_FILE)),
       display_resolution_(wm_utils::GetDisplayResolution(dpy_, root_window_)),
       tiling_area_(Area(0, 0, display_resolution_.first, display_resolution_.second)),
-      current_(0) {
+      current_(0),
+      btn_pressed_event_(XButtonEvent()) {
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
     InitXEvents();
@@ -158,8 +159,8 @@ void WindowManager::Run() {
             case MotionNotify:
                 OnMotionNotify(event.xbutton);
                 break;
-            case PropertyNotify:
-                OnPropertyNotify(event.xproperty);
+            case ClientMessage:
+                OnClientMessage(event.xclient);
                 break;
             default:
                 break;
@@ -345,26 +346,31 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
     if (!e.subwindow) return;
 
     Client* c = Client::mapper_[e.subwindow];
-    if (!c || !c->is_floating()) {
-        return;
-    } 
 
-    if (e.state == Mod4Mask) {
-        XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
-        btn_pressed_event_ = e;
+    if (c) {
+        c->workspace()->UnsetFocusedClient();
+        c->workspace()->SetFocusedClient(c->window());
+        c->workspace()->RaiseAllFloatingClients();
 
-        XDefineCursor(dpy_, root_window_, cursors_[e.button]);
+        if (c->is_floating()) {
+            XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
+            btn_pressed_event_ = e;
+            XDefineCursor(dpy_, root_window_, cursors_[e.button]);
+        }
     }
 }
 
 void WindowManager::OnButtonRelease(const XButtonEvent& e) {
-    if (!btn_pressed_event_.subwindow) return;
+    if (!btn_pressed_event_.subwindow || !e.subwindow) return;
 
-    XWindowAttributes attr = wm_utils::GetWindowAttributes(dpy_, btn_pressed_event_.subwindow);
-    XClassHint class_hint = wm_utils::GetWmClass(dpy_, btn_pressed_event_.subwindow);
-    string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
-    string wm_name = wm_utils::GetWmName(dpy_, btn_pressed_event_.subwindow);
-    cookie_->Put(res_class_name + ',' + wm_name, Area(attr.x, attr.y, attr.width, attr.height));
+    Client* c = Client::mapper_[btn_pressed_event_.subwindow];
+    if (c && c->is_floating()) {
+        XWindowAttributes attr = wm_utils::GetWindowAttributes(dpy_, btn_pressed_event_.subwindow);
+        XClassHint class_hint = wm_utils::GetWmClass(dpy_, btn_pressed_event_.subwindow);
+        string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
+        string wm_name = wm_utils::GetWmName(dpy_, btn_pressed_event_.subwindow);
+        cookie_->Put(res_class_name + ',' + wm_name, Area(attr.x, attr.y, attr.width, attr.height));
+    }
 
     btn_pressed_event_.subwindow = None;
     XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
@@ -389,13 +395,19 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
     XMoveResizeWindow(dpy_, btn_pressed_event_.subwindow, new_x, new_y, new_width, new_height);
 }
 
-void WindowManager::OnPropertyNotify(const XPropertyEvent& e) { 
+void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
     Client* c = Client::mapper_[e.window];
     if (!c) return;
 
-    if (e.atom == prop_->net[atom::NET_WM_STATE]) {
-        if (c->is_fullscreen() != IsFullscreen(e.window)) {
-            ToggleFullscreen(e.window);
+    if (e.message_type == prop_->net[atom::NET_WM_STATE]) {
+        XClassHint hint = wm_utils::GetWmClass(dpy_, e.window);
+        LOG(INFO) << hint.res_class;
+
+        if (e.data.l[1] == prop_->net[atom::NET_WM_STATE_FULLSCREEN]
+                || e.data.l[2] == prop_->net[atom::NET_WM_STATE_FULLSCREEN]) {
+            if (e.data.l[0] == 1 || (e.data.l[2] && !c->is_fullscreen())) {
+                ToggleFullscreen(e.window);
+            }
         }
     }
 }

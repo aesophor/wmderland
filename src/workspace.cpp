@@ -192,7 +192,10 @@ void Workspace::RaiseAllFloatingClients() const {
 
 void Workspace::SetFocusedClient(Window w) const {
     Client* c = GetClient(w);
+
     if (c) {
+        client_tree_->set_current(client_tree_->GetTreeNode(c));
+
         // Raise the window to the top and set input focus to it.
         c->Raise();
         c->SetInputFocus();
