@@ -13,10 +13,10 @@ Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib)
 I started this project because I want experience with OOP in C++ and Xlib. I know there's already [lots of WM out there](https://wiki.archlinux.org/index.php/Window_manager), but I'm writing this for my personal use and study.
 
 ## Build Requirements
-* g++ (requires c++11)
+* g++ (requires C++11)
 * CMake
 * Xlib headers
-* [glog](https://github.com/google/glog) (Google's c++ logging library)
+* [glog](https://github.com/google/glog) (Google's C++ logging library)
 
 ## Installation
 1. Clone the repo
