@@ -39,9 +39,9 @@ unique_ptr<WindowManager> WindowManager::GetInstance() {
 WindowManager::WindowManager(Display* dpy) 
     : dpy_(dpy), 
       root_window_(DefaultRootWindow(dpy_)),
-      prop_(unique_ptr<Properties>(new Properties(dpy_))),
-      config_(unique_ptr<Config>(new Config(CONFIG_FILE))),
-      cookie_(unique_ptr<Cookie>(new Cookie(COOKIE_FILE))),
+      prop_(new Properties(dpy_)),
+      config_(new Config(CONFIG_FILE)),
+      cookie_(new Cookie(COOKIE_FILE)),
       display_resolution_(wm_utils::GetDisplayResolution(dpy_, root_window_)),
       tiling_area_(Area(0, 0, display_resolution_.first, display_resolution_.second)),
       current_(0) {

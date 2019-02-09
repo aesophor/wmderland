@@ -5,13 +5,9 @@ using std::vector;
 using std::remove;
 using tiling::Direction;
 
-TreeNode::TreeNode(Client* client) : client_(client), tiling_direction_(Direction::UNSPECIFIED) {
+TreeNode::TreeNode(Client* client) : client_(client), tiling_direction_(Direction::UNSPECIFIED) {}
 
-}
-
-TreeNode::~TreeNode() {
-
-}
+TreeNode::~TreeNode() {}
 
 
 bool TreeNode::IsLeaf() const {

@@ -19,7 +19,7 @@ Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
     : dpy_(dpy),
       root_window_(root_window),
       config_(config),
-      client_tree_(unique_ptr<Tree>(new Tree())),
+      client_tree_(new Tree()),
       id_(id),
       is_fullscreen_(false) {}
 

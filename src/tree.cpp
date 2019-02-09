@@ -1,28 +1,24 @@
-#include <stack>
 #include "tree.hpp"
+#include <stack>
 
-using std::endl;
 using std::stack;
 using std::vector;
-using std::ostream;
 using tiling::Direction;
 
-Tree::Tree() : current_(nullptr) {
+// In Wmderland, the root node will always exist in a client tree at any given time.
+Tree::Tree() : root_(new TreeNode(nullptr)), current_(nullptr) {
     // Initialize a TreeNode with no client associated with it,
     // and set its tiling direction to HORIZONTAL by default.
-    root_ = new TreeNode(nullptr);
     root_->set_tiling_direction(Direction::HORIZONTAL);
 }
 
-Tree::~Tree() {
-    delete root_;
-}
+Tree::~Tree() {}
 
 
 TreeNode* Tree::GetTreeNode(Client* client) const {
     if (!current_) return nullptr;
 
-    TreeNode* ptr = root_;
+    TreeNode* ptr = root_.get();
     stack<TreeNode*> s;
 
     while (ptr) {
@@ -50,7 +46,7 @@ TreeNode* Tree::GetTreeNode(Client* client) const {
 vector<TreeNode*> Tree::GetAllLeaves() const {
     vector<TreeNode*> leaves;
     stack<TreeNode*> s;
-    TreeNode* ptr = root_;
+    TreeNode* ptr = root_.get();
     
     while (ptr) {
         if (!ptr->IsLeaf()) {
@@ -75,15 +71,11 @@ vector<TreeNode*> Tree::GetAllLeaves() const {
 
 
 TreeNode* Tree::root() const {
-    return root_;
+    return root_.get();
 }
 
 TreeNode* Tree::current() const {
     return current_;
-}
-
-void Tree::set_root(TreeNode* root) {
-    root_ = root;
 }
 
 void Tree::set_current(TreeNode* current) {
