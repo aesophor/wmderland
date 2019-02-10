@@ -1,4 +1,5 @@
 #include "cookie.hpp"
+#include "util.hpp"
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -10,9 +11,9 @@ using std::string;
 using std::stringstream;
 using std::unordered_map;
 
-Cookie::Cookie(string filename) : filename_ (filename) {
+Cookie::Cookie(Display* dpy, Properties* prop, string filename)
+    : dpy_(dpy), prop_(prop), filename_ (filename) {
     filename_ = sys_utils::ToAbsPath(filename_);
-
     std::ifstream file(filename_);
     string line;
 
@@ -47,17 +48,23 @@ Cookie::Cookie(string filename) : filename_ (filename) {
 Cookie::~Cookie() {}
 
 
-Area Cookie::Get(const XClassHint& class_hint, const std::string& wm_name) const {
-    string key = string(class_hint.res_class) + ',' + string(class_hint.res_name) + ',' + wm_name;
+Area Cookie::Get(Window w) const {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    string cookie_key = string(hint.res_class) + "," + hint.res_name + "," + net_wm_name;
 
-    if (window_area_map_.find(key) != window_area_map_.end()) {
-        return window_area_map_.at(key);
+    if (window_area_map_.find(cookie_key) != window_area_map_.end()) {
+        return window_area_map_.at(cookie_key);
     }
     return Area(0, 0, 0, 0);
 }
 
-void Cookie::Put(const string& res_class_name, const Area& window_area) {
-    window_area_map_[res_class_name] = window_area;
+void Cookie::Put(Window w, const Area& window_area) {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    string cookie_key = string(hint.res_class) + "," + hint.res_name + "," + net_wm_name;
+
+    window_area_map_[cookie_key] = window_area;
     WriteToFile();
 }
 

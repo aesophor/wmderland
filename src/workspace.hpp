@@ -37,6 +37,7 @@ public:
     void Focus(ActionType focus_action_type) const;
     Client* GetFocusedClient() const;
     Client* GetClient(Window w) const;
+    std::vector<Client*> GetClients() const;
     std::vector<Client*> GetFloatingClients() const;
     std::vector<Client*> GetTilingClients() const;
 

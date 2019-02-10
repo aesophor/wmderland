@@ -226,26 +226,29 @@ Client* Workspace::GetClient(Window w) const {
     return (c && c->workspace() == this) ? c : nullptr;
 }
 
-vector<Client*> Workspace::GetFloatingClients() const {
-    vector<Client*> floating_clients;
+vector<Client*> Workspace::GetClients() const {
+    vector<Client*> clients;
 
     for (auto leaf : client_tree_->GetAllLeaves()) {
-        if (leaf != client_tree_->root() && leaf->client()->is_floating()) {
-            floating_clients.push_back(leaf->client());
+        if (leaf != client_tree_->root()) {
+            clients.push_back(leaf->client());
         }
     }
-    return floating_clients;
+    return clients;
+}
+
+vector<Client*> Workspace::GetFloatingClients() const {
+    vector<Client*> clients = GetClients();
+    clients.erase(remove_if(clients.begin(), clients.end(), [](Client* c) {
+            return !c->is_floating(); }), clients.end());
+    return clients;
 }
 
 vector<Client*> Workspace::GetTilingClients() const {
-    vector<Client*> tiling_clients;
-
-    for (auto leaf : client_tree_->GetAllLeaves()) {
-        if (leaf != client_tree_->root() && !leaf->client()->is_floating()) {
-            tiling_clients.push_back(leaf->client());
-        }
-    }
-    return tiling_clients;
+    vector<Client*> clients = GetClients();
+    clients.erase(remove_if(clients.begin(), clients.end(), [](Client* c) {
+            return c->is_floating(); }), clients.end());
+    return clients;
 }
 
 

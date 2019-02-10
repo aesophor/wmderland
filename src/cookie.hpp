@@ -17,17 +17,22 @@ extern "C" {
 #include <string>
 #include <unordered_map>
 
+class Properties;
+
 class Cookie {
 public:
     static const char kDelimiter = ' ';
-    Cookie(const std::string filename);
+    Cookie(Display* dpy, Properties* prop, const std::string filename);
     virtual ~Cookie();
 
-    Area Get(const XClassHint& class_hint, const std::string& wm_name) const;
-    void Put(const std::string& res_class_name, const Area& window_area);
+    Area Get(Window w) const;
+    void Put(Window w, const Area& window_area);
     void WriteToFile() const;
 
 private:
+    Display* dpy_;
+    Properties* prop_;
+
     std::string filename_;
     std::unordered_map<std::string, Area> window_area_map_;
 };

@@ -12,7 +12,7 @@ using std::vector;
 using std::stringstream;
 using std::unordered_map;
 
-Config::Config(string filename) {
+Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), prop_(prop) {
     unordered_map<string, string> global_vars;
 
     // Load the default global values.
@@ -101,23 +101,27 @@ Config::Config(string filename) {
 Config::~Config() {}
 
 
-int Config::GetSpawnWorkspaceId(const XClassHint& class_hint) const {
-    string res_class = string(class_hint.res_class);
-    string res_name = string(class_hint.res_name);
-
+int Config::GetSpawnWorkspaceId(Window w) const {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string res_class = string(hint.res_class);
+    string res_name = string(hint.res_name);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    
     if (spawn_rules_.find(res_class + ',' + res_name) != spawn_rules_.end()) {
         return spawn_rules_.at(res_class + ',' + res_name) - 1;
     } else if (spawn_rules_.find(res_class) != spawn_rules_.end()) {
         return spawn_rules_.at(res_class) - 1;
     } else {
-        return WORKSPACE_ID_NULL;
+        return WORKSPACE_UNSPECIFIED;
     }
 }
 
-bool Config::ShouldFloat(const XClassHint& class_hint) const {
-    string res_class = string(class_hint.res_class);
-    string res_name = string(class_hint.res_name);
-
+bool Config::ShouldFloat(Window w) const {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string res_class = string(hint.res_class);
+    string res_name = string(hint.res_name);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    
     if (float_rules_.find(res_class + ',' + res_name) != float_rules_.end()) {
         return float_rules_.at(res_class + ',' + res_name);
     } else if (float_rules_.find(res_class) != float_rules_.end()) {
@@ -127,10 +131,12 @@ bool Config::ShouldFloat(const XClassHint& class_hint) const {
     }
 }
 
-bool Config::ShouldProhibit(const XClassHint& class_hint) const {
-    string res_class = string(class_hint.res_class);
-    string res_name = string(class_hint.res_name);
-
+bool Config::ShouldProhibit(Window w) const {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string res_class = string(hint.res_class);
+    string res_name = string(hint.res_name);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    
     if (prohibit_rules_.find(res_class + ',' + res_name) != prohibit_rules_.end()) {
         return prohibit_rules_.at(res_class + ',' + res_name);
     } else if (prohibit_rules_.find(res_class) != prohibit_rules_.end()) {

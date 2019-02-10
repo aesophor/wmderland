@@ -11,15 +11,9 @@
 #define VERSION "0.9.1 Beta"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
+
+#define WORKSPACE_UNSPECIFIED -1
 #define WORKSPACE_COUNT 9
-#define WORKSPACE_ID_NULL -1
-
-#define MOUSE_LEFT_BTN 1
-#define MOUSE_RIGHT_BTN 3
-
-#define LEFT_PTR_CURSOR 0
-#define MOVE_CURSOR 1
-#define RESIZE_CURSOR 3
 
 #define MIN_WINDOW_WIDTH 50
 #define MIN_WINDOW_HEIGHT 50
@@ -46,12 +40,12 @@ enum class ConfigKeyword {
 
 class Config {
 public:
-    Config(std::string filename);
+    Config(Display* dpy, Properties* prop, std::string filename);
     virtual ~Config();
     
-    int GetSpawnWorkspaceId(const XClassHint& class_hint) const;
-    bool ShouldFloat(const XClassHint& class_hint) const;
-    bool ShouldProhibit(const XClassHint& class_hint) const;
+    int GetSpawnWorkspaceId(Window w) const;
+    bool ShouldFloat(Window w) const;
+    bool ShouldProhibit(Window w) const;
     const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
     void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
 
@@ -68,7 +62,7 @@ public:
     const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
     const std::vector<std::string>& autostart_rules() const;
 
-private:
+private: 
     static ConfigKeyword StrToConfigKeyword(const std::string& s);
     const std::string& ReplaceSymbols(std::string& s);
     std::unordered_map<std::string, std::string> symtab_;
@@ -87,6 +81,9 @@ private:
     std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
     std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
     std::vector<std::string> autostart_rules_; // launch certain apps when wm starts.
+
+    Display* dpy_;
+    Properties* prop_;
 };
 
 #endif

@@ -40,10 +40,8 @@ WindowManager::WindowManager(Display* dpy)
     : dpy_(dpy), 
       root_window_(DefaultRootWindow(dpy_)),
       prop_(new Properties(dpy_)),
-      config_(new Config(CONFIG_FILE)),
-      cookie_(new Cookie(COOKIE_FILE)),
-      display_resolution_(wm_utils::GetDisplayResolution(dpy_, root_window_)),
-      tiling_area_(Area(0, 0, display_resolution_.first, display_resolution_.second)),
+      config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
+      cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
       current_(0),
       btn_pressed_event_(XButtonEvent()) {
     InitWorkspaces(WORKSPACE_COUNT);
@@ -67,7 +65,20 @@ void WindowManager::InitProperties() {
     // Set the name of window manager (i.e., Wmderland) on the root_window_ window,
     // so that other programs can acknowledge the name of this WM.
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_WM_NAME], prop_->utf8string, 8,
-            PropModeReplace, (unsigned char*) WIN_MGR_NAME, sizeof(WIN_MGR_NAME));
+            PropModeReplace, (unsigned char*) WIN_MGR_NAME, sizeof(WIN_MGR_NAME) / sizeof(char));
+
+    // Supporting window for _NET_WM_SUPPORTING_CHECK which tells other client
+    // a compliant window manager exists.
+    wmcheckwin_ = XCreateSimpleWindow(dpy_, root_window_, 0, 0, 1, 1, 0, 0, 0);
+    XChangeProperty(dpy_, wmcheckwin_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32,
+            PropModeReplace, (unsigned char *) &wmcheckwin_, 1);
+    XChangeProperty(dpy_, wmcheckwin_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], prop_->utf8string, 8,
+            PropModeReplace, (unsigned char *) WIN_MGR_NAME, sizeof(WIN_MGR_NAME) / sizeof(char));
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32,
+            PropModeReplace, (unsigned char *) &wmcheckwin_, 1);
+
+    // Initialize NET_CLIENT_LIST to empty.
+    XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST]);
 
     // Set _NET_SUPPORTED to indicate which atoms are supported by this window manager.    
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_SUPPORTED], XA_ATOM, 32,
@@ -87,6 +98,8 @@ void WindowManager::InitProperties() {
     XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_DESKTOP_VIEWPORT], XA_CARDINAL, 32, 
             PropModeReplace, (unsigned char *) desktop_viewport_cord, 2);
 
+    // TODO: Add/remove workspaces at runtime.
+    // TODO: User should be able to modify workspace names at runtime.
     const char* names[WORKSPACE_COUNT] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
     XTextProperty text_prop;
     Xutf8TextListToTextProperty(dpy_, (char**) names, WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
@@ -111,19 +124,19 @@ void WindowManager::InitXEvents() {
     // Define which mouse clicks will send us X events.
     XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
-
+ 
     // Enable substructure redirection on the root window.
-    XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
+    XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask);
 
     // Setup the bitch catcher.
     XSetErrorHandler(&WindowManager::OnXError);
 }
 
 void WindowManager::InitCursors() {
-    cursors_[LEFT_PTR_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
+    cursors_[NORMAL_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
     cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
     cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
-    XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
+    XDefineCursor(dpy_, root_window_, cursors_[NORMAL_CURSOR]);
 }
 
 void WindowManager::Run() {
@@ -170,117 +183,106 @@ void WindowManager::Run() {
 
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
-    if (HasResolutionChanged()) {
-        UpdateTilingArea();
-    }
-
-    XClassHint class_hint = wm_utils::GetWmClass(dpy_, e.window);
-
-    // If the config says that this window should be prohibited, then
-    // we should kill this window and return immediately.
-    if (config_->ShouldProhibit(class_hint)) {
+    // Windows that are prohibited from mapping should be killed immediately.
+    if (config_->ShouldProhibit(e.window)) {
         XKillClient(dpy_, e.window);
         return;
     }
     
-    // If this window is a dock, then add it to the docks_and_bars_ vector,
-    // map it and return immediately.
-    if (IsDock(e.window)
-            && find(docks_and_bars_.begin(), docks_and_bars_.end(), e.window) == docks_and_bars_.end()) {
-            docks_and_bars_.push_back(e.window);
-            UpdateTilingArea();
-            Tile(workspaces_[current_]);
-            XMapWindow(dpy_, e.window);
-            return;
+    // If this window is a dock (or bar), record it, map it and tile the workspace.
+    if (IsDock(e.window) && find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
+        docks_.push_back(e.window);
+        workspaces_[current_]->Arrange(CalculateTilingArea());
+        XMapWindow(dpy_, e.window);
+        return;
     }
 
-    // If everything is fine, then it means we should manage this window.
-    // Float this window if it's a dialog or if such rule exists.
-    bool should_float = IsDialog(e.window) || IsSplash(e.window) || config_->ShouldFloat(class_hint);
+    // Pass all checks above -> we should manage this window.
+    // Floating creiteria: has _NET_WM_WINDOW_TYPE_{DIALOG,SPLASH} or defined in config.
+    bool should_float = IsDialog(e.window) || IsSplash(e.window) || config_->ShouldFloat(e.window);
 
     // Spawn this window at the specified workspace if such rule exists,
     // otherwise spawn it in current workspace.
-    int target_workspace_id = config_->GetSpawnWorkspaceId(class_hint);
-    if (target_workspace_id == WORKSPACE_ID_NULL) target_workspace_id = current_;
+    int target = config_->GetSpawnWorkspaceId(e.window);
+    if (target == WORKSPACE_UNSPECIFIED) target = current_;
 
     // Add this window to the target workspace.
-    if (!workspaces_[target_workspace_id]->Has(e.window)) {
-        workspaces_[target_workspace_id]->UnsetFocusedClient();
-        workspaces_[target_workspace_id]->Add(e.window, should_float);
-        Tile(workspaces_[target_workspace_id]);
-        UpdateWindowWmState(e.window, 1);
+    if (!workspaces_[target]->Has(e.window)) {
+        workspaces_[target]->UnsetFocusedClient();
+        workspaces_[target]->Add(e.window, should_float);
+        workspaces_[target]->Arrange(CalculateTilingArea());
+        wm_utils::SetWindowWmState(dpy_, e.window, WM_STATE_NORMAL, prop_.get());
+        UpdateClientList();
 
-        if (target_workspace_id == current_) {
+        if (target == current_) {
             XMapWindow(dpy_, e.window);
-            SetNetActiveWindow(e.window);
-            workspaces_[target_workspace_id]->SetFocusedClient(e.window);
-        }
-    }
-    
-    if (target_workspace_id == current_) {
-        Area cookie_area = cookie_->Get(class_hint, wm_utils::GetWmName(dpy_, e.window));
-        XSizeHints hints = wm_utils::GetWmNormalHints(dpy_, e.window);
+            wm_utils::SetNetActiveWindow(dpy_, root_window_, e.window, prop_.get());
+            workspaces_[target]->SetFocusedClient(e.window);
 
-        if (should_float) {
-            RestoreWindowPosSize(e.window, cookie_area, hints);
-        }
-
-        pair<short, short> resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-        bool should_fullscreen = IsFullscreen(e.window);
-        Client* c = Client::mapper_[e.window];
-        if (c && ((should_fullscreen && !c->is_fullscreen()) || (hints.min_width == resolution.first && hints.min_height == resolution.second))) {
-            ToggleFullscreen(e.window);
+            if (should_float) {
+                ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
+            }
         }
     }
 
-    RaiseAllNotificationWindows();
+    // If this window is managed by our wm, which its client can be found by the Client mapper,
+    // and this window should be fullscreen (but it is currently not), then fullscreen this window.
+    Client* c = Client::mapper_[e.window];
+    if (c && !c->is_fullscreen() && IsFullscreen(e.window)) {
+        ToggleFullscreen(e.window);
+    }
 }
 
 void WindowManager::OnMapNotify(const XMapEvent& e) {
-    Window w = e.window;
-
-    if (IsNotification(w)
-            && find(notifications_.begin(), notifications_.end(), w) == notifications_.end()) {
+    // Checking if a window is a notification in OnMapRequest() will fail (especially dunst),
+    // So we perform the check here (after the window is mapped) instead.
+    if (IsNotification(e.window) 
+            && find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
         notifications_.push_back(e.window);
     } 
 }
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
-    if (find(docks_and_bars_.begin(), docks_and_bars_.end(), e.window) != docks_and_bars_.end()) {
-        docks_and_bars_.erase(remove(docks_and_bars_.begin(), docks_and_bars_.end(), e.window), docks_and_bars_.end());
-        UpdateTilingArea();
-        Tile(workspaces_[current_]);
+    // If the window is a dock/bar or notification, remove it and tile the workspace.
+    if (find(docks_.begin(), docks_.end(), e.window) != docks_.end()) {
+        docks_.erase(remove(docks_.begin(), docks_.end(), e.window), docks_.end());
+        workspaces_[current_]->Arrange(CalculateTilingArea());
+        return;
+    } else if (IsNotification(e.window)) {
+        notifications_.erase(remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
+        return;
     }
 
-    // If we aren't managing this window, return at once.
-    if (!Client::mapper_[e.window]) return;
+    // If we aren't managing this window, there's no need to proceed further.
     Client* c = Client::mapper_[e.window];
+    if (!c) return;
 
-    // If the client being destroyed is in fullscreen mode, make sure to
-    // unset the workspace's fullscreen state.
+    // If the client being destroyed is in fullscreen mode, make sure to unset the workspace's
+    // fullscreen state.
     if (c->is_fullscreen()) {
         c->workspace()->set_fullscreen(false);
         c->workspace()->MapAllClients();
-        MapDocksAndBars();
+        MapDocks();
     }
-
-    if (IsNotification(e.window)) {
-        notifications_.erase(remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
-    }
-
+    
     // Remove the corresponding client from the client tree.
     c->workspace()->Remove(e.window);
-    UpdateWindowWmState(e.window, 0);
-    ClearNetActiveWindow();
+    wm_utils::SetWindowWmState(dpy_, e.window, WM_STATE_WITHDRAWN, prop_.get());
+    UpdateClientList();
 
+    // Clear _NET_ACTIVE_WINDOW only if the window being destroyed is in current workspace.
+    if (c->workspace() == workspaces_[current_]) {
+        wm_utils::ClearNetActiveWindow(dpy_, root_window_, prop_.get());
+    }
+    
     // Transfer focus to another window (if there's still one).
     Client* new_focused_client = c->workspace()->GetFocusedClient();
     if (c->workspace() == workspaces_[current_] && new_focused_client) {
         c->workspace()->SetFocusedClient(new_focused_client->window());
-        SetNetActiveWindow(new_focused_client->window());
+        wm_utils::SetNetActiveWindow(dpy_, root_window_, new_focused_client->window(), prop_.get());
     }
 
-    Tile(c->workspace());
+    c->workspace()->Arrange(CalculateTilingArea());
     c->workspace()->RaiseAllFloatingClients();
 }
 
@@ -307,7 +309,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->Focus(action.type());
                 workspaces_[current_]->RaiseAllFloatingClients();
-                SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+                wm_utils::SetNetActiveWindow(dpy_, root_window_, workspaces_[current_]->GetFocusedClient()->window(), prop_.get());
                 break;
            case ActionType::TOGGLE_FLOATING:
                 if (!focused_client) continue;
@@ -338,8 +340,6 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 break;
         }
     }
-
-    RaiseAllNotificationWindows();
 }
 
 void WindowManager::OnButtonPress(const XButtonEvent& e) {
@@ -366,14 +366,14 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
     Client* c = Client::mapper_[btn_pressed_event_.subwindow];
     if (c && c->is_floating()) {
         XWindowAttributes attr = wm_utils::GetWindowAttributes(dpy_, btn_pressed_event_.subwindow);
-        XClassHint class_hint = wm_utils::GetWmClass(dpy_, btn_pressed_event_.subwindow);
+        XClassHint class_hint = wm_utils::GetXClassHint(dpy_, btn_pressed_event_.subwindow);
         string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
         string wm_name = wm_utils::GetWmName(dpy_, btn_pressed_event_.subwindow);
-        cookie_->Put(res_class_name + ',' + wm_name, Area(attr.x, attr.y, attr.width, attr.height));
+        cookie_->Put(c->window(), Area(attr.x, attr.y, attr.width, attr.height));
     }
 
     btn_pressed_event_.subwindow = None;
-    XDefineCursor(dpy_, root_window_, cursors_[LEFT_PTR_CURSOR]);
+    XDefineCursor(dpy_, root_window_, cursors_[NORMAL_CURSOR]);
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
@@ -396,20 +396,7 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
-    Client* c = Client::mapper_[e.window];
-    if (!c) return;
 
-    if (e.message_type == prop_->net[atom::NET_WM_STATE]) {
-        XClassHint hint = wm_utils::GetWmClass(dpy_, e.window);
-        LOG(INFO) << hint.res_class;
-
-        if (e.data.l[1] == prop_->net[atom::NET_WM_STATE_FULLSCREEN]
-                || e.data.l[2] == prop_->net[atom::NET_WM_STATE_FULLSCREEN]) {
-            if (e.data.l[0] == 1 || (e.data.l[2] && !c->is_fullscreen())) {
-                ToggleFullscreen(e.window);
-            }
-        }
-    }
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
@@ -426,69 +413,222 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
 }
 
 
+void WindowManager::GotoWorkspace(int next) {
+    if (current_ == next) return;
+
+    MapDocks();
+    wm_utils::ClearNetActiveWindow(dpy_, root_window_, prop_.get());
+
+    workspaces_[current_]->UnmapAllClients();
+    workspaces_[next]->MapAllClients();
+    current_ = next;
+
+    workspaces_[current_]->UnsetFocusedClient();
+    Client* focused_client = workspaces_[current_]->GetFocusedClient();
+    if (focused_client) {
+        workspaces_[current_]->SetFocusedClient(focused_client->window());
+        wm_utils::SetNetActiveWindow(dpy_, root_window_, focused_client->window(), prop_.get());
+        workspaces_[current_]->Arrange(CalculateTilingArea());
+
+        // Restore fullscreen application.
+        if (focused_client->is_fullscreen()) {
+            pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+            XMoveResizeWindow(dpy_, focused_client->window(), 0, 0, res.first, res.second);
+            UnmapDocks();
+        }
+    }
+
+    // Update _NET_CURRENT_DESKTOP
+    unsigned long current_workspace = current_;
+    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CURRENT_DESKTOP], XA_CARDINAL, 32, 
+            PropModeReplace, (unsigned char *) &current_workspace, 1);
+}
+
+void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
+    if (current_ == next) return;
+
+    Client* c = Client::mapper_[window];
+    if (!c) return;
+
+    if (c->is_fullscreen()) {
+        workspaces_[current_]->set_fullscreen(false);
+        c->set_fullscreen(false);
+        c->workspace()->MapAllClients();
+        MapDocks();
+    }
+
+    XUnmapWindow(dpy_, window);
+
+    workspaces_[next]->UnsetFocusedClient();
+    workspaces_[current_]->Move(window, workspaces_[next]);
+    Client* focused_client = workspaces_[current_]->GetFocusedClient();
+
+    if (!focused_client) {
+        wm_utils::ClearNetActiveWindow(dpy_, root_window_, prop_.get());
+        return;
+    }
+
+    workspaces_[current_]->SetFocusedClient(focused_client->window());
+    workspaces_[next]->SetFocusedClient(window);
+    workspaces_[current_]->Arrange(CalculateTilingArea());
+}
+
+
+void WindowManager::Center(Window w) {
+    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    short screen_width = display_resolution.first;
+    short screen_height = display_resolution.second;
+
+    XWindowAttributes w_attr = wm_utils::GetWindowAttributes(dpy_, w);
+    int new_x = screen_width / 2 - w_attr.width / 2;
+    int new_y = screen_height / 2 - w_attr.height / 2;
+    XMoveWindow(dpy_, w, new_x, new_y);
+}
+
+void WindowManager::ToggleFloating(Window w) {
+    Client* c = Client::mapper_[w];
+    if (!c) return;
+
+    // TODO: Fix floating and fullscreen.
+    c->set_floating(!c->is_floating());
+    if (c->is_floating()) {
+        XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+        Center(c->window());
+    }
+
+    workspaces_[current_]->Arrange(CalculateTilingArea());
+}
+
+void WindowManager::ToggleFullscreen(Window w) {
+    Client* c = Client::mapper_[w];
+    if (!c) return;
+ 
+    if (!workspaces_[current_]->is_fullscreen() && !c->is_fullscreen()) {
+        UnmapDocks();
+        c->set_previous_attr(c->GetXWindowAttributes());
+        pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+        XMoveResizeWindow(dpy_, w, 0, 0, res.first, res.second);
+        c->SetBorderWidth(0);
+        c->set_fullscreen(true);
+        c->workspace()->set_fullscreen(true);
+        c->workspace()->UnmapAllClients();
+        c->Map();
+        c->SetInputFocus();
+
+        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*) &prop_->net[atom::NET_WM_STATE_FULLSCREEN], 1);    
+    } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
+        MapDocks();
+        XWindowAttributes& attr = c->previous_attr();
+        XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
+        c->SetBorderWidth(config_->border_width());
+        c->set_fullscreen(false);
+        c->workspace()->set_fullscreen(false);
+        c->workspace()->MapAllClients();
+        workspaces_[current_]->Arrange(CalculateTilingArea());
+
+        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*) 0, 0);
+    }
+}
+
+void WindowManager::KillClient(Window w) {
+    Atom* supported_protocols;
+    int num_supported_protocols;
+
+    // First try to kill the client gracefully via ICCCM.  If the client does not support
+    // this method, then we'll perform the brutal XKillClient().
+    if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
+            && (find(supported_protocols, supported_protocols + num_supported_protocols, 
+                    prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
+        XEvent msg;
+        memset(&msg, 0, sizeof(msg));
+        msg.xclient.type = ClientMessage;
+        msg.xclient.message_type = prop_->wm[atom::WM_PROTOCOLS];
+        msg.xclient.window = w;
+        msg.xclient.format = 32;
+        msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
+        CHECK(XSendEvent(dpy_, w, false, 0, &msg));
+    } else {
+        XKillClient(dpy_, w);
+    }
+}
+
+
+bool WindowManager::IsWindowOfType(Window w, Atom property_atom, Atom target_atom) {
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, property_atom, target_atom);
+}
+
 bool WindowManager::IsDock(Window w) {
-    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
-    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK];
-    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK]);
 }
 
 bool WindowManager::IsDialog(Window w) {
-    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
-    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_DIALOG];
-    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_DIALOG]);
 }
 
 bool WindowManager::IsSplash(Window w) {
-    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
-    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_SPLASH];
-    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_SPLASH]);
 }
 
 bool WindowManager::IsNotification(Window w) {
-    Atom property = prop_->net[atom::NET_WM_WINDOW_TYPE];
-    Atom atom = prop_->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION];
-    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]);
 }
 
 bool WindowManager::IsFullscreen(Window w) {
-    Atom property = prop_->net[atom::NET_WM_STATE];
-    Atom atom = prop_->net[atom::NET_WM_STATE_FULLSCREEN];
-    return wm_utils::WindowPropertyHasAtom(dpy_, w, property, atom);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_STATE], prop_->net[atom::NET_WM_STATE_FULLSCREEN]);
 }
 
 
-bool WindowManager::HasResolutionChanged() {
-    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    return res.first != display_resolution_.first || res.second != display_resolution_.second;
+inline void WindowManager::MapDocks() const {
+    for (auto w : docks_) {
+        XMapWindow(dpy_, w);
+    }
 }
 
-void WindowManager::UpdateTilingArea() {
-    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    display_resolution_ = std::make_pair(res.first, res.second);
-    tiling_area_ = { 0, 0, res.first, res.second };
+inline void WindowManager::UnmapDocks() const {
+    for (auto w : docks_) {
+        XUnmapWindow(dpy_, w);
+    }
+}
 
-    for (auto w : docks_and_bars_) {
+inline void WindowManager::RaiseNotifications() const {
+    for (auto w : notifications_) {
+        XRaiseWindow(dpy_, w);
+    }
+}
+
+
+Area WindowManager::CalculateTilingArea() {
+    pair<int, int> res = wm_utils::GetDisplayResolution(dpy_, root_window_);
+    Area tiling_area = { 0, 0, res.first, res.second };
+
+    for (auto w : docks_) {
         XWindowAttributes dock_attr = wm_utils::GetWindowAttributes(dpy_, w);
 
         if (dock_attr.y == 0) {
             // If the dock is at the top of the screen.
-            tiling_area_.y += dock_attr.height;
-            tiling_area_.height -= dock_attr.height;
-        } else if (dock_attr.y + dock_attr.height == tiling_area_.y + tiling_area_.height) {
+            tiling_area.y += dock_attr.height;
+            tiling_area.height -= dock_attr.height;
+        } else if (dock_attr.y + dock_attr.height == tiling_area.y + tiling_area.height) {
             // If the dock is at the bottom of the screen.
-            tiling_area_.height -= dock_attr.height;
+            tiling_area.height -= dock_attr.height;
         } else if (dock_attr.x == 0) {
             // If the dock is at the leftmost of the screen.
-            tiling_area_.x += dock_attr.width;
-            tiling_area_.width -= dock_attr.width;
-        } else if (dock_attr.x + dock_attr.width == tiling_area_.x + tiling_area_.width) {
+            tiling_area.x += dock_attr.width;
+            tiling_area.width -= dock_attr.width;
+        } else if (dock_attr.x + dock_attr.width == tiling_area.x + tiling_area.width) {
             // If the dock is at the rightmost of the screen.
-            tiling_area_.width -= dock_attr.width;
+            tiling_area.width -= dock_attr.width;
         }
     }
+
+    return tiling_area;
 }
 
-void WindowManager::RestoreWindowPosSize(Window w, const Area& cookie_area, const XSizeHints& hints) {
+void WindowManager::ResizeWindowFromCookie(Window w, const Area& cookie_area) {
+    XSizeHints hints = wm_utils::GetWmNormalHints(dpy_, w);
+
     // Set window size. (Priority: cookie > hints)
     if (cookie_area.width > 0 && cookie_area.height > 0) {
         XResizeWindow(dpy_, w, cookie_area.width, cookie_area.height);
@@ -513,197 +653,14 @@ void WindowManager::RestoreWindowPosSize(Window w, const Area& cookie_area, cons
 }
 
 
-void WindowManager::MapDocksAndBars() {
-    for (auto w : docks_and_bars_) {
-        XMapWindow(dpy_, w);
-    }
-}
+void WindowManager::UpdateClientList() {
+    XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST]);
 
-void WindowManager::UnmapDocksAndBars() {
-    for (auto w : docks_and_bars_) {
-        XUnmapWindow(dpy_, w);
-    }
-}
-
-void WindowManager::RaiseAllNotificationWindows() {
-    for (auto w : notifications_) {
-        XRaiseWindow(dpy_, w);
-    }
-}
-
-
-void WindowManager::UpdateWindowWmState(Window w, unsigned long state) {
-    // Set full WM_STATE according to
-    // http://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html#WM_STATE_Property
-    // WithdrawnState: 0
-    // NormalState: 1
-    // IconicState: 3
-    unsigned long wmstate[] = { state, None };
-    XChangeProperty(dpy_, w,  prop_->wm[atom::WM_STATE], prop_->wm[atom::WM_STATE], 32, 
-            PropModeReplace, (unsigned char*) wmstate, 2);
-}
-
-void WindowManager::SetNetActiveWindow(Window w) {
-    Client* c = workspaces_[current_]->GetClient(w);
-    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
-            PropModeReplace, (unsigned char*) &(c->window()), 1);
-}
-
-void WindowManager::ClearNetActiveWindow() {
-    XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_ACTIVE_WINDOW]);
-}
-
-
-void WindowManager::GotoWorkspace(int next) {
-    if (current_ == next) return;
-
-    MapDocksAndBars();
-    ClearNetActiveWindow();
-
-    workspaces_[current_]->UnmapAllClients();
-    workspaces_[next]->MapAllClients();
-    current_ = next;
-
-    workspaces_[current_]->UnsetFocusedClient();
-    Client* focused_client = workspaces_[current_]->GetFocusedClient();
-    if (focused_client) {
-        workspaces_[current_]->SetFocusedClient(focused_client->window());
-        SetNetActiveWindow(focused_client->window());
-        Tile(workspaces_[current_]);
-
-        // Restore fullscreen application.
-        if (focused_client->is_fullscreen()) {
-            int screen_width = display_resolution_.first;
-            int screen_height = display_resolution_.second;
-            XMoveResizeWindow(dpy_, focused_client->window(), 0, 0, screen_width, screen_height);
-            UnmapDocksAndBars();
+    for (auto w : workspaces_) {
+        for (auto c : w->GetClients()) {
+            Window w = c->window();
+            XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST], XA_WINDOW, 32, 
+                    PropModeAppend, (unsigned char *) &w, 1);
         }
-    }
-
-    unsigned long current_workspace = current_;
-    XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CURRENT_DESKTOP], XA_CARDINAL, 32, 
-            PropModeReplace, (unsigned char *) &current_workspace, 1);
-}
-
-void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
-    if (current_ == next) return;
-
-    Client* c = Client::mapper_[window];
-    if (!c) return;
-
-    if (c->is_fullscreen()) {
-        workspaces_[current_]->set_fullscreen(false);
-        c->set_fullscreen(false);
-        c->workspace()->MapAllClients();
-        MapDocksAndBars();
-    }
-
-    XUnmapWindow(dpy_, window);
-
-    workspaces_[next]->UnsetFocusedClient();
-    workspaces_[current_]->Move(window, workspaces_[next]);
-    Client* focused_client = workspaces_[current_]->GetFocusedClient();
-
-    if (!focused_client) {
-        ClearNetActiveWindow();
-        return;
-    }
-
-    workspaces_[current_]->SetFocusedClient(focused_client->window());
-    workspaces_[next]->SetFocusedClient(window);
-    Tile(workspaces_[current_]);
-}
-
-
-void WindowManager::Center(Window w) {
-    pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-    short screen_width = display_resolution.first;
-    short screen_height = display_resolution.second;
-
-    XWindowAttributes w_attr = wm_utils::GetWindowAttributes(dpy_, w);
-    int new_x = screen_width / 2 - w_attr.width / 2;
-    int new_y = screen_height / 2 - w_attr.height / 2;
-    XMoveWindow(dpy_, w, new_x, new_y);
-}
-
-void WindowManager::Tile(Workspace* workspace) {
-    UpdateTilingArea();
-    workspace->Arrange(tiling_area_);
-}
-
-void WindowManager::ToggleFloating(Window w) {
-    Client* c = Client::mapper_[w];
-    if (!c) return;
-
-    // TODO: Fix floating and fullscreen.
-    c->set_floating(!c->is_floating());
-    if (c->is_floating()) {
-        XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-        Center(c->window());
-    }
-    Tile(workspaces_[current_]);
-}
-
-void WindowManager::ToggleFullscreen(Window w) {
-    Client* c = Client::mapper_[w];
-    if (!c) return;
-
-    XWindowAttributes& attr = c->previous_attr();
-
-    if (!workspaces_[current_]->is_fullscreen() && !c->is_fullscreen()) {
-        pair<short, short> display_resolution = wm_utils::GetDisplayResolution(dpy_, root_window_);
-        short screen_width = display_resolution.first;
-        short screen_height = display_resolution.second;
-
-        // Record the current window's position and size before making it fullscreen.
-        XGetWindowAttributes(dpy_, w, &attr);
-        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
-                PropModeReplace, (unsigned char*) &prop_->net[atom::NET_WM_STATE_FULLSCREEN], 1);
-        XMoveResizeWindow(dpy_, w, 0, 0, screen_width, screen_height);
-        c->SetBorderWidth(0);
-
-        workspaces_[current_]->set_fullscreen(true);
-        c->set_fullscreen(true);
-
-        workspaces_[current_]->UnmapAllClients();
-        UnmapDocksAndBars();
-        c->Map();
-        c->SetInputFocus();
-    } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
-        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
-                PropModeReplace, (unsigned char*) 0, 0);
-        // Restore the window to its original position and size.
-        XMoveResizeWindow(dpy_, w, attr.x, attr.y, attr.width, attr.height);
-        c->SetBorderWidth(config_->border_width());
-
-        workspaces_[current_]->set_fullscreen(false);
-        c->set_fullscreen(false);
-
-        workspaces_[current_]->MapAllClients();
-        MapDocksAndBars();
-    }
-
-    XRaiseWindow(dpy_, w);
-}
-
-void WindowManager::KillClient(Window w) {
-    Atom* supported_protocols;
-    int num_supported_protocols;
-
-    // First try to kill the client gracefully via ICCCM.  If the client does not support
-    // this method, then we'll perform the brutal XKillClient().
-    if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
-            && (find(supported_protocols, supported_protocols + num_supported_protocols, 
-                    prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
-        XEvent msg;
-        memset(&msg, 0, sizeof(msg));
-        msg.xclient.type = ClientMessage;
-        msg.xclient.message_type = prop_->wm[atom::WM_PROTOCOLS];
-        msg.xclient.window = w;
-        msg.xclient.format = 32;
-        msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
-        CHECK(XSendEvent(dpy_, w, false, 0, &msg));
-    } else {
-        XKillClient(dpy_, w);
     }
 }

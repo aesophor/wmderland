@@ -1,6 +1,7 @@
 #ifndef WMDERLAND_UTIL_HPP_
 #define WMDERLAND_UTIL_HPP_
 
+#include "properties.hpp"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -34,9 +35,13 @@ namespace wm_utils {
     std::pair<int, int> GetDisplayResolution(Display* dpy, Window root_window);
     XWindowAttributes GetWindowAttributes(Display* dpy, Window w);
     XSizeHints GetWmNormalHints(Display* dpy, Window w);
-    XClassHint GetWmClass(Display* dpy, Window w);
+    XClassHint GetXClassHint(Display* dpy, Window w);
+    std::string GetNetWmName(Display* dpy, Window w, Properties* prop);
     std::string GetWmName(Display* dpy, Window w);
-    Atom* GetPropertyAtoms(Display* dpy, Window w, Atom property, unsigned long* atom_len);
+    void SetWindowWmState(Display* dpy, Window w, unsigned long state, Properties* prop);
+    void SetNetActiveWindow(Display* dpy, Window root_window, Window w, Properties* prop);
+    void ClearNetActiveWindow(Display* dpy, Window root_window, Properties* prop);
+    Atom* GetWindowProperty(Display* dpy, Window w, Atom property, unsigned long* atom_len);
     bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_atom);
 
     std::string KeysymToStr(Display* dpy, unsigned int keycode);

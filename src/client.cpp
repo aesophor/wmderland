@@ -11,6 +11,7 @@ Client::Client(Display* dpy, Window w, Workspace* workspace)
     mapper_[window_] = this;
     SetBorderWidth(workspace->config()->border_width());
     SetBorderColor(workspace->config()->focused_color());
+    XSelectInput(dpy_, window_, StructureNotifyMask | PropertyChangeMask);
 }
 
 Client::~Client() {
@@ -47,7 +48,7 @@ XWindowAttributes Client::GetXWindowAttributes() const {
 }
 
 
-const Window& Client::window() const {
+Window Client::window() const {
     return window_;
 }
 
@@ -71,6 +72,10 @@ bool Client::is_fullscreen() const {
 
 void Client::set_workspace(Workspace* workspace) {
     workspace_ = workspace;
+}
+
+void Client::set_previous_attr(const XWindowAttributes& attr) {
+    previous_attr_ = attr;
 }
 
 void Client::set_floating(bool is_floating) {

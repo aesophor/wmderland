@@ -46,10 +46,21 @@ namespace wm_utils {
     }
 
     // Get the XClassHint (which contains res_class and res_name) of window w.
-    XClassHint GetWmClass(Display* dpy, Window w) {
+    XClassHint GetXClassHint(Display* dpy, Window w) {
         XClassHint hint;
         XGetClassHint(dpy, w, &hint);
         return hint;
+    }
+
+    // Get the utf8string in _NET_WM_NAME property.
+    string GetNetWmName(Display* dpy, Window w, Properties* prop) {
+        XTextProperty name;
+        if (!XGetTextProperty(dpy, w, &name, prop->net[atom::NET_WM_NAME]) || !name.nitems) {
+            return string();
+        }
+        string ret = string((char*) name.value);
+        XFree(name.value);
+        return ret;
     }
 
     // Get the WM_NAME (i.e., the window title) of window w.
@@ -66,10 +77,28 @@ namespace wm_utils {
         return nullptr;
     }
 
-    // Get the atoms contained in the property of window w. The number of atoms
-    // will be stored in *atom_len. XFree() should be called manually on the returned
-    // Atom ptr.
-    Atom* GetPropertyAtoms(Display* dpy, Window w, Atom property, unsigned long* atom_len) {
+    // Set WM_STATE according to the following page to fix WINE application close hang issue:
+    // http://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html#WM_STATE_Property
+    void SetWindowWmState(Display* dpy, Window w, unsigned long state, Properties* prop) {
+        unsigned long wm_state[] = { state, None };
+        XChangeProperty(dpy, w,  prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE], 32,
+            PropModeReplace, (unsigned char*) wm_state, 2);
+    }
+
+    // Set root window's _NET_ACTIVE_WINDOW property
+    void SetNetActiveWindow(Display* dpy, Window root_window, Window w, Properties* prop) {
+        XChangeProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
+                PropModeReplace, (unsigned char*) &w, 1);
+    }
+
+    // Clear root window's _NET_ACTIVE_WINDOW property
+    void ClearNetActiveWindow(Display* dpy, Window root_window, Properties* prop) {
+        XDeleteProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW]);
+    }
+
+    // Get the atoms contained in the property of window w. The number of atoms retrieved
+    // will be stored in *atom_len. XFree() should be called manually on the returned Atom ptr.
+    Atom* GetWindowProperty(Display* dpy, Window w, Atom property, unsigned long* atom_len) {
         Atom da;
         unsigned char *prop_ret = nullptr;
         int di;
@@ -85,7 +114,7 @@ namespace wm_utils {
     // Check if the property of window w contains the target atom.
     bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_atom) {
         unsigned long atom_len = 0;
-        Atom* atoms = GetPropertyAtoms(dpy, w, property, &atom_len);
+        Atom* atoms = GetWindowProperty(dpy, w, property, &atom_len);
 
         for (int i = 0; atoms && i < (int) atom_len; i++) {
             if (atoms[i] && atoms[i] == target_atom) {
