@@ -64,6 +64,7 @@ public:
 
 private: 
     static ConfigKeyword StrToConfigKeyword(const std::string& s);
+    std::vector<std::string> GeneratePossibleConfigKeys(Window w) const;
     const std::string& ReplaceSymbols(std::string& s);
     std::unordered_map<std::string, std::string> symtab_;
 

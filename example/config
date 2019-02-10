@@ -1,7 +1,7 @@
 ; Global Variables
 ; syntax: set <Key> = <Value>
 ;         set $<Variable> = <Value>
-; -------------------------------------------------------------
+; -----------------------------------------------------------------------
 set gap_width = 12
 set border_width = 3
 set min_window_width = 100
@@ -12,8 +12,8 @@ set $Mod = Mod4
 
 
 ; Spawning Rules
-; syntax: assign <class>{,<instance>} -> <workspace_id>
-; -------------------------------------------------------------
+; syntax: assign <res_class>{,<res_name>,<net_wm_name>} -> <workspace_id>
+; -----------------------------------------------------------------------
 assign URxvt -> 1
 assign jetbrains-idea -> 2
 assign jetbrains-studio -> 2
@@ -35,10 +35,11 @@ assign Transmission -> 9
 
 
 ; Floating Rules
-; syntax: floating <class>{,<instance>} true
-; -------------------------------------------------------------
+; syntax: floating <res_class>{,<res_name>,<net_wm_name>} true
+; -----------------------------------------------------------------------
 floating systemsettings true
 floating SimpleScreenRecorder true
+floating Sxiv true
 floating feh true
 floating mpv true
 floating Peek true
@@ -53,8 +54,8 @@ floating Vigilante true
 
 
 ; Prohibit Rules
-; syntax: prohibit <class>{,<instance>} true
-; -------------------------------------------------------------
+; syntax: prohibit <res_class>{,<res_name>,<net_wm_name>} true
+; -----------------------------------------------------------------------
 prohibit plasmashell true
 
 

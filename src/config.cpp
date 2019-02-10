@@ -102,48 +102,30 @@ Config::~Config() {}
 
 
 int Config::GetSpawnWorkspaceId(Window w) const {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
-    string res_class = string(hint.res_class);
-    string res_name = string(hint.res_name);
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
-    
-    if (spawn_rules_.find(res_class + ',' + res_name) != spawn_rules_.end()) {
-        return spawn_rules_.at(res_class + ',' + res_name) - 1;
-    } else if (spawn_rules_.find(res_class) != spawn_rules_.end()) {
-        return spawn_rules_.at(res_class) - 1;
-    } else {
-        return WORKSPACE_UNSPECIFIED;
+    for (auto& key : GeneratePossibleConfigKeys(w)) {
+        if (spawn_rules_.find(key) != spawn_rules_.end()) {
+            return spawn_rules_.at(key) - 1; // Workspace id starts from 0.
+        }
     }
+    return WORKSPACE_UNSPECIFIED;
 }
 
 bool Config::ShouldFloat(Window w) const {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
-    string res_class = string(hint.res_class);
-    string res_name = string(hint.res_name);
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
-    
-    if (float_rules_.find(res_class + ',' + res_name) != float_rules_.end()) {
-        return float_rules_.at(res_class + ',' + res_name);
-    } else if (float_rules_.find(res_class) != float_rules_.end()) {
-        return float_rules_.at(res_class);
-    } else {
-        return false;
+    for (auto& key : GeneratePossibleConfigKeys(w)) {
+        if (float_rules_.find(key) != float_rules_.end()) {
+            return float_rules_.at(key);
+        }
     }
+    return false;
 }
 
 bool Config::ShouldProhibit(Window w) const {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
-    string res_class = string(hint.res_class);
-    string res_name = string(hint.res_name);
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
-    
-    if (prohibit_rules_.find(res_class + ',' + res_name) != prohibit_rules_.end()) {
-        return prohibit_rules_.at(res_class + ',' + res_name);
-    } else if (prohibit_rules_.find(res_class) != prohibit_rules_.end()) {
-        return prohibit_rules_.at(res_class);
-    } else {
-        return false;
+    for (auto& key : GeneratePossibleConfigKeys(w)) {
+        if (prohibit_rules_.find(key) != prohibit_rules_.end()) {
+            return prohibit_rules_.at(key);
+        }
     }
+    return false;
 }
 
 const vector<Action>& Config::GetKeybindActions(const string& modifier, const string& key) const {
@@ -157,6 +139,21 @@ void Config::SetKeybindActions(const string& modifier_and_key, const string& act
         string_utils::Strip(action_str);
         keybind_rules_[modifier_and_key].push_back(Action(action_str));
     }
+}
+
+
+vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string res_class = string(hint.res_class);
+    string res_name = string(hint.res_name);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+
+    vector<string> keys;
+    keys.push_back(res_class + ',' + res_name + ',' + net_wm_name);
+    keys.push_back(res_class + ',' + res_name);
+    keys.push_back(res_class + ',' + net_wm_name);
+    keys.push_back(res_class);
+    return keys;
 }
 
 ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
