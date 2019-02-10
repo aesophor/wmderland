@@ -133,8 +133,10 @@ Floating windows
 
 ## Special Thanks
 * [Markus Elfring](https://github.com/elfring) for giving me lots of helpful advice
-* suckless.org's dwm
+* Airblader's [i3wm](https://github.com/i3/i3)
+* suckless.org's [dwm](https://dwm.suckless.org/)
 * jichu4n's [basic_wm](https://github.com/jichu4n/basic_wm)
+* baskerville's [bspwm](https://github.com/baskerville/bspwm)
 * mil's [simple_wm](https://github.com/mil/simple-wm)
 * JLErvin's [berry](https://github.com/JLErvin/berry)
 * Mr messyhair's [eveningwm](https://gitlab.com/mrmessyhair/eveningwm/blob/master/eveningwm.c)
