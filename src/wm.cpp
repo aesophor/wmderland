@@ -399,7 +399,11 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
-
+    if (e.message_type == prop_->net[atom::NET_CURRENT_DESKTOP]) {
+        if (e.data.l[0] >= 0 && e.data.l[0] < WORKSPACE_COUNT) {
+            GotoWorkspace(e.data.l[0]);
+        }
+    }
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
