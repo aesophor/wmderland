@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(Wmderland)
+project(Wmderland VERSION 0.9.2)
 
 # Request C++11 standard, using new CMake variables.
 set(CMAKE_CXX_STANDARD 11)
@@ -10,22 +10,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall")
 # 1. BuildType.cmake - determine build type on demand
 # 2. Findglog.cmake - used by `find_package(glog REQUIRED)`
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
-# Determine BuildType on demand.
 include(BuildType)
 
 # Find the required libraries.
 find_package(X11 REQUIRED)
-find_package(glog REQUIRED)
-
-set(WMDERLAND_VERSION "\"0.9.2 Beta\"")
+find_package(glog)
 
 # CMake will generate config.hpp from config.hpp.in
 # and store it under src/
-configure_file(
-    "${PROJECT_SOURCE_DIR}/src/config.hpp.in"
-    "${PROJECT_SOURCE_DIR}/src/config.hpp"
-)
+include_directories("build" "src")
+configure_file("src/config.hpp.in" "config.hpp")
 
 # Grab all files end in .cpp
 FILE(GLOB cpp_sources src/*.cpp)

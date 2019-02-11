@@ -7,8 +7,8 @@
 #include <vector>
 #include <string>
 
-#define WIN_MGR_NAME "Wmderland"
-#define VERSION @WMDERLAND_VERSION@
+#define WIN_MGR_NAME "@PROJECT_NAME@"
+#define VERSION "@PROJECT_VERSION@"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 
