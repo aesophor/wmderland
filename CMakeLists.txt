@@ -18,7 +18,7 @@ include(BuildType)
 find_package(X11 REQUIRED)
 find_package(glog REQUIRED)
 
-set(WMDERLAND_VERSION \"0.9.2 Beta\")
+set(WMDERLAND_VERSION "\"0.9.2 Beta\"")
 
 # CMake will generate config.hpp from config.hpp.in
 # and store it under src/
