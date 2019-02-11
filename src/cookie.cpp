@@ -21,24 +21,17 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
         string_utils::Strip(line);
 
         if (!line.empty()) {
-            int res_class_name_length;
-            string res_class_name;
+            vector<string> tokens = string_utils::Split(line, kDelimiter, 4);
+
+            // The first 4 item is x, y, width, height of a window.
             Area window_area;
+            stringstream(tokens[0]) >> window_area.x;
+            stringstream(tokens[1]) >> window_area.y;
+            stringstream(tokens[2]) >> window_area.width;
+            stringstream(tokens[3]) >> window_area.height;
 
-            // First, check the length of the res_class_name string, and 
-            // use res_class_name_tokens[1].substr() to extract it accurately.
-            vector<string> res_class_name_tokens = string_utils::Split(line, kDelimiter, 1);
-            stringstream(res_class_name_tokens[0]) >> res_class_name_length;
-            res_class_name = res_class_name_tokens[1].substr(0, res_class_name_length);
-
-            string pos_size_str = res_class_name_tokens[1].substr(res_class_name_length + 1, string::npos);
-            vector<string> pos_size_tokens = string_utils::Split(pos_size_str, kDelimiter);
-            stringstream(pos_size_tokens[0]) >> window_area.x;
-            stringstream(pos_size_tokens[1]) >> window_area.y;
-            stringstream(pos_size_tokens[2]) >> window_area.width;
-            stringstream(pos_size_tokens[3]) >> window_area.height;
-
-            window_area_map_[res_class_name] = window_area;
+            // The rest will be res_class, res_name and _NET_WM_NAME.
+            window_area_map_[tokens[4]] = window_area;
         }
     }
 
@@ -71,10 +64,11 @@ void Cookie::Put(Window w, const Area& window_area) {
 void Cookie::WriteToFile() const {
     std::ofstream file(filename_);
 
-    for (auto wps : window_area_map_) {
-        file << wps.first.length() << kDelimiter << wps.first << kDelimiter
-            << wps.second.x << kDelimiter << wps.second.y << kDelimiter
-            << wps.second.width << kDelimiter << wps.second.height << endl;
+    for (auto w : window_area_map_) {
+        // Write x, y, width, height, res_class,res_name,net_wm_name to cookie.
+        file << w.second.x << kDelimiter << w.second.y << kDelimiter
+            << w.second.width << kDelimiter << w.second.height << kDelimiter
+            << w.first << endl;
     }
 
     file.close();
