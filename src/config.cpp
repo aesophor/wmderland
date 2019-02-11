@@ -3,7 +3,7 @@
 #include "util.hpp"
 #include <fstream>
 #include <sstream>
-#if GLOG_FOUND != FALSE
+#if GLOG_FOUND
 #include <glog/logging.h>
 #endif
 
@@ -73,7 +73,7 @@ Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), pro
                     autostart_rules_.push_back(cmd);
                     break; }
                 default: {
-                    #if GLOG_FOUND != FALSE
+                    #if GLOG_FOUND
                         LOG(INFO) << "Ignored unrecognized symbol in config: " << tokens[0];
                     #endif
                     break;

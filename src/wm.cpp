@@ -11,7 +11,7 @@ extern "C" {
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
 }
-#if GLOG_FOUND != FALSE
+#if GLOG_FOUND
 #include <glog/logging.h>
 #endif
 
@@ -410,7 +410,7 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
-    #if GLOG_FOUND != FALSE
+    #if GLOG_FOUND
         const int MAX_ERROR_TEXT_LENGTH = 1024;
         char error_text[MAX_ERROR_TEXT_LENGTH];
         XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));

@@ -72,7 +72,10 @@ The following illustration shows how Wmderland stores its clients, where R is th
 * g++ (requires C++11)
 * CMake
 * Xlib headers
-* [glog](https://github.com/google/glog) (Google's C++ logging library)
+* **Optional** - [glog](https://github.com/google/glog) (Google's C++ logging library)
+
+CMake will determine if your machine have glog installed. If compiled and linked with glog, you can
+find the log files under /tmp/Wmderland.*
 
 ## Installation
 1. Clone the repo
@@ -81,7 +84,7 @@ $ git clone https://github.com/aesophor/Wmderland
 $ cd Wmderland
 ```
 
-2. Build from source (requires **GLOG**, see Build Requirements)
+2. Build from source
 ```
 $ mkdir build
 $ cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL

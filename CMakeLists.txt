@@ -18,6 +18,8 @@ include(BuildType)
 find_package(X11 REQUIRED)
 find_package(glog REQUIRED)
 
+set(WMDERLAND_VERSION \"0.9.2 Beta\")
+
 # CMake will generate config.hpp from config.hpp.in
 # and store it under src/
 configure_file(
@@ -29,11 +31,11 @@ configure_file(
 FILE(GLOB cpp_sources src/*.cpp)
 add_executable(Wmderland ${cpp_sources})
 
-set(LIBRARIES "X11")
+set(LINK_LIBRARIES X11)
 if(GLOG_FOUND)
-    set(LIBRARIES "${LIBRARIES} glog")
+    set(LINK_LIBRARIES ${LINK_LIBRARIES} glog)
 endif()
-target_link_libraries(Wmderland X11 ${LIBRARIES})
+target_link_libraries(Wmderland ${LINK_LIBRARIES})
 
 # Install rule
 install(TARGETS Wmderland DESTINATION bin)
