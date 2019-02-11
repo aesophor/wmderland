@@ -1,9 +1,11 @@
 #include "action.hpp"
 #include "config.hpp"
 #include "util.hpp"
-#include <glog/logging.h>
 #include <fstream>
 #include <sstream>
+#if GLOG_FOUND != FALSE
+#include <glog/logging.h>
+#endif
 
 using std::hex;
 using std::pair;
@@ -71,7 +73,9 @@ Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), pro
                     autostart_rules_.push_back(cmd);
                     break; }
                 default: {
-                    LOG(INFO) << "Ignored unrecognized symbol in config: " << tokens[0];
+                    #if GLOG_FOUND != FALSE
+                        LOG(INFO) << "Ignored unrecognized symbol in config: " << tokens[0];
+                    #endif
                     break;
                 }
             }

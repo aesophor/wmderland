@@ -1,16 +1,19 @@
 #include "wm.hpp"
 #include "client.hpp"
 #include "util.hpp"
+#include <memory>
+#include <string>
+#include <sstream>
+#include <cstring>
+#include <algorithm>
 extern "C" {
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
 }
+#if GLOG_FOUND != FALSE
 #include <glog/logging.h>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <algorithm>
+#endif
 
 using std::hex;
 using std::find;
@@ -407,16 +410,18 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
-    const int MAX_ERROR_TEXT_LENGTH = 1024;
-    char error_text[MAX_ERROR_TEXT_LENGTH];
-    XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
-    LOG(ERROR) << "Received X error:\n"
-        << "    Request: " << int(e->request_code)
-        << "    Error code: " << int(e->error_code)
-        << " - " << error_text << "\n"
-        << "    Resource ID: " << e->resourceid;
-    // The return value is ignored.
-    return 0;
+    #if GLOG_FOUND != FALSE
+        const int MAX_ERROR_TEXT_LENGTH = 1024;
+        char error_text[MAX_ERROR_TEXT_LENGTH];
+        XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
+        LOG(ERROR) << "Received X error:\n"
+            << "    Request: " << int(e->request_code)
+            << "    Error code: " << int(e->error_code)
+            << " - " << error_text << "\n"
+            << "    Resource ID: " << e->resourceid;
+        // The return value is ignored.
+        return 0;
+    #endif
 }
 
 
@@ -554,7 +559,7 @@ void WindowManager::KillClient(Window w) {
         msg.xclient.window = w;
         msg.xclient.format = 32;
         msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
-        CHECK(XSendEvent(dpy_, w, false, 0, &msg));
+        XSendEvent(dpy_, w, false, 0, &msg);
     } else {
         XKillClient(dpy_, w);
     }

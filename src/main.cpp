@@ -1,9 +1,12 @@
 #include "wm.hpp"
 #include "config.hpp"
-#include <glog/logging.h>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <cstring>
+#if GLOG_FOUND != FALSE
+#include <glog/logging.h>
+#endif
 
 using std::string;
 using std::unique_ptr;
@@ -22,20 +25,26 @@ int main(int argc, char* args[]) {
     }
 
     try {
-        // Initialize google's c++ logging library.
-        google::InitGoogleLogging(args[0]);
+        #if GLOG_FOUND != FALSE
+            // Initialize google's c++ logging library.
+            google::InitGoogleLogging(args[0]);
+        #endif
 
         // WindowManager is a singleton class. If XOpenDisplay() fails during 
         // WindowManager::GetInstance(), it will return None (in xlib, None is
         // the universal null resource ID or atom.)
         unique_ptr<WindowManager> wm = WindowManager::GetInstance();
         if (!wm) {
-            LOG(INFO) << "Failed to open display to X server.";
+            #if GLOG_FOUND != FALSE
+                LOG(INFO) << "Failed to open display to X server.";
+            #endif
             return EXIT_FAILURE;
         }
         wm->Run();
     } catch (const std::exception& ex) {
-        LOG(ERROR) << ex.what();
+        #if GLOG_FOUND != FALSE
+            LOG(ERROR) << ex.what();
+        #endif
         return EXIT_FAILURE;
     }
 
