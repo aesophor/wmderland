@@ -18,17 +18,12 @@ include(BuildType)
 find_package(X11 REQUIRED)
 find_package(glog REQUIRED)
 
-# Automatic macro construction.
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 9)
-
 # CMake will generate config.hpp from config.hpp.in
 # and store it under src/
 configure_file(
     "${PROJECT_SOURCE_DIR}/src/config.hpp.in"
     "${PROJECT_SOURCE_DIR}/src/config.hpp"
 )
-
 
 # Grab all files end in .cpp
 FILE(GLOB cpp_sources src/*.cpp)
