@@ -56,10 +56,8 @@ void Workspace::Remove(Window w) const {
     TreeNode* node = client_tree_->GetTreeNode(c);
     if (!node) return;
 
-    // Get all tiling leaves and find the index of the node we're going to remove.
+    // Get all leaves and find the index of the node we're going to remove.
     vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
-    nodes.erase(remove_if(nodes.begin(), nodes.end(), [](TreeNode* n) {
-            return n->client()->is_floating(); }), nodes.end());
     ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
 
     // Remove this node from its parent.

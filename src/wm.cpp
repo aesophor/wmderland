@@ -218,6 +218,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             XMapWindow(dpy_, e.window);
             wm_utils::SetNetActiveWindow(dpy_, root_window_, e.window, prop_.get());
             workspaces_[target]->SetFocusedClient(e.window);
+            workspaces_[target]->RaiseAllFloatingClients();
 
             if (should_float) {
                 ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
@@ -279,6 +280,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     Client* new_focused_client = c->workspace()->GetFocusedClient();
     if (c->workspace() == workspaces_[current_] && new_focused_client) {
         c->workspace()->SetFocusedClient(new_focused_client->window());
+        c->workspace()->RaiseAllFloatingClients();
         wm_utils::SetNetActiveWindow(dpy_, root_window_, new_focused_client->window(), prop_.get());
     }
 
@@ -351,6 +353,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
         c->workspace()->UnsetFocusedClient();
         c->workspace()->SetFocusedClient(c->window());
         c->workspace()->RaiseAllFloatingClients();
+        wm_utils::SetNetActiveWindow(dpy_, root_window_, c->window(), prop_.get());
 
         if (c->is_floating()) {
             XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
@@ -421,14 +424,14 @@ void WindowManager::GotoWorkspace(int next) {
 
     workspaces_[current_]->UnmapAllClients();
     workspaces_[next]->MapAllClients();
+    workspaces_[next]->RaiseAllFloatingClients();
     current_ = next;
 
-    workspaces_[current_]->UnsetFocusedClient();
-    Client* focused_client = workspaces_[current_]->GetFocusedClient();
+    Client* focused_client = workspaces_[next]->GetFocusedClient();
     if (focused_client) {
-        workspaces_[current_]->SetFocusedClient(focused_client->window());
+        workspaces_[next]->SetFocusedClient(focused_client->window());
+        workspaces_[next]->Arrange(CalculateTilingArea());
         wm_utils::SetNetActiveWindow(dpy_, root_window_, focused_client->window(), prop_.get());
-        workspaces_[current_]->Arrange(CalculateTilingArea());
 
         // Restore fullscreen application.
         if (focused_client->is_fullscreen()) {
@@ -468,8 +471,8 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
         return;
     }
 
-    workspaces_[current_]->SetFocusedClient(focused_client->window());
     workspaces_[next]->SetFocusedClient(window);
+    workspaces_[current_]->SetFocusedClient(focused_client->window());
     workspaces_[current_]->Arrange(CalculateTilingArea());
 }
 
@@ -489,7 +492,6 @@ void WindowManager::ToggleFloating(Window w) {
     Client* c = Client::mapper_[w];
     if (!c) return;
 
-    // TODO: Fix floating and fullscreen.
     c->set_floating(!c->is_floating());
     if (c->is_floating()) {
         XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
