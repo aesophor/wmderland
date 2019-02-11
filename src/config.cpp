@@ -95,7 +95,6 @@ Config::~Config() {}
 int Config::GetSpawnWorkspaceId(Window w) const {
     for (auto& key : GeneratePossibleConfigKeys(w)) {
         if (spawn_rules_.find(key) != spawn_rules_.end()) {
-            LOG(INFO) << key << " -> " << spawn_rules_.at(key);
             return spawn_rules_.at(key) - 1; // Workspace id starts from 0.
         }
     }
