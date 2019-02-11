@@ -12,26 +12,26 @@ set $Mod = Mod4
 
 
 ; Spawning Rules
-; syntax: assign <res_class>{,<res_name>,<net_wm_name>} -> <workspace_id>
+; syntax: assign <res_class>{,<res_name>,<net_wm_name>} <workspace_id>
 ; -----------------------------------------------------------------------
-assign URxvt -> 1
-assign jetbrains-idea -> 2
-assign jetbrains-studio -> 2
-assign Firefox -> 3
-assign dolphin -> 4
-assign ark -> 4
-assign Et -> 5
-assign Wps -> 5
-assign Wpp -> 5
-assign Spotify -> 6
-assign vlc -> 6
-assign Gimp-2.8 -> 7
-assign tiled -> 7
-assign Wine,steam.exe -> 8
-assign Steam -> 8
-assign PCSX2 -> 8
-assign VirtualBox -> 9
-assign Transmission -> 9
+assign URxvt 1
+assign jetbrains-idea 2
+assign jetbrains-studio 2
+assign Firefox 3
+assign dolphin 4
+assign ark 4
+assign Et 5
+assign Wps 5
+assign Wpp 5
+assign Spotify 6
+assign vlc 6
+assign Gimp-2.8 7
+assign tiled 7
+assign Wine,steam.exe 8
+assign Steam 8
+assign PCSX2 8
+assign VirtualBox 9
+assign Transmission 9
 
 
 ; Floating Rules

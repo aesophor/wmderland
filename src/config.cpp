@@ -48,38 +48,29 @@ Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), pro
                     } else {
                         global_vars[key] = value;
                     }
-                    break;
-                } case ConfigKeyword::ASSIGN: {
-                    string wm_class_name = tokens[1];
-                    string workspace_id = tokens[3];
-                    short workspace_id_short;
-                    stringstream(workspace_id) >> workspace_id_short;
-                    spawn_rules_[wm_class_name] = workspace_id_short;
-                    break;
-                } case ConfigKeyword::FLOATING: {
-                    string wm_class_name = tokens[1];
-                    string should_float_str = tokens[2];
-                    bool should_float;
-                    stringstream(should_float_str) >> std::boolalpha >> should_float;
-                    float_rules_[wm_class_name] = should_float;
-                    break;
-                } case ConfigKeyword::PROHIBIT: {
-                    string wm_class_name = tokens[1];
-                    string should_prohibit_str = tokens[2];
-                    bool should_prohibit;
-                    stringstream(should_prohibit_str) >> std::boolalpha >> should_prohibit;
-                    prohibit_rules_[wm_class_name] = should_prohibit;
-                    break;
-                } case ConfigKeyword::BINDSYM: {
+                    break; }
+                case ConfigKeyword::ASSIGN: {
+                    string window_identifier = ExtractWindowIdentifier(line);
+                    stringstream(tokens.back()) >> spawn_rules_[window_identifier];
+                    break; }
+                case ConfigKeyword::FLOATING: {
+                    string window_identifier = ExtractWindowIdentifier(line);
+                    stringstream(tokens.back()) >> std::boolalpha >> float_rules_[window_identifier];
+                    break; }
+                case ConfigKeyword::PROHIBIT: {
+                    string window_identifier = ExtractWindowIdentifier(line);
+                    stringstream(tokens.back()) >> std::boolalpha >> prohibit_rules_[window_identifier];
+                    break; }
+                case ConfigKeyword::BINDSYM: {
                     string modifier_and_key = tokens[1];
                     string action_series_str = string_utils::Split(line, ' ', 2)[2];
                     SetKeybindActions(modifier_and_key, action_series_str);
-                    break;
-                } case ConfigKeyword::EXEC: {
+                    break; }
+                case ConfigKeyword::EXEC: {
                     string cmd = string_utils::Split(line, ' ', 1)[1];
                     autostart_rules_.push_back(cmd);
-                    break;
-                } default: {
+                    break; }
+                default: {
                     LOG(INFO) << "Ignored unrecognized symbol in config: " << tokens[0];
                     break;
                 }
@@ -104,6 +95,7 @@ Config::~Config() {}
 int Config::GetSpawnWorkspaceId(Window w) const {
     for (auto& key : GeneratePossibleConfigKeys(w)) {
         if (spawn_rules_.find(key) != spawn_rules_.end()) {
+            LOG(INFO) << key << " -> " << spawn_rules_.at(key);
             return spawn_rules_.at(key) - 1; // Workspace id starts from 0.
         }
     }
@@ -172,6 +164,14 @@ ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
     } else {
         return ConfigKeyword::UNDEFINED;
     }
+}
+
+string Config::ExtractWindowIdentifier(const std::string& s) {
+    // Split the string with the first and the last whitespace,
+    // and return the substring in the middle.
+    string identifier = string_utils::Split(s, ' ', 1)[1];
+    identifier = identifier.substr(0, identifier.find_last_of(' '));
+    return identifier;
 }
 
 const string& Config::ReplaceSymbols(string& s) {
