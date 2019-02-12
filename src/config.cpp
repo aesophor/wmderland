@@ -59,6 +59,10 @@ Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), pro
                     string window_identifier = ExtractWindowIdentifier(line);
                     stringstream(tokens.back()) >> std::boolalpha >> float_rules_[window_identifier];
                     break; }
+                case ConfigKeyword::FULLSCREEN: {
+                    string window_identifier = ExtractWindowIdentifier(line);
+                    stringstream(tokens.back()) >> std::boolalpha >> fullscreen_rules_[window_identifier];
+                    break; }
                 case ConfigKeyword::PROHIBIT: {
                     string window_identifier = ExtractWindowIdentifier(line);
                     stringstream(tokens.back()) >> std::boolalpha >> prohibit_rules_[window_identifier];
@@ -114,6 +118,15 @@ bool Config::ShouldFloat(Window w) const {
     return false;
 }
 
+bool Config::ShouldFullscreen(Window w) const {
+    for (auto& key: GeneratePossibleConfigKeys(w)) {
+        if (fullscreen_rules_.find(key) != fullscreen_rules_.end()) {
+            return fullscreen_rules_.at(key);
+        }
+    }
+    return false;
+}
+
 bool Config::ShouldProhibit(Window w) const {
     for (auto& key : GeneratePossibleConfigKeys(w)) {
         if (prohibit_rules_.find(key) != prohibit_rules_.end()) {
@@ -158,6 +171,8 @@ ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
         return ConfigKeyword::ASSIGN;
     } else if (s == "floating") {
         return ConfigKeyword::FLOATING;
+    } else if (s == "fullscreen") {
+        return ConfigKeyword::FULLSCREEN;
     } else if (s == "prohibit") {
         return ConfigKeyword::PROHIBIT;
     } else if (s == "bindsym") {
@@ -216,6 +231,10 @@ const unordered_map<string, short>& Config::spawn_rules() const {
 
 const unordered_map<string, bool>& Config::float_rules() const {
     return float_rules_;
+}
+
+const unordered_map<string, bool>& Config::fullscreen_rules() const {
+    return fullscreen_rules_;
 }
 
 const unordered_map<string, bool>& Config::prohibit_rules() const {

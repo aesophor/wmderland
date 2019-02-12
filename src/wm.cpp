@@ -226,13 +226,17 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             if (should_float) {
                 ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
             }
+
+            if (config_->ShouldFullscreen(e.window)) {
+                ToggleFullscreen(e.window);
+            }
         }
     }
 
     // If this window is managed by our wm, which its client can be found by the Client mapper,
     // and this window should be fullscreen (but it is currently not), then fullscreen this window.
     Client* c = Client::mapper_[e.window];
-    if (c && !c->is_fullscreen() && IsFullscreen(e.window)) {
+    if (c && !c->is_fullscreen() && IsFullscreen(e.window)) { // rename IsFullscreen() to HasNetWmStateFullscreen() ?
         ToggleFullscreen(e.window);
     }
 }
@@ -243,7 +247,7 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
     if (IsNotification(e.window) 
             && find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
         notifications_.push_back(e.window);
-    } 
+    }
 }
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {

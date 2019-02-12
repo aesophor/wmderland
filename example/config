@@ -1,6 +1,19 @@
-; Global Variables
-; syntax: set <Key> = <Value>
-;         set $<Variable> = <Value>
+; Wmderland configuration file
+; To describe a window, run `xprop` and click on the target window, and
+; you will get something like this as output:
+;
+; WM_CLASS(STRING) = (2)"urxvt", (1)"URxvt"
+; _NET_WM_NAME(UTF8_STRING) = (3)"urxvt"
+;
+; To make urxvt floating by default, write in this order:
+; (1) res_class (2) res_name (3) _NET_WM_NAME. (1) is always required,
+; (2) and (3) are optional.
+; example: float URxvt,urxvt,urxvt true
+
+
+; [Global Variables]
+; `set <Key> = <Value>` to set a builtin varaible
+; `set $<Variable> = <Value>` to define your own variable
 ; -----------------------------------------------------------------------
 set gap_width = 12
 set border_width = 3
@@ -11,8 +24,8 @@ set unfocused_color = ff393f52
 set $Mod = Mod4
 
 
-; Spawning Rules
-; syntax: assign <res_class>{,<res_name>,<net_wm_name>} <workspace_id>
+; [Spawning Rules]
+; Assign an application to a specific workspace
 ; -----------------------------------------------------------------------
 assign URxvt 1
 assign jetbrains-idea 2
@@ -34,8 +47,8 @@ assign VirtualBox Manager 9
 assign Transmission 9
 
 
-; Floating Rules
-; syntax: floating <res_class>{,<res_name>,<net_wm_name>} true
+; [Floating Rules]
+; Applications that should be floating by default
 ; -----------------------------------------------------------------------
 floating systemsettings true
 floating SimpleScreenRecorder true
@@ -49,19 +62,26 @@ floating PCSX2 true
 floating Wine true
 floating Wine,steam.exe true
 floating Wine,tesv.exe true
+floating VirtualBox Machine true
 floating Vigilante true
 
 
-; Prohibit Rules
-; syntax: prohibit <res_class>{,<res_name>,<net_wm_name>} true
+; [Fullscreen Rules]
+; Applications that should be fullscreen by default
+; -----------------------------------------------------------------------
+fullscreen Wine,maplelegendswindowed.exe true
+
+
+; [Prohibit Rules]
+; Applications that should be prohibited from being launched
 ; -----------------------------------------------------------------------
 prohibit plasmashell true
 
 
-; Keybind
-; syntax: bindsym <Modifier>+<Key> action
-;         bindsym <Modifier>+<Key> exec command
-; -------------------------------------------------------------
+; [Keybind]
+; `bindsym <Modifier>+<Key> action1; action2; action3; ...` where
+; an action can be either a built-in action or a shell command to execute
+; -----------------------------------------------------------------------
 bindsym $Mod+1 goto_workspace 1
 bindsym $Mod+2 goto_workspace 2
 bindsym $Mod+3 goto_workspace 3
@@ -97,9 +117,9 @@ bindsym $Mod+d exec rofi -show drun
 bindsym $Mod+Return goto_workspace 1; exec urxvt
 
 
-; Autostart
-; syntax: exec <command>
-; -------------------------------------------------------------
+; [Autostart]
+; Applications to execute when WM starts up (DON'T append '&' at the end)
+; -----------------------------------------------------------------------
 exec wmctrl -c Plasma
 exec displayctl
 exec dispad
