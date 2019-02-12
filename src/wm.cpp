@@ -112,15 +112,15 @@ void WindowManager::InitProperties() {
 void WindowManager::InitXEvents() {
     // Define the key combinations which will send us X events based on the key combinations 
     // defined in config.
-    for (auto r : config_->keybind_rules()) {
+    for (const auto& r : config_->keybind_rules()) {
         vector<string> modifier_and_key = string_utils::Split(r.first, '+');
-        bool shift = string_utils::Contains(r.first, "Shift");
+        bool shifted = string_utils::Contains(r.first, "Shift");
 
         string modifier = modifier_and_key[0];
-        string key = modifier_and_key[(shift) ? 2 : 1];
+        string key = modifier_and_key[(shifted) ? 2 : 1];
 
         int keycode = wm_utils::StrToKeycode(dpy_, key);
-        int mod_mask = wm_utils::StrToKeymask(modifier, shift); 
+        int mod_mask = wm_utils::StrToKeymask(modifier, shifted);
         XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
 
