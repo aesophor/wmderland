@@ -46,7 +46,7 @@ WindowManager::WindowManager(Display* dpy)
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
       current_(0),
-      btn_pressed_event_(XButtonEvent()) {
+      btn_pressed_event_() {
     InitWorkspaces(WORKSPACE_COUNT);
     InitProperties();
     InitXEvents();
@@ -122,6 +122,7 @@ void WindowManager::InitXEvents() {
         int keycode = wm_utils::StrToKeycode(dpy_, key);
         int mod_mask = wm_utils::StrToKeymask(modifier, shifted);
         XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
+        XGrabKey(dpy_, keycode, mod_mask | LockMask, root_window_, True, GrabModeAsync, GrabModeAsync);
     }
 
     // Define which mouse clicks will send us X events.

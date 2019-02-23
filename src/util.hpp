@@ -48,7 +48,7 @@ namespace wm_utils {
     unsigned int StrToKeycode(Display* dpy, const std::string& key_name);
     std::string KeymaskToStr(int modifier);
     int StrToKeymask(const std::string& modifier_str, bool shift);
-}
+} // namespace wm_utils
 
 namespace string_utils {
     std::vector<std::string> Split(const std::string& s, const char delimiter);
@@ -57,10 +57,10 @@ namespace string_utils {
     bool Contains(const std::string& s, const std::string& keyword);
     void Replace(std::string& s, const std::string& keyword, const std::string& newword);
     void Strip(std::string& s);
-}
+} // namespace string_utils
 
 namespace sys_utils {
     std::string ToAbsPath(const std::string& path);
-}
+} // namespace sys_utils
 
 #endif

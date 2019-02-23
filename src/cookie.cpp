@@ -12,7 +12,7 @@ using std::stringstream;
 using std::unordered_map;
 
 Cookie::Cookie(Display* dpy, Properties* prop, string filename)
-    : dpy_(dpy), prop_(prop), filename_ (filename) {
+    : dpy_(dpy), prop_(prop), filename_(filename) {
     filename_ = sys_utils::ToAbsPath(filename_);
     std::ifstream file(filename_);
     string line;

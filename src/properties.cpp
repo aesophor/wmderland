@@ -1,8 +1,6 @@
 #include "properties.hpp"
 
-Properties::Properties(Display* dpy) {
-    utf8string = XInternAtom(dpy, "UTF8_STRING", false); 
-
+Properties::Properties(Display* dpy) : utf8string(XInternAtom(dpy, "UTF8_STRING", false)) {
     wm[atom::WM_PROTOCOLS] = XInternAtom(dpy, "WM_PROTOCOLS", false);
     wm[atom::WM_DELETE] = XInternAtom(dpy, "WM_DELETE_WINDOW", false);
     wm[atom::WM_STATE] = XInternAtom(dpy, "WM_STATE", false);

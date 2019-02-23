@@ -141,35 +141,64 @@ namespace wm_utils {
             case Mod4Mask: // Cmd
                 modifier_str = "Mod4";
                 break;
+            case Mod4Mask | LockMask: // Cmd + Caps
+                modifier_str = "Mod4";
+                break;
             case Mod4Mask | ShiftMask: // Cmd + Shift
                 modifier_str = "Mod4+Shift";
                 break;
+            case Mod4Mask | ShiftMask | LockMask: // Cmd + Shift + Caps
+                modifier_str = "Mod4+Shift";
 
             case Mod1Mask: // Alt
                 modifier_str = "Mod1";
                 break;
+            case Mod1Mask | LockMask: // Alt + Caps
+                modifier_str = "Mod1";
+                break;
             case Mod1Mask | ShiftMask: // Alt + Shift
+                modifier_str = "Mod1+Shift";
+                break;
+            case Mod1Mask | ShiftMask | LockMask: // Alt + Shift + Caps
                 modifier_str = "Mod1+Shift";
                 break;
 
             case Mod2Mask:
                 modifier_str = "Mod2";
                 break;
+            case Mod2Mask | LockMask:
+                modifier_str = "Mod2";
+                break;
             case Mod2Mask | ShiftMask:
+                modifier_str = "Mod2+Shift";
+                break;
+            case Mod2Mask | ShiftMask | LockMask:
                 modifier_str = "Mod2+Shift";
                 break;
 
             case Mod3Mask:
                 modifier_str = "Mod3";
                 break;
+            case Mod3Mask | LockMask:
+                modifier_str = "Mod3";
+                break;
             case Mod3Mask | ShiftMask:
+                modifier_str = "Mod3+Shift";
+                break;
+            case Mod3Mask | ShiftMask | LockMask:
                 modifier_str = "Mod3+Shift";
                 break;
 
             case Mod5Mask:
                 modifier_str = "Mod5";
                 break;
+            case Mod5Mask | LockMask:
+                modifier_str = "Mod5";
+                break;
             case Mod5Mask | ShiftMask:
+                modifier_str = "Mod5+Shift";
+                break;
+            case Mod5Mask | ShiftMask | LockMask:
                 modifier_str = "Mod5+Shift";
                 break;
 
@@ -192,7 +221,7 @@ namespace wm_utils {
         }
     }
 
-}
+} // namespace wm_utils
 
 
 
@@ -257,7 +286,7 @@ namespace string_utils {
         s.erase(s.find_last_not_of(whitespace_chars) + 1);
     }
 
-}
+} // namespace string_utils
 
 
 
@@ -273,4 +302,4 @@ namespace sys_utils {
         return abs_path;
     }
 
-}
+} // namespace sys_utils

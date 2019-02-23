@@ -116,24 +116,21 @@ void Workspace::Arrange(const Area& tiling_area) const {
 }
 
 void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int border_width, int gap_width) const {
-    // Retrieve all clients that we should tile.
-    vector<TreeNode*> tiling_children;
-    for (const auto& child : node->children()) {
-        if (child->client() && child->client()->is_floating()) {
-            continue;
-        } else {
-            tiling_children.push_back(child);
-        }
-    }
+    vector<TreeNode*> children = node->children(); // pass by value here
 
+    // We don't care about floating windows. Remove them.
+    children.erase(remove_if(children.begin(), children.end(), [](TreeNode* n) {
+            return n->client() && n->client()->is_floating(); }), children.end());
+
+    // Calculate each child's x, y, width and height based on node's tiling direction.
     Direction dir = node->tiling_direction();
     int child_x = x;
     int child_y = y;
-    int child_width = (dir == Direction::HORIZONTAL) ? width / tiling_children.size() : width;
-    int child_height = (dir == Direction::VERTICAL) ? height / tiling_children.size() : height;
+    int child_width = (dir == Direction::HORIZONTAL) ? width / children.size() : width;
+    int child_height = (dir == Direction::VERTICAL) ? height / children.size() : height;
     
-    for (size_t i = 0; i < tiling_children.size(); i++) {
-        TreeNode* child = tiling_children[i];
+    for (size_t i = 0; i < children.size(); i++) {
+        TreeNode* child = children[i];
         if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + child_width * i;
         if (node->tiling_direction() == Direction::VERTICAL) child_y = y + child_height * i;
 
