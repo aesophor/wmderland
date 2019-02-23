@@ -363,7 +363,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
         c->workspace()->RaiseAllFloatingClients();
         wm_utils::SetNetActiveWindow(dpy_, root_window_, c->window(), prop_.get());
 
-        if (c->is_floating()) {
+        if (c->is_floating() && !c->is_fullscreen()) {
             XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
             btn_pressed_event_ = e;
             XDefineCursor(dpy_, root_window_, cursors_[e.button]);
