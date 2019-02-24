@@ -70,6 +70,7 @@ floating Vigilante true
 ; Applications that should be fullscreen by default
 ; -----------------------------------------------------------------------
 fullscreen Wine,maplelegendswindowed.exe true
+fullscreen Wine,tesv.exe true
 
 
 ; [Prohibit Rules]
@@ -112,6 +113,7 @@ bindsym $Mod+Shift+space toggle_floating
 bindsym $Mod+f toggle_fullscreen
 bindsym $Mod+Shift+q kill
 bindsym $Mod+Shift+Escape exit
+bindsym $Mod+Shift+r reload
 
 bindsym $Mod+d exec rofi -show drun
 bindsym $Mod+Return goto_workspace 1; exec urxvt
