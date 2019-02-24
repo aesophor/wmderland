@@ -1,7 +1,7 @@
 <div align="center">
 <h3>Wmderland</h3>
 Project started in <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a>
-<img src="https://github.com/aesophor/Wmderland/raw/master/assets/tiling.png">
+<img src="https://github.com/aesophor/Wmderland/raw/master/.meta/tiling.png">
 </div>
 
 ## Overview
