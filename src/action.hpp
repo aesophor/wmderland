@@ -18,6 +18,7 @@ enum ActionType {
     KILL,
     EXIT,
     EXEC,
+    RELOAD,
     UNDEFINED
 };
 

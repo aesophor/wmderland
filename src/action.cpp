@@ -57,6 +57,8 @@ ActionType Action::StrToActionType(const string& s) {
         return ActionType::EXIT;
     } else if (s == "exec") {
         return ActionType::EXEC;
+    } else if (s == "reload") {
+        return ActionType::RELOAD;
     } else {
         return ActionType::UNDEFINED;
     }

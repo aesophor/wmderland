@@ -346,6 +346,10 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
             case ActionType::EXEC:
                 system((action.arguments() + '&').c_str());
                 break;
+            case ActionType::RELOAD:
+                config_->Reload();
+                OnConfigReload();
+                break;
             default:
                 break;
         }
@@ -410,6 +414,26 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
     if (e.message_type == prop_->net[atom::NET_CURRENT_DESKTOP]) {
         if (e.data.l[0] >= 0 && e.data.l[0] < WORKSPACE_COUNT) {
             GotoWorkspace(e.data.l[0]);
+        }
+    }
+}
+
+void WindowManager::OnConfigReload() {
+    // 1. Rearrange all workspaces.
+    // 2. Apply new border width and color to existing clients.
+    Area tiling_area = CalculateTilingArea();
+    
+    for (auto workspace : workspaces_) {
+        workspace->Arrange(tiling_area);
+
+        for (auto client : workspace->GetClients()) {
+            client->SetBorderWidth(config_->border_width());
+            client->SetBorderColor(config_->unfocused_color());
+        }
+        
+        Client* focused_client = workspace->GetFocusedClient();
+        if (focused_client) {
+            focused_client->SetBorderColor(config_->focused_color());
         }
     }
 }

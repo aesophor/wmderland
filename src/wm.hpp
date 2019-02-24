@@ -49,6 +49,7 @@ private:
     void OnButtonRelease(const XButtonEvent& e);
     void OnMotionNotify(const XButtonEvent& e);
     void OnClientMessage(const XClientMessageEvent& e);
+    void OnConfigReload();
     static int OnXError(Display* dpy, XErrorEvent* e);
 
     // Workspace manipulation

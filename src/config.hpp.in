@@ -42,8 +42,10 @@ enum class ConfigKeyword {
 
 class Config {
 public:
-    Config(Display* dpy, Properties* prop, std::string filename);
+    Config(Display* dpy, Properties* prop, const std::string& filename);
     virtual ~Config();
+
+    void Reload();
     
     int GetSpawnWorkspaceId(Window w) const;
     bool ShouldFloat(Window w) const;
@@ -67,6 +69,8 @@ public:
     const std::vector<std::string>& autostart_rules() const;
 
 private: 
+    void Load(const std::string& filename);
+
     static ConfigKeyword StrToConfigKeyword(const std::string& s);
     static std::string ExtractWindowIdentifier(const std::string& s);
     std::vector<std::string> GeneratePossibleConfigKeys(Window w) const;
@@ -91,6 +95,7 @@ private:
 
     Display* dpy_;
     Properties* prop_;
+    const std::string filename_;
 };
 
 #endif

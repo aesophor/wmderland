@@ -14,7 +14,15 @@ using std::vector;
 using std::stringstream;
 using std::unordered_map;
 
-Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), prop_(prop) {
+Config::Config(Display* dpy, Properties* prop, const string& filename)
+    : dpy_(dpy), prop_(prop), filename_(filename) {
+    Load(filename);
+}
+
+Config::~Config() {}
+
+
+void Config::Load(const string& filename) {
     unordered_map<string, string> global_vars;
 
     // Load the default global values.
@@ -29,9 +37,7 @@ Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), pro
     SetKeybindActions(DEFAULT_EXIT_KEY, "exit");
     
     // If the file starts with ~, convert it to full path first.
-    filename = sys_utils::ToAbsPath(filename);
-
-    std::ifstream file(filename);
+    std::ifstream file(sys_utils::ToAbsPath(filename));
     string line;
 
     while (std::getline(file, line)) {
@@ -97,7 +103,9 @@ Config::Config(Display* dpy, Properties* prop, string filename) : dpy_(dpy), pro
     stringstream(global_vars["unfocused_color"]) >> hex >> unfocused_color_;
 }
 
-Config::~Config() {}
+void Config::Reload() {
+    Load(filename_);
+}
 
 
 int Config::GetSpawnWorkspaceId(Window w) const {
