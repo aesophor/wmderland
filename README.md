@@ -132,7 +132,7 @@ $ startx
 
 ## Other Screenshots
 Floating windows
-![](https://github.com/aesophor/Wmderland/raw/master/assets/floating.png)
+![](https://github.com/aesophor/Wmderland/raw/master/.meta/floating.png)
 
 ## Special Thanks
 * [Markus Elfring](https://github.com/elfring) for giving me lots of helpful advice
