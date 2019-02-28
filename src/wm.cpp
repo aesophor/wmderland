@@ -622,28 +622,28 @@ void WindowManager::KillClient(Window w) {
 }
 
 
-bool WindowManager::IsWindowOfType(Window w, Atom property_atom, Atom target_atom) {
-    return wm_utils::WindowPropertyHasAtom(dpy_, w, property_atom, target_atom);
+bool WindowManager::IsFullscreen(Window w) {
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, prop_->net[atom::NET_WM_STATE], prop_->net[atom::NET_WM_STATE_FULLSCREEN]);
+}
+
+bool WindowManager::IsWindowOfType(Window w, Atom type_atom) {
+    return wm_utils::WindowPropertyHasAtom(dpy_, w, prop_->net[atom::NET_WM_WINDOW_TYPE], type_atom);
 }
 
 bool WindowManager::IsDock(Window w) {
-    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK]);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE_DOCK]);
 }
 
 bool WindowManager::IsDialog(Window w) {
-    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_DIALOG]);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE_DIALOG]);
 }
 
 bool WindowManager::IsSplash(Window w) {
-    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_SPLASH]);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE_SPLASH]);
 }
 
 bool WindowManager::IsNotification(Window w) {
-    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE], prop_->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]);
-}
-
-bool WindowManager::IsFullscreen(Window w) {
-    return IsWindowOfType(w, prop_->net[atom::NET_WM_STATE], prop_->net[atom::NET_WM_STATE_FULLSCREEN]);
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]);
 }
 
 

@@ -64,13 +64,13 @@ private:
     void KillClient(Window w);
 
     // Window type
-    bool IsWindowOfType(Window, Atom property_atom, Atom target_atom);
+    bool IsFullscreen(Window w);
+    bool IsWindowOfType(Window, Atom type_atom);
     bool IsDock(Window w);
     bool IsDialog(Window w);
     bool IsSplash(Window w);
     bool IsNotification(Window w);
-    bool IsFullscreen(Window w);
-
+    
     // Docks, bars and notifications
     inline void MapDocks() const;
     inline void UnmapDocks() const;
