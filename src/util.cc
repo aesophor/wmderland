@@ -129,6 +129,7 @@ bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_at
             return true;
         }
     }
+    XFree(atoms);
     return false;
 }
     
