@@ -118,9 +118,9 @@ $ startx
 * Gaps and borders
 * Static workspaces
 * Smart floating (dialog windows will be floating by default)
-* Easy-to-use config with runtime reload support. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
-* Remembers the positions/sizes of floating windows, see `src/cookie.cpp`
+* Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cpp`
+* Remembers the positions/sizes of floating windows (~/.local/share/Wmderland/cookie)
 
 ## Compatibility with WINE
 Most WINE applications should work fine, except the following bugs:
