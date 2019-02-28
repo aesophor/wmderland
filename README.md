@@ -123,6 +123,7 @@ $ startx
 * Supports a subset of EWMH, see `src/properties.cpp`
 
 ## Compatibility with WINE
+Most WINE applications should work fine, except the following bugs:
 * ~~WINE applications will hang on close~~ **fixed in commit [`a816f31`](https://github.com/aesophor/Wmderland/commit/a816f312d4f6b06865d36bbb565be95475d71719#comments)**
 * WINE Steam floating menu windows are slightly laggy when closed
 * WINE Steam startup logo window is not correctly resized
