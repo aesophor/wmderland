@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-enum ActionType {
+enum class ActionType {
     TILE_H,
     TILE_V,
     FOCUS_LEFT,
