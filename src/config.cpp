@@ -157,9 +157,9 @@ void Config::SetKeybindActions(const string& modifier_and_key, const string& act
 
 
 vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
-    string res_class = string(hint.res_class);
-    string res_name = string(hint.res_name);
+    pair<string, string> hint = wm_utils::GetXClassHint(dpy_, w);
+    string& res_class = hint.first;
+    string& res_name = hint.second;
     string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
 
     vector<string> keys;
@@ -167,6 +167,7 @@ vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
     keys.push_back(res_class + ',' + res_name);
     keys.push_back(res_class + ',' + net_wm_name);
     keys.push_back(res_class);
+
     return keys;
 }
 

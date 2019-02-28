@@ -38,7 +38,7 @@ namespace wm_utils {
 std::pair<int, int> GetDisplayResolution(Display* dpy, Window root_window);
 XWindowAttributes GetWindowAttributes(Display* dpy, Window w);
 XSizeHints GetWmNormalHints(Display* dpy, Window w);
-XClassHint GetXClassHint(Display* dpy, Window w);
+std::pair<std::string, std::string> GetXClassHint(Display* dpy, Window w);
 std::string GetNetWmName(Display* dpy, Window w, Properties* prop);
 std::string GetWmName(Display* dpy, Window w);
 void SetWindowWmState(Display* dpy, Window w, unsigned long state, Properties* prop);

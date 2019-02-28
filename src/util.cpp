@@ -46,10 +46,17 @@ XSizeHints GetWmNormalHints(Display* dpy, Window w) {
 }
 
 // Get the XClassHint (which contains res_class and res_name) of window w.
-XClassHint GetXClassHint(Display* dpy, Window w) {
+pair<string, string> GetXClassHint(Display* dpy, Window w) {
     XClassHint hint;
     XGetClassHint(dpy, w, &hint);
-    return hint;
+
+    static const string undefined = "undefined";
+    string res_class = (hint.res_class) ? hint.res_class : undefined;
+    string res_name = (hint.res_name) ? hint.res_name : undefined;
+    XFree(hint.res_class);
+    XFree(hint.res_name);
+
+    return std::make_pair(res_class, res_name);
 }
 
 // Get the utf8string in _NET_WM_NAME property.
@@ -135,78 +142,45 @@ unsigned int StrToKeycode(Display* dpy, const string& key_name) {
 }
     
 string KeymaskToStr(int modifier) {
-    string modifier_str = "";
-
     switch (modifier) {
         case Mod4Mask: // Cmd
-            modifier_str = "Mod4";
-            break;
         case Mod4Mask | LockMask: // Cmd + Caps
-            modifier_str = "Mod4";
-            break;
+            return "Mod4";
         case Mod4Mask | ShiftMask: // Cmd + Shift
-            modifier_str = "Mod4+Shift";
-            break;
         case Mod4Mask | ShiftMask | LockMask: // Cmd + Shift + Caps
-            modifier_str = "Mod4+Shift";
+            return "Mod4+Shift";
 
         case Mod1Mask: // Alt
-            modifier_str = "Mod1";
-            break;
         case Mod1Mask | LockMask: // Alt + Caps
-            modifier_str = "Mod1";
-            break;
+            return "Mod1";
         case Mod1Mask | ShiftMask: // Alt + Shift
-            modifier_str = "Mod1+Shift";
-            break;
         case Mod1Mask | ShiftMask | LockMask: // Alt + Shift + Caps
-            modifier_str = "Mod1+Shift";
-            break;
+            return "Mod1+Shift";
 
         case Mod2Mask:
-            modifier_str = "Mod2";
-            break;
         case Mod2Mask | LockMask:
-            modifier_str = "Mod2";
-            break;
+            return "Mod2";
         case Mod2Mask | ShiftMask:
-            modifier_str = "Mod2+Shift";
-            break;
         case Mod2Mask | ShiftMask | LockMask:
-            modifier_str = "Mod2+Shift";
-            break;
+            return "Mod2+Shift";
 
         case Mod3Mask:
-            modifier_str = "Mod3";
-            break;
         case Mod3Mask | LockMask:
-            modifier_str = "Mod3";
-            break;
+            return "Mod3";
         case Mod3Mask | ShiftMask:
-            modifier_str = "Mod3+Shift";
-            break;
         case Mod3Mask | ShiftMask | LockMask:
-            modifier_str = "Mod3+Shift";
-            break;
+            return "Mod3+Shift";
 
         case Mod5Mask:
-            modifier_str = "Mod5";
-            break;
         case Mod5Mask | LockMask:
-            modifier_str = "Mod5";
-            break;
+            return "Mod5";
         case Mod5Mask | ShiftMask:
-            modifier_str = "Mod5+Shift";
-            break;
         case Mod5Mask | ShiftMask | LockMask:
-            modifier_str = "Mod5+Shift";
-            break;
+            return "Mod5+Shift";
 
         default:
-            break;
+            return "";
     }
-
-    return modifier_str;
 }
 
 int StrToKeymask(const string& modifier, bool shift) {

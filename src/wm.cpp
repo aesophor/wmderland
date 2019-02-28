@@ -145,7 +145,7 @@ void WindowManager::InitCursors() {
 
 void WindowManager::Run() {
     // Automatically start the applications specified in config in background.
-    for (auto s : config_->autostart_rules()) {
+    for (auto& s : config_->autostart_rules()) {
         system((s + '&').c_str());
     }
 
@@ -199,7 +199,6 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
     changes.sibling = e.above;
     changes.stack_mode = e.detail;
     XConfigureWindow(dpy_, e.window, e.value_mask, &changes);
-    LOG(INFO) << "Resize " << e.window << " to " << e.width << ", " << e.height;
 }
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
@@ -208,7 +207,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         XKillClient(dpy_, e.window);
         return;
     }
-    
+
     // If this window is a dock (or bar), record it, map it and tile the workspace.
     if (IsDock(e.window) && find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
         docks_.push_back(e.window);
@@ -217,10 +216,11 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         return;
     }
 
+    pair<string, string> hint = wm_utils::GetXClassHint(dpy_, e.window);
+
     // If this window is wine steam dialog, just map it directly and don't manage it.
     if (IsDialog(e.window)) {
-        XClassHint hint = wm_utils::GetXClassHint(dpy_, e.window);
-        if (string(hint.res_class) == "Wine" && string(hint.res_name) == "steam.exe") {
+        if (hint.first == "Wine" && hint.second == "steam.exe") {
             XMapWindow(dpy_, e.window);
             return;
         }
@@ -335,7 +335,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
             wm_utils::KeysymToStr(dpy_, e.keycode) // key str, e.g., "q"
     );
 
-    for (auto action : actions) { 
+    for (auto& action : actions) {
         switch (action.type()) {
             case ActionType::TILE_H:
                 workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
@@ -412,9 +412,6 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
     Client* c = Client::mapper_[btn_pressed_event_.subwindow];
     if (c && c->is_floating()) {
         XWindowAttributes attr = wm_utils::GetWindowAttributes(dpy_, btn_pressed_event_.subwindow);
-        XClassHint class_hint = wm_utils::GetXClassHint(dpy_, btn_pressed_event_.subwindow);
-        string res_class_name = string(class_hint.res_class) + ',' + string(class_hint.res_name);
-        string wm_name = wm_utils::GetWmName(dpy_, btn_pressed_event_.subwindow);
         cookie_->Put(c->window(), Area(attr.x, attr.y, attr.width, attr.height));
     }
 

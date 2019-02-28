@@ -57,7 +57,7 @@ void Cookie::Put(Window w, const Area& window_area) {
 void Cookie::WriteToFile() const {
     std::ofstream file(filename_);
 
-    for (auto w : window_area_map_) {
+    for (auto& w : window_area_map_) {
         // Write x, y, width, height, res_class,res_name,net_wm_name to cookie.
         file << w.second.x << kDelimiter << w.second.y << kDelimiter
             << w.second.width << kDelimiter << w.second.height << kDelimiter
@@ -69,7 +69,7 @@ void Cookie::WriteToFile() const {
 
 
 string Cookie::GetCookieKey(Window w) const {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    pair<string, string> hint = wm_utils::GetXClassHint(dpy_, w);
     string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
-    return string(hint.res_class) + "," + hint.res_name + "," + net_wm_name;
+    return hint.first + ',' + hint.second + ',' + net_wm_name;
 }
