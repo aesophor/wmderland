@@ -28,16 +28,13 @@ TreeNode* Tree::GetTreeNode(Client* client) const {
             for (int i = ptr->children().size() - 1; i >= 0; i--) {
                 s.push(ptr->children()[i]);
             }
-
-            // Pop the first item on the stack which is ptr's first child.
-            ptr = s.top();
-            s.pop();
         } else {
             if (ptr->client() == client) return ptr;
-            if (s.empty()) break;
-            ptr = s.top();
-            s.pop();
         }
+
+        // Pop the first item on the stack which is ptr's first child.
+        ptr = s.top();
+        s.pop();
     }
 
     return nullptr;
@@ -55,17 +52,16 @@ vector<TreeNode*> Tree::GetAllLeaves() const {
             for (int i = ptr->children().size() - 1; i >= 0; i--) {
                 s.push(ptr->children()[i]);
             }
-
-            // Pop the first item on the stack which is ptr's first child.
-            ptr = s.top();
-            s.pop();
         } else {
             leaves.push_back(ptr);
-            if (s.empty()) break;
-            ptr = s.top();
-            s.pop();
         }
+
+        // Process the next tree node at the top of the stack.
+        if (s.empty()) break;
+        ptr = s.top();
+        s.pop();
     }
+
     return leaves;
 }
 
