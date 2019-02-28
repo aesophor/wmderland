@@ -113,21 +113,22 @@ exec Wmderland
 $ startx
 ```
 
-## Features
-* Tree-based horizontal and vertical tiling.
-* Gaps and borders.
-* Toggle windows between tiled / floating.
-* Smart floating (dialog windows will be floating by default).
-* Workspaces. ( `Mod4 + {1~9}`: switch; `Mod4 + Shift + {1~9}`: move application to... )
-* Configuration supported. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
-* Remembers the position and size of floating windows.
-* Supports a subset of EWMH, please see `src/properties.cpp`.
-* Compatible with Polybar's `xwindow` and `xworkspaces` module.
-* Wine applications will not hang on close (fixed in commit [`a816f31`](https://github.com/aesophor/Wmderland/commit/a816f312d4f6b06865d36bbb565be95475d71719#comments))
+## Main Features
+* Tree-based horizontal and vertical tiling (like in i3wm)
+* Gaps and borders
+* Static workspaces
+* Smart floating (dialog windows will be floating by default)
+* Easy-to-use config with runtime reload support. ([example config](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* Remembers the positions/sizes of floating windows, see `src/cookie.cpp`
+* Supports a subset of EWMH, see `src/properties.cpp`
+
+## Compatibility with WINE
+* ~~WINE applications will hang on close~~ **fixed in commit [`a816f31`](https://github.com/aesophor/Wmderland/commit/a816f312d4f6b06865d36bbb565be95475d71719#comments)**
+* WINE Steam floating menu windows are slightly laggy when closed
+* WINE Steam startup logo window is not correctly resized
 
 ## Todo List
 * Web browser windows should go fullscreen as video goes fullscreen
-* WINE Steam is extremely buggy
 * Two borders
 
 ## Other Screenshots
