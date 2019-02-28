@@ -35,12 +35,12 @@ int main(int argc, char* args[]) {
         // the universal null resource ID or atom.)
         unique_ptr<WindowManager> wm = WindowManager::GetInstance();
         if (!wm) {
-            WM_LOG(INFO, "Failed to open display to X server.")
+            WM_LOG(INFO, "Failed to open display to X server.");
             return EXIT_FAILURE;
         }
         wm->Run();
     } catch (const std::exception& ex) {
-        WM_LOG(ERROR, ex.what())
+        WM_LOG(ERROR, ex.what());
         return EXIT_FAILURE;
     }
 

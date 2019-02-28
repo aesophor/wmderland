@@ -83,7 +83,7 @@ void Config::Load(const string& filename) {
                     autostart_rules_.push_back(cmd);
                     break; }
                 default: {
-                    WM_LOG(INFO, "Ignored unrecognized symbol in config: " << tokens[0])
+                    WM_LOG(INFO, "Ignored unrecognized symbol in config: " << tokens[0]);
                     break;
                 }
             }
