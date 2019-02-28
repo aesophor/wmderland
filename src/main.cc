@@ -1,5 +1,5 @@
-#include "wm.hpp"
-#include "config.hpp"
+#include "wm.h"
+#include "config.h"
 #include <iostream>
 #include <memory>
 #include <string>

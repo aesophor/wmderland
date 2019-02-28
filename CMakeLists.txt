@@ -19,10 +19,10 @@ find_package(glog)
 # CMake will generate config.hpp from config.hpp.in
 # and store it under src/
 include_directories("build" "src")
-configure_file("src/config.hpp.in" "config.hpp")
+configure_file("src/config.h.in" "config.h")
 
-# Grab all files end in .cpp
-FILE(GLOB cpp_sources src/*.cpp)
+# Grab all files end in .cc
+FILE(GLOB cpp_sources src/*.cc)
 add_executable(Wmderland ${cpp_sources})
 
 set(LINK_LIBRARIES X11)

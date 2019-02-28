@@ -1,10 +1,10 @@
 // A Client is any window that we have decided to manage. It is a wrapper class 
 // of Window which provides some useful information and methods.
 
-#ifndef WMDERLAND_CLIENT_HPP_
-#define WMDERLAND_CLIENT_HPP_
+#ifndef WMDERLAND_CLIENT_H_
+#define WMDERLAND_CLIENT_H_
 
-#include "workspace.hpp"
+#include "workspace.h"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

@@ -1,4 +1,4 @@
-#include "tree.hpp"
+#include "tree.h"
 #include <stack>
 
 using std::stack;

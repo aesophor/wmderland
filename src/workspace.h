@@ -1,13 +1,13 @@
 // A Workspace contains its id, the active window in this workspace
 // and a list of windows.
 
-#ifndef WMDERLAND_WORKSPACE_HPP_
-#define WMDERLAND_WORKSPACE_HPP_
+#ifndef WMDERLAND_WORKSPACE_H_
+#define WMDERLAND_WORKSPACE_H_
 
-#include "client.hpp"
-#include "tree.hpp"
-#include "config.hpp"
-#include "util.hpp"
+#include "client.h"
+#include "tree.h"
+#include "config.h"
+#include "util.h"
 extern "C" {
 #include <X11/Xlib.h>
 }

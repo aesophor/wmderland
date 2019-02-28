@@ -1,7 +1,7 @@
-#ifndef WMDERLAND_UTIL_HPP_
-#define WMDERLAND_UTIL_HPP_
+#ifndef WMDERLAND_UTIL_H_
+#define WMDERLAND_UTIL_H_
 
-#include "properties.hpp"
+#include "properties.h"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

@@ -1,5 +1,5 @@
-#ifndef WMDERLAND_PROPERTIES_HPP_
-#define WMDERLAND_PROPERTIES_HPP_
+#ifndef WMDERLAND_PROPERTIES_H_
+#define WMDERLAND_PROPERTIES_H_
 
 extern "C" {
 #include <X11/Xlib.h>

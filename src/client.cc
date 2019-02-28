@@ -1,6 +1,6 @@
-#include "client.hpp"
-#include "config.hpp"
-#include "util.hpp"
+#include "client.h"
+#include "config.h"
+#include "util.h"
 
 using std::string;
 

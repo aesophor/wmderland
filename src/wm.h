@@ -1,11 +1,11 @@
-#ifndef WMDERLAND_WM_HPP_
-#define WMDERLAND_WM_HPP_
+#ifndef WMDERLAND_WM_H_
+#define WMDERLAND_WM_H_
 
-#include "properties.hpp"
-#include "workspace.hpp"
-#include "config.hpp"
-#include "cookie.hpp"
-#include "util.hpp"
+#include "properties.h"
+#include "workspace.h"
+#include "config.h"
+#include "cookie.h"
+#include "util.h"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

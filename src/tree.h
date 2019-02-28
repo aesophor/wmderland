@@ -1,7 +1,7 @@
-#ifndef WMDERLAND_TREE_HPP_
-#define WMDERLAND_TREE_HPP_
+#ifndef WMDERLAND_TREE_H_
+#define WMDERLAND_TREE_H_
 
-#include "tree_node.hpp"
+#include "tree_node.h"
 #include <memory>
 #include <vector>
 

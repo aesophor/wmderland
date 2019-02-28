@@ -1,5 +1,5 @@
-#ifndef WMDERLAND_ACTION_HPP_
-#define WMDERLAND_ACTION_HPP_
+#ifndef WMDERLAND_ACTION_H_
+#define WMDERLAND_ACTION_H_
 
 #include <string>
 #include <vector>

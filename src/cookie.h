@@ -1,16 +1,9 @@
-// Cookie holds the user-prefered positions and sizes
-// of windows (these data are stored in XSizeHints struct).
-//
-// When the Window Manager starts, these data will be loaded
-// into window_pos_size_map_ from a file.
-//
-// When the Window Manager shutdowns, these data will be written
-// back to the file from window_pos_size_map_.
+// Cookie holds the user-prefered positions and sizes of windows.
 
-#ifndef WMDERLAND_COOKIE_HPP_
-#define WMDERLAND_COOKIE_HPP_
+#ifndef WMDERLAND_COOKIE_H_
+#define WMDERLAND_COOKIE_H_
 
-#include "util.hpp"
+#include "util.h"
 extern "C" {
 #include <X11/Xutil.h>
 }

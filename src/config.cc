@@ -1,6 +1,6 @@
-#include "action.hpp"
-#include "config.hpp"
-#include "util.hpp"
+#include "action.h"
+#include "config.h"
+#include "util.h"
 #include <fstream>
 #include <sstream>
 #if GLOG_FOUND

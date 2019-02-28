@@ -1,6 +1,6 @@
-#include "wm.hpp"
-#include "client.hpp"
-#include "util.hpp"
+#include "wm.h"
+#include "client.h"
+#include "util.h"
 #include <memory>
 #include <string>
 #include <sstream>

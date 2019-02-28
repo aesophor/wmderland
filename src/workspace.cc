@@ -1,6 +1,6 @@
-#include "wm.hpp"
-#include "workspace.hpp"
-#include "util.hpp"
+#include "workspace.h"
+#include "wm.h"
+#include "util.h"
 #include <algorithm>
 #include <memory>
 #include <stack>

@@ -1,5 +1,5 @@
-#include "cookie.hpp"
-#include "util.hpp"
+#include "cookie.h"
+#include "util.h"
 #include <fstream>
 #include <sstream>
 #include <vector>

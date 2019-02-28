@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "tree_node.hpp"
+#include "tree_node.h"
 
 using std::vector;
 using std::remove;

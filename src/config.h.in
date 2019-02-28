@@ -1,8 +1,8 @@
-#ifndef WMDERLAND_CONFIG_HPP_
-#define WMDERLAND_CONFIG_HPP_
+#ifndef WMDERLAND_CONFIG_H_
+#define WMDERLAND_CONFIG_H_
 
-#include "action.hpp"
-#include "util.hpp"
+#include "action.h"
+#include "util.h"
 #include <unordered_map>
 #include <vector>
 #include <string>

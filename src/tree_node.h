@@ -1,8 +1,8 @@
-#ifndef WMDERLAND_TREE_NODE_HPP_
-#define WMDERLAND_TREE_NODE_HPP_
+#ifndef WMDERLAND_TREE_NODE_H_
+#define WMDERLAND_TREE_NODE_H_
 
 #include <vector>
-#include "util.hpp"
+#include "util.h"
 
 class Client;
 

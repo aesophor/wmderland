@@ -1,5 +1,5 @@
-#include "action.hpp"
-#include "util.hpp"
+#include "action.h"
+#include "util.h"
 
 using std::string;
 using std::vector;

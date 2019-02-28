@@ -1,4 +1,4 @@
-#include "properties.hpp"
+#include "properties.h"
 
 Properties::Properties(Display* dpy) : utf8string(XInternAtom(dpy, "UTF8_STRING", false)) {
     wm[atom::WM_PROTOCOLS] = XInternAtom(dpy, "WM_PROTOCOLS", false);
