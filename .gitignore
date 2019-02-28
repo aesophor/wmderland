@@ -1,5 +1,5 @@
 build/
-src/config.hpp
+src/config.h
 logs/
 test/
 scripts/
