@@ -25,14 +25,16 @@ public:
     Cookie(Display* dpy, Properties* prop, const std::string filename);
     virtual ~Cookie();
 
+    bool Has(Window w) const;
     Area Get(Window w) const;
     void Put(Window w, const Area& window_area);
     void WriteToFile() const;
 
 private:
+    std::string GetCookieKey(Window w) const;
+
     Display* dpy_;
     Properties* prop_;
-
     std::string filename_;
     std::unordered_map<std::string, Area> window_area_map_;
 };

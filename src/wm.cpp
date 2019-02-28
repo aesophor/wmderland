@@ -155,6 +155,9 @@ void WindowManager::Run() {
         XNextEvent(dpy_, &event);
 
         switch (event.type) {
+            case ConfigureRequest:
+                OnConfigureRequest(event.xconfigurerequest);
+                break;
             case MapRequest:
                 OnMapRequest(event.xmaprequest);
                 break;
@@ -186,6 +189,19 @@ void WindowManager::Run() {
 }
 
 
+void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
+    XWindowChanges changes;
+    changes.x = e.x;
+    changes.y = e.y;
+    changes.width = e.width;
+    changes.height = e.height;
+    changes.border_width = e.border_width;
+    changes.sibling = e.above;
+    changes.stack_mode = e.detail;
+    XConfigureWindow(dpy_, e.window, e.value_mask, &changes);
+    LOG(INFO) << "Resize " << e.window << " to " << e.width << ", " << e.height;
+}
+
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     // Windows that are prohibited from mapping should be killed immediately.
     if (config_->ShouldProhibit(e.window)) {
@@ -200,6 +216,16 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         XMapWindow(dpy_, e.window);
         return;
     }
+
+    // If this window is wine steam dialog, just map it directly and don't manage it.
+    if (IsDialog(e.window)) {
+        XClassHint hint = wm_utils::GetXClassHint(dpy_, e.window);
+        if (string(hint.res_class) == "Wine" && string(hint.res_name) == "steam.exe") {
+            XMapWindow(dpy_, e.window);
+            return;
+        }
+    }
+    
 
     // Pass all checks above -> we should manage this window.
     // Floating creiteria: has _NET_WM_WINDOW_TYPE_{DIALOG,SPLASH} or defined in config.
@@ -225,7 +251,9 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             workspaces_[target]->RaiseAllFloatingClients();
 
             if (should_float) {
-                ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
+                if (cookie_->Has(e.window)) {
+                    ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
+                }
             }
 
             if (config_->ShouldFullscreen(e.window)) {
@@ -262,6 +290,10 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
         return;
     }
 
+    // Set window state to withdrawn (wine application needs this to destroy windows properly).
+    // TODO: Wine steam floating menu still laggy upon removal
+    wm_utils::SetWindowWmState(dpy_, e.window, WM_STATE_WITHDRAWN, prop_.get());
+
     // If we aren't managing this window, there's no need to proceed further.
     Client* c = Client::mapper_[e.window];
     if (!c) return;
@@ -276,7 +308,6 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     
     // Remove the corresponding client from the client tree.
     c->workspace()->Remove(e.window);
-    wm_utils::SetWindowWmState(dpy_, e.window, WM_STATE_WITHDRAWN, prop_.get());
     UpdateClientList();
 
     // Clear _NET_ACTIVE_WINDOW only if the window being destroyed is in current workspace.
@@ -575,7 +606,7 @@ void WindowManager::KillClient(Window w) {
     Atom* supported_protocols;
     int num_supported_protocols;
 
-    // First try to kill the client gracefully via ICCCM.  If the client does not support
+    // First try to kill the client gracefully via ICCCM. If the client does not support
     // this method, then we'll perform the brutal XKillClient().
     if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
             && (find(supported_protocols, supported_protocols + num_supported_protocols, 
@@ -665,6 +696,8 @@ Area WindowManager::CalculateTilingArea() {
     return tiling_area;
 }
 
+// TODO: This method this to be re-written, since it does not simply resize window from cookie,
+// but also resize the window based on its properties.
 void WindowManager::ResizeWindowFromCookie(Window w, const Area& cookie_area) {
     XSizeHints hints = wm_utils::GetWmNormalHints(dpy_, w);
 

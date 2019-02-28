@@ -41,6 +41,7 @@ private:
     void InitCursors();
  
     // XEvent handlers
+    void OnConfigureRequest(const XConfigureRequestEvent& e);
     void OnMapRequest(const XMapRequestEvent& e);
     void OnMapNotify(const XMapEvent& e);
     void OnDestroyNotify(const XDestroyWindowEvent& e);

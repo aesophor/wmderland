@@ -41,23 +41,16 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
 Cookie::~Cookie() {}
 
 
-Area Cookie::Get(Window w) const {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
-    string cookie_key = string(hint.res_class) + "," + hint.res_name + "," + net_wm_name;
+bool Cookie::Has(Window w) const {
+    return window_area_map_.find(GetCookieKey(w)) != window_area_map_.end();
+}
 
-    if (window_area_map_.find(cookie_key) != window_area_map_.end()) {
-        return window_area_map_.at(cookie_key);
-    }
-    return Area(0, 0, 0, 0);
+Area Cookie::Get(Window w) const {
+    return window_area_map_.at(GetCookieKey(w));
 }
 
 void Cookie::Put(Window w, const Area& window_area) {
-    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
-    string cookie_key = string(hint.res_class) + "," + hint.res_name + "," + net_wm_name;
-
-    window_area_map_[cookie_key] = window_area;
+    window_area_map_[GetCookieKey(w)] = window_area;
     WriteToFile();
 }
 
@@ -72,4 +65,11 @@ void Cookie::WriteToFile() const {
     }
 
     file.close();
+}
+
+
+string Cookie::GetCookieKey(Window w) const {
+    XClassHint hint = wm_utils::GetXClassHint(dpy_, w);
+    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    return string(hint.res_class) + "," + hint.res_name + "," + net_wm_name;
 }

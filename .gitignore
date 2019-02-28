@@ -1,4 +1,5 @@
 build/
 src/config.hpp
+logs/
 test/
 scripts/
