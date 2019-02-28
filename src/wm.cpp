@@ -448,8 +448,7 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
             << "    Error code: " << int(e->error_code)
             << " - " << error_text << "\n"
             << "    Resource ID: " << e->resourceid;
-        // The return value is ignored.
-        return 0;
+        return 0; // The return value is ignored.
     #endif
 }
 

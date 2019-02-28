@@ -25,8 +25,8 @@ int main(int argc, char* args[]) {
     }
 
     try {
-        #if GLOG_FOUND != FALSE
-            // Initialize google's c++ logging library.
+        // Initialize google's c++ logging library.
+        #if GLOG_FOUND
             google::InitGoogleLogging(args[0]);
         #endif
 
@@ -35,16 +35,12 @@ int main(int argc, char* args[]) {
         // the universal null resource ID or atom.)
         unique_ptr<WindowManager> wm = WindowManager::GetInstance();
         if (!wm) {
-            #if GLOG_FOUND != FALSE
-                LOG(INFO) << "Failed to open display to X server.";
-            #endif
+            WM_LOG(INFO, "Failed to open display to X server.")
             return EXIT_FAILURE;
         }
         wm->Run();
     } catch (const std::exception& ex) {
-        #if GLOG_FOUND != FALSE
-            LOG(ERROR) << ex.what();
-        #endif
+        WM_LOG(ERROR, ex.what())
         return EXIT_FAILURE;
     }
 

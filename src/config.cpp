@@ -83,9 +83,7 @@ void Config::Load(const string& filename) {
                     autostart_rules_.push_back(cmd);
                     break; }
                 default: {
-                    #if GLOG_FOUND
-                        LOG(INFO) << "Ignored unrecognized symbol in config: " << tokens[0];
-                    #endif
+                    WM_LOG(INFO, "Ignored unrecognized symbol in config: " << tokens[0])
                     break;
                 }
             }
