@@ -157,10 +157,10 @@ void Config::SetKeybindActions(const string& modifier_and_key, const string& act
 
 
 vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
-    pair<string, string> hint = wm_utils::GetXClassHint(dpy_, w);
+    pair<string, string> hint = wm_utils::GetXClassHint(w);
     string& res_class = hint.first;
     string& res_name = hint.second;
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    string net_wm_name = wm_utils::GetNetWmName(w);
 
     vector<string> keys;
     keys.push_back(res_class + ',' + res_name + ',' + net_wm_name);

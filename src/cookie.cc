@@ -69,7 +69,7 @@ void Cookie::WriteToFile() const {
 
 
 string Cookie::GetCookieKey(Window w) const {
-    pair<string, string> hint = wm_utils::GetXClassHint(dpy_, w);
-    string net_wm_name = wm_utils::GetNetWmName(dpy_, w, prop_);
+    pair<string, string> hint = wm_utils::GetXClassHint(w);
+    string net_wm_name = wm_utils::GetNetWmName(w);
     return hint.first + ',' + hint.second + ',' + net_wm_name;
 }

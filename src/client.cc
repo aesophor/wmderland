@@ -1,6 +1,5 @@
 #include "client.h"
 #include "config.h"
-#include "util.h"
 
 using std::string;
 
@@ -19,32 +18,8 @@ Client::~Client() {
 }
 
 
-void Client::Map() const {
-    XMapWindow(dpy_, window_);
-}
-
-void Client::Unmap() const {
-    XUnmapWindow(dpy_, window_);
-}
-
-void Client::Raise() const {
-    XRaiseWindow(dpy_, window_);
-}
-
-void Client::SetInputFocus() const {
-    XSetInputFocus(dpy_, window_, RevertToParent, CurrentTime);
-}
-
-void Client::SetBorderWidth(unsigned int width) const {
-    XSetWindowBorderWidth(dpy_, window_, width);
-}
-
-void Client::SetBorderColor(unsigned long color) const {
-    XSetWindowBorder(dpy_, window_, color);
-}
-
-XWindowAttributes Client::GetXWindowAttributes() const {
-    return wm_utils::GetWindowAttributes(dpy_, window_);
+void Client::SaveXWindowAttributes() {
+    previous_attr_ = wm_utils::GetXWindowAttributes(window_);
 }
 
 
@@ -72,10 +47,6 @@ bool Client::is_fullscreen() const {
 
 void Client::set_workspace(Workspace* workspace) {
     workspace_ = workspace;
-}
-
-void Client::set_previous_attr(const XWindowAttributes& attr) {
-    previous_attr_ = attr;
 }
 
 void Client::set_floating(bool is_floating) {

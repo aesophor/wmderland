@@ -5,6 +5,8 @@
 #define WMDERLAND_CLIENT_H_
 
 #include "workspace.h"
+#include "properties.h"
+#include "util.h"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -21,14 +23,17 @@ public:
 
     Client(Display* dpy, Window window, Workspace* workspace);
     virtual ~Client();
-    
-    void Map() const;
-    void Unmap() const;
-    void Raise() const;
-    void SetInputFocus() const;
-    void SetBorderWidth(unsigned int width) const;
-    void SetBorderColor(unsigned long color) const;
-    XWindowAttributes GetXWindowAttributes() const;
+
+    inline void Map() const;
+    inline void Unmap() const;
+    inline void Raise() const;
+    inline void Move(int x, int y) const;
+    inline void Resize(int w, int h) const;
+    inline void MoveResize(int x, int y, int w, int h) const;
+    inline void SetInputFocus() const;
+    inline void SetBorderWidth(unsigned int width) const;
+    inline void SetBorderColor(unsigned long color) const;
+    void SaveXWindowAttributes();
 
     Window window() const;
     Workspace* workspace() const;
@@ -37,7 +42,6 @@ public:
     bool is_floating() const;
     bool is_fullscreen() const;
     void set_workspace(Workspace* workspace);
-    void set_previous_attr(const XWindowAttributes& attr);
     void set_floating(bool is_floating);
     void set_fullscreen(bool is_fullscreen);
 
@@ -50,5 +54,42 @@ private:
     bool is_floating_;
     bool is_fullscreen_;
 };
+
+
+inline void Client::Map() const {
+    XMapWindow(dpy_, window_);
+}
+
+inline void Client::Unmap() const {
+    XUnmapWindow(dpy_, window_);
+}
+
+inline void Client::Raise() const {
+    XRaiseWindow(dpy_, window_);
+}
+
+inline void Client::Move(int x, int y) const {
+    XMoveWindow(dpy_, window_, x, y);
+}
+
+inline void Client::Resize(int w, int h) const {
+    XResizeWindow(dpy_, window_, w, h);
+}
+
+inline void Client::MoveResize(int x, int y, int w, int h) const {
+    XMoveResizeWindow(dpy_, window_, x, y, w, h);
+}
+
+inline void Client::SetInputFocus() const {
+    XSetInputFocus(dpy_, window_, RevertToParent, CurrentTime);
+}
+
+inline void Client::SetBorderWidth(unsigned int width) const {
+    XSetWindowBorderWidth(dpy_, window_, width);
+}
+
+inline void Client::SetBorderColor(unsigned long color) const {
+    XSetWindowBorder(dpy_, window_, color);
+}
 
 #endif

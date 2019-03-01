@@ -63,15 +63,6 @@ private:
     void ToggleFullscreen(Window w);
     void KillClient(Window w);
 
-    // Window type
-    bool IsFullscreen(Window w);
-    bool IsWindowOfType(Window, Atom type_atom);
-    bool IsDock(Window w);
-    bool IsDialog(Window w);
-    bool IsSplash(Window w);
-    bool IsUtility(Window w);
-    bool IsNotification(Window w);
-    
     // Docks, bars and notifications
     inline void MapDocks() const;
     inline void UnmapDocks() const;

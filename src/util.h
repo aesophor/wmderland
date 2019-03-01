@@ -35,20 +35,29 @@ enum Direction {
 
 namespace wm_utils {
 
-std::pair<int, int> GetDisplayResolution(Display* dpy, Window root_window);
-XWindowAttributes GetWindowAttributes(Display* dpy, Window w);
-XSizeHints GetWmNormalHints(Display* dpy, Window w);
-std::pair<std::string, std::string> GetXClassHint(Display* dpy, Window w);
-std::string GetNetWmName(Display* dpy, Window w, Properties* prop);
-std::string GetWmName(Display* dpy, Window w);
-void SetWindowWmState(Display* dpy, Window w, unsigned long state, Properties* prop);
-void SetNetActiveWindow(Display* dpy, Window root_window, Window w, Properties* prop);
-void ClearNetActiveWindow(Display* dpy, Window root_window, Properties* prop);
-Atom* GetWindowProperty(Display* dpy, Window w, Atom property, unsigned long* atom_len);
-bool WindowPropertyHasAtom(Display* dpy, Window w, Atom property, Atom target_atom);
+void Init(Display* d, Properties* p, Window root_win);
+std::pair<int, int> GetDisplayResolution();
+XWindowAttributes GetXWindowAttributes(Window w);
+XSizeHints GetWmNormalHints(Window w);
+std::pair<std::string, std::string> GetXClassHint(Window w);
+std::string GetNetWmName(Window w);
+std::string GetWmName(Window w);
+void SetWindowWmState(Window w, unsigned long state);
+void SetNetActiveWindow(Window w);
+void ClearNetActiveWindow();
+Atom* GetWindowProperty(Window w, Atom property, unsigned long* atom_len);
+bool WindowPropertyHasAtom(Window w, Atom property, Atom target_atom);
 
-std::string KeysymToStr(Display* dpy, unsigned int keycode);
-unsigned int StrToKeycode(Display* dpy, const std::string& key_name);
+bool HasNetWmStateFullscreen(Window w);
+bool IsWindowOfType(Window, Atom type_atom);
+bool IsDock(Window w);
+bool IsDialog(Window w);
+bool IsSplash(Window w);
+bool IsUtility(Window w);
+bool IsNotification(Window w);
+
+std::string KeysymToStr(unsigned int keycode);
+unsigned int StrToKeycode(const std::string& key_name);
 std::string KeymaskToStr(int modifier);
 int StrToKeymask(const std::string& modifier_str, bool shift);
 
