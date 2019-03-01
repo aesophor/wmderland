@@ -167,7 +167,6 @@ vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
     keys.push_back(res_class + ',' + res_name);
     keys.push_back(res_class + ',' + net_wm_name);
     keys.push_back(res_class);
-
     return keys;
 }
 
@@ -231,22 +230,6 @@ unsigned long Config::unfocused_color() const {
     return unfocused_color_;
 }
 
-
-const unordered_map<string, short>& Config::spawn_rules() const {
-    return spawn_rules_;
-}
-
-const unordered_map<string, bool>& Config::float_rules() const {
-    return float_rules_;
-}
-
-const unordered_map<string, bool>& Config::fullscreen_rules() const {
-    return fullscreen_rules_;
-}
-
-const unordered_map<string, bool>& Config::prohibit_rules() const {
-    return prohibit_rules_;
-}
 
 const unordered_map<string, vector<Action>>& Config::keybind_rules() const {
     return keybind_rules_;

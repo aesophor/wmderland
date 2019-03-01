@@ -229,7 +229,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Pass all checks above -> we should manage this window.
     // Floating creiteria: has _NET_WM_WINDOW_TYPE_{DIALOG,SPLASH} or defined in config.
-    bool should_float = IsDialog(e.window) || IsSplash(e.window) || config_->ShouldFloat(e.window);
+    bool should_float = IsDialog(e.window) || IsSplash(e.window) || IsUtility(e.window) || config_->ShouldFloat(e.window);
 
     // Spawn this window at the specified workspace if such rule exists,
     // otherwise spawn it in current workspace.
@@ -640,6 +640,10 @@ bool WindowManager::IsDialog(Window w) {
 
 bool WindowManager::IsSplash(Window w) {
     return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE_SPLASH]);
+}
+
+bool WindowManager::IsUtility(Window w) {
+    return IsWindowOfType(w, prop_->net[atom::NET_WM_WINDOW_TYPE_UTILITY]);
 }
 
 bool WindowManager::IsNotification(Window w) {

@@ -4,7 +4,7 @@ project(Wmderland VERSION 0.9.2)
 # Request C++11 standard, using new CMake variables.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall -rdynamic")
 
 # There are two CMake scripts in ./cmake
 # 1. BuildType.cmake - determine build type on demand

@@ -70,10 +70,6 @@ public:
     unsigned long focused_color() const;
     unsigned long unfocused_color() const;
 
-    const std::unordered_map<std::string, short>& spawn_rules() const;
-    const std::unordered_map<std::string, bool>& float_rules() const;
-    const std::unordered_map<std::string, bool>& fullscreen_rules() const;
-    const std::unordered_map<std::string, bool>& prohibit_rules() const;
     const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
     const std::vector<std::string>& autostart_rules() const;
 

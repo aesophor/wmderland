@@ -69,6 +69,7 @@ private:
     bool IsDock(Window w);
     bool IsDialog(Window w);
     bool IsSplash(Window w);
+    bool IsUtility(Window w);
     bool IsNotification(Window w);
     
     // Docks, bars and notifications

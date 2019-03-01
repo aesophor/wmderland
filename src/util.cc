@@ -48,15 +48,23 @@ XSizeHints GetWmNormalHints(Display* dpy, Window w) {
 // Get the XClassHint (which contains res_class and res_name) of window w.
 pair<string, string> GetXClassHint(Display* dpy, Window w) {
     XClassHint hint;
-    XGetClassHint(dpy, w, &hint);
 
-    static const string undefined = "undefined";
-    string res_class = (hint.res_class) ? hint.res_class : undefined;
-    string res_name = (hint.res_name) ? hint.res_name : undefined;
-    XFree(hint.res_class);
-    XFree(hint.res_name);
+    if (XGetClassHint(dpy, w, &hint)) {
+        static const string undefined = "undefined";
+        string res_class = (hint.res_class) ? hint.res_class : undefined;
+        string res_name = (hint.res_name) ? hint.res_name : undefined;
 
-    return std::make_pair(res_class, res_name);
+        if (hint.res_class) {
+            XFree(hint.res_class);
+        }
+        if (hint.res_name) {
+            XFree(hint.res_name);
+        }
+
+        return std::make_pair(res_class, res_name);
+    } else {
+        return std::make_pair("", "");
+    }
 }
 
 // Get the utf8string in _NET_WM_NAME property.
