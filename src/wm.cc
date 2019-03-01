@@ -697,7 +697,7 @@ Area WindowManager::CalculateTilingArea() {
     return tiling_area;
 }
 
-// TODO: This method this to be re-written, since it does not simply resize window from cookie,
+// TODO: This method needs to be re-written, since it does not simply resize window from cookie,
 // but also resize the window based on its properties.
 void WindowManager::ResizeWindowFromCookie(Window w, const Area& cookie_area) {
     XSizeHints hints = wm_utils::GetWmNormalHints(dpy_, w);
