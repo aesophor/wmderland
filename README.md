@@ -129,6 +129,7 @@ Most WINE applications should work fine, except the following bugs:
 * WINE Steam startup logo window is not correctly resized
 
 ## Todo List
+* Add support for [sxhkd](https://github.com/baskerville/sxhkd)
 * Web browser windows should go fullscreen as video goes fullscreen
 * Rounded corners
 * Two borders
