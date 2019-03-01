@@ -1,16 +1,23 @@
 cmake_minimum_required(VERSION 3.9)
-project(Wmderland VERSION 0.9.2)
-
-# Request C++11 standard, using new CMake variables.
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall -rdynamic")
+project(Wmderland VERSION 0.9.3)
 
 # There are two CMake scripts in ./cmake
 # 1. BuildType.cmake - determine build type on demand
 # 2. Findglog.cmake - used by `find_package(glog REQUIRED)`
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(BuildType)
+
+# Request C++11 standard, using new CMake variables.
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall")
+
+# If the BuildType is Debug, then add -rdynamic.
+# (used to print stacktrace with function names)
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+endif()
+
 
 # Find the required libraries.
 find_package(X11 REQUIRED)

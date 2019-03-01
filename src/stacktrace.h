@@ -5,9 +5,19 @@ extern "C" {
 #include <execinfo.h> // backtrace*
 #include <signal.h> // signal
 #include <stdlib.h> // exit
-#include <unistd.h> // STDERR_FILENO
+#include <unistd.h> // close
+#include <fcntl.h> // open
 }
 
-extern "C" void segv_init(void (*handler)(int));
+
+namespace segv {
+
+    void InstallHandler(void (*Handler)(int),
+                        int stacktrace_function_count=10,
+                        char* stacktrace_log_location="/tmp/Wmderland.STACKTRACE");
+
+    void Handle(int sig);
+
+} // namespace segv
     
 #endif

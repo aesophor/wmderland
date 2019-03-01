@@ -8,9 +8,6 @@
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
-extern "C" {
-#include <fcntl.h>
-}
 
 using std::string;
 using std::unique_ptr;
@@ -22,37 +19,25 @@ string version() {
         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
 }
 
-extern "C" void segv_handler(int sig) {
-    void* array[10];
-    size_t size = backtrace(array, 10);
-
-    WM_LOG(ERROR, "Stack trace (most recent call first):");
-
-    int fd = open("/tmp/Wmderland.stacktrace.log", O_CREAT | O_WRONLY, 0600);
-    backtrace_symbols_fd(array + 2, size - 2, fd);
-    close(fd);
-
-    exit(EXIT_FAILURE);
-}
-
 int main(int argc, char* args[]) {
     if (argc > 1 && (!strcmp(args[1], "-v") || !strcmp(args[1], "--version"))) {
         std::cout << version() << std::endl;
         return EXIT_SUCCESS;
     }
 
-    // Install segmentation fault handler.
-    segv_init(&segv_handler);
+    // Install segfault handler.
+    // By default, stacktrace is dumped into /tmp/Wmderland.STACKTRACE
+    // with 10 most recent function calls recorded.
+    segv::InstallHandler(&segv::Handle);
 
     try {
-        // Initialize google's c++ logging library.
-        #if GLOG_FOUND
-            google::InitGoogleLogging(args[0]);
-        #endif
+        // Initialize google's c++ logging library (if installed)
+        // Logging-related macros are defined in config.h.in
+        WM_INIT_LOGGING(args[0]);
 
         // WindowManager is a singleton class. If XOpenDisplay() fails during 
-        // WindowManager::GetInstance(), it will return None (in xlib, None is
-        // the universal null resource ID or atom.)
+        // WindowManager::GetInstance(), it will return None (in Xlib, 'None'
+        // is the universal null resource ID or atom.)
         unique_ptr<WindowManager> wm = WindowManager::GetInstance();
         if (!wm) {
             WM_LOG(INFO, "Failed to open display to X server.");
