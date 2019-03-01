@@ -130,6 +130,7 @@ Most WINE applications should work fine, except the following bugs:
 
 ## Todo List
 * Web browser windows should go fullscreen as video goes fullscreen
+* Rounded corners
 * Two borders
 
 ## Other Screenshots
