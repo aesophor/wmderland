@@ -258,15 +258,15 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         UpdateClientList();
 
         if (target == current_) {
-            XMapWindow(dpy_, e.window);
-            wm_utils::SetNetActiveWindow(e.window);
-            workspaces_[target]->SetFocusedClient(e.window);
-            workspaces_[target]->RaiseAllFloatingClients();
+            if (!prev_focused_client || (prev_focused_client && !prev_focused_client->is_fullscreen())) {
+                XMapWindow(dpy_, e.window);
+                wm_utils::SetNetActiveWindow(e.window);
+                workspaces_[target]->SetFocusedClient(e.window);
+                workspaces_[target]->RaiseAllFloatingClients();
+            }
 
-            if (should_float) {
-                if (cookie_->Has(e.window)) {
-                    ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
-                }
+            if (should_float && cookie_->Has(e.window)) {
+                ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
             }
 
             if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
