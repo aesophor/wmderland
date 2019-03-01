@@ -60,11 +60,10 @@ pair<string, string> GetXClassHint(Display* dpy, Window w) {
         if (hint.res_name) {
             XFree(hint.res_name);
         }
-
         return std::make_pair(res_class, res_name);
-    } else {
-        return std::make_pair("", "");
-    }
+    } 
+    
+    return std::make_pair("", "");
 }
 
 // Get the utf8string in _NET_WM_NAME property.
