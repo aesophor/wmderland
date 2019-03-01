@@ -139,7 +139,7 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, int bo
             int new_y = child_y + gap_width / 2;
             int new_width = child_width - border_width * 2 - gap_width;
             int new_height = child_height - border_width * 2 - gap_width;
-            XMoveResizeWindow(dpy_, child->client()->window(), new_x, new_y, new_width, new_height);
+            child->client()->MoveResize(new_x, new_y, new_width, new_height);
         } else {
             Tile(child, child_x, child_y, child_width, child_height, border_width, gap_width);
         }

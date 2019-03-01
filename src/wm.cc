@@ -245,9 +245,15 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
     // Add this window to the target workspace.
     if (!workspaces_[target]->Has(e.window)) {
+        Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
+
         workspaces_[target]->UnsetFocusedClient();
         workspaces_[target]->Add(e.window, should_float);
-        workspaces_[target]->Arrange(CalculateTilingArea());
+
+        if (!workspaces_[target]->is_fullscreen()) {
+            workspaces_[target]->Arrange(CalculateTilingArea());
+        }
+        
         wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
         UpdateClientList();
 
@@ -264,8 +270,15 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             }
 
             if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
-                ToggleFullscreen(e.window);
+                SetFullscreen(e.window, true);
             }
+        }
+
+        // If before we mapped this new window, there was a fullscreen window,
+        // then we should restore that window to fullscreen.
+        if (prev_focused_client && prev_focused_client->is_fullscreen()) {
+            workspaces_[target]->UnsetFocusedClient();
+            SetFullscreen(prev_focused_client->window(), true);
         }
     }
 }
@@ -354,11 +367,11 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 break;
            case ActionType::TOGGLE_FLOATING:
                 if (!focused_client) continue;
-                ToggleFloating(focused_client->window());
+                SetFloating(focused_client->window(), !focused_client->is_floating());
                 break;
             case ActionType::TOGGLE_FULLSCREEN:
                 if (!focused_client) continue;
-                ToggleFullscreen(focused_client->window());
+                SetFullscreen(focused_client->window(), !focused_client->is_fullscreen());
                 break;
             case ActionType::GOTO_WORKSPACE:
                 GotoWorkspace(stoi(action.arguments()) - 1);
@@ -553,24 +566,24 @@ void WindowManager::Center(Window w) {
     XMoveWindow(dpy_, w, new_x, new_y);
 }
 
-void WindowManager::ToggleFloating(Window w) {
+void WindowManager::SetFloating(Window w, bool is_floating) {
     Client* c = Client::mapper_[w];
     if (!c) return;
 
-    c->set_floating(!c->is_floating());
-    if (c->is_floating()) {
-        XResizeWindow(dpy_, c->window(), DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+    if (is_floating) {
+        c->Resize(DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
         Center(c->window());
     }
 
-    workspaces_[current_]->Arrange(CalculateTilingArea());
+    c->set_floating(!c->is_floating());
+    c->workspace()->Arrange(CalculateTilingArea());
 }
 
-void WindowManager::ToggleFullscreen(Window w) {
+void WindowManager::SetFullscreen(Window w, bool is_fullscreen) {
     Client* c = Client::mapper_[w];
     if (!c) return;
  
-    if (!workspaces_[current_]->is_fullscreen() && !c->is_fullscreen()) {
+    if (is_fullscreen) {
         UnmapDocks();
         c->SaveXWindowAttributes();
         pair<int, int> res = wm_utils::GetDisplayResolution();
@@ -579,12 +592,13 @@ void WindowManager::ToggleFullscreen(Window w) {
         c->set_fullscreen(true);
         c->workspace()->set_fullscreen(true);
         c->workspace()->UnmapAllClients();
+        c->workspace()->SetFocusedClient(c->window());
         c->Map();
         c->SetInputFocus();
 
         XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
                 PropModeReplace, (unsigned char*) &prop_->net[atom::NET_WM_STATE_FULLSCREEN], 1);    
-    } else if (workspaces_[current_]->is_fullscreen() && c->is_fullscreen()) {
+    } else if (!is_fullscreen) {
         MapDocks();
         XWindowAttributes& attr = c->previous_attr();
         c->MoveResize(attr.x, attr.y, attr.width, attr.height);

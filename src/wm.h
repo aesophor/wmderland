@@ -59,8 +59,8 @@ private:
 
     // Client manipulation
     void Center(Window w);
-    void ToggleFloating(Window w);
-    void ToggleFullscreen(Window w);
+    void SetFloating(Window w, bool is_floating);
+    void SetFullscreen(Window w, bool is_fullscreen);
     void KillClient(Window w);
 
     // Docks, bars and notifications
