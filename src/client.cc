@@ -9,7 +9,7 @@ Client::Client(Display* dpy, Window w, Workspace* workspace)
     : dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
     mapper_[window_] = this;
     SetBorderWidth(workspace->config()->border_width());
-    SetBorderColor(workspace->config()->focused_color());
+    SetBorderColor(workspace->config()->unfocused_color());
     XSelectInput(dpy_, window_, StructureNotifyMask | PropertyChangeMask);
 }
 

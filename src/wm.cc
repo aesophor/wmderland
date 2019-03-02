@@ -223,9 +223,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         return;
     }
 
-    pair<string, string> hint = wm_utils::GetXClassHint(e.window);
-
     // If this window is wine steam dialog, just map it directly and don't manage it.
+    pair<string, string> hint = wm_utils::GetXClassHint(e.window);
     if (IsDialog(e.window)) {
         if (hint.first == "Wine" && hint.second == "steam.exe") {
             XMapWindow(dpy_, e.window);
@@ -235,51 +234,49 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     
 
     // Pass all checks above -> we should manage this window.
-    // Floating creiteria: has _NET_WM_WINDOW_TYPE_{DIALOG,SPLASH} or defined in config.
+    // Floating criteria: has _NET_WM_WINDOW_TYPE_{DIALOG,SPLASH,UTILITY} or is requested in config.
     bool should_float = IsDialog(e.window) || IsSplash(e.window) || IsUtility(e.window) || config_->ShouldFloat(e.window);
 
-    // Spawn this window at the specified workspace if such rule exists,
+    // Spawn this window in the specified workspace if such rule exists,
     // otherwise spawn it in current workspace.
     int target = config_->GetSpawnWorkspaceId(e.window);
     if (target == WORKSPACE_UNSPECIFIED) target = current_;
 
-    // Add this window to the target workspace.
+    // Manage this window by adding it to the target workspace.
     if (!workspaces_[target]->Has(e.window)) {
         Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
-
         workspaces_[target]->UnsetFocusedClient();
         workspaces_[target]->Add(e.window, should_float);
 
-        if (!workspaces_[target]->is_fullscreen()) {
-            workspaces_[target]->Arrange(CalculateTilingArea());
+        if (workspaces_[target]->is_fullscreen()) {
+            workspaces_[target]->SetFocusedClient(prev_focused_client->window());
         }
-        
-        wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
-        UpdateClientList();
 
         if (target == current_) {
-            if (!prev_focused_client || (prev_focused_client && !prev_focused_client->is_fullscreen())) {
+            // If there's currently a fullscreen window, don't arrange the workspace,
+            // or the entire workspace will mess up.
+            if (!workspaces_[target]->is_fullscreen()) {
                 XMapWindow(dpy_, e.window);
-                wm_utils::SetNetActiveWindow(e.window);
+                workspaces_[target]->Arrange(CalculateTilingArea());
                 workspaces_[target]->SetFocusedClient(e.window);
                 workspaces_[target]->RaiseAllFloatingClients();
-            }
-
-            if (should_float && cookie_->Has(e.window)) {
-                ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
-            }
-
-            if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
-                SetFullscreen(e.window, true);
+                wm_utils::SetNetActiveWindow(e.window);
             }
         }
 
-        // If before we mapped this new window, there was a fullscreen window,
-        // then we should restore that window to fullscreen.
-        if (prev_focused_client && prev_focused_client->is_fullscreen()) {
-            workspaces_[target]->UnsetFocusedClient();
-            SetFullscreen(prev_focused_client->window(), true);
+        if (should_float && cookie_->Has(e.window)) {
+            ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
         }
+
+        // If the window we're launching has _NET_WM_STATE_FULLSCREEN, or is requested in config,
+        // then we should set this window to fullscreen.
+        if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
+            SetFullscreen(e.window, true);
+        }
+
+        // Update WM_STATE and NET_CLIENT_LIST
+        wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
+        UpdateClientList();
     }
 }
 
@@ -512,9 +509,8 @@ void WindowManager::GotoWorkspace(int next) {
         wm_utils::SetNetActiveWindow(focused_client->window());
 
         // Restore fullscreen application.
-        if (focused_client->is_fullscreen()) {
-            pair<int, int> res = wm_utils::GetDisplayResolution();
-            XMoveResizeWindow(dpy_, focused_client->window(), 0, 0, res.first, res.second);
+        if (workspaces_[next]->is_fullscreen()) {
+            focused_client->MoveResize(0, 0, wm_utils::GetDisplayResolution());
             UnmapDocks();
         }
     }
@@ -531,7 +527,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     Client* c = Client::mapper_[window];
     if (!c) return;
 
-    if (c->is_fullscreen()) {
+    if (workspaces_[current_]->is_fullscreen()) {
         workspaces_[current_]->set_fullscreen(false);
         c->set_fullscreen(false);
         c->workspace()->MapAllClients();
@@ -539,19 +535,24 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     }
 
     XUnmapWindow(dpy_, window);
-
+    Client* next_workspace_prev_focused_client = workspaces_[next]->GetFocusedClient();
     workspaces_[next]->UnsetFocusedClient();
     workspaces_[current_]->Move(window, workspaces_[next]);
-    Client* focused_client = workspaces_[current_]->GetFocusedClient();
 
-    if (!focused_client) {
-        wm_utils::ClearNetActiveWindow();
-        return;
+    if (workspaces_[next]->is_fullscreen()) {
+        workspaces_[next]->SetFocusedClient(next_workspace_prev_focused_client->window());
+    } else {
+        workspaces_[next]->UnsetFocusedClient();
+        workspaces_[next]->SetFocusedClient(window);
     }
 
-    workspaces_[next]->SetFocusedClient(window);
-    workspaces_[current_]->SetFocusedClient(focused_client->window());
-    workspaces_[current_]->Arrange(CalculateTilingArea());
+    Client* current_workspace_focused_client = workspaces_[current_]->GetFocusedClient();
+    if (current_workspace_focused_client) {
+        workspaces_[current_]->Arrange(CalculateTilingArea());
+        workspaces_[current_]->SetFocusedClient(current_workspace_focused_client->window());
+    } else {
+        wm_utils::ClearNetActiveWindow();
+    }
 }
 
 
