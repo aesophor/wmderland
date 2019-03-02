@@ -412,7 +412,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
         wm_utils::SetNetActiveWindow(c->window());
 
         if (c->is_floating() && !c->is_fullscreen()) {
-            XGetWindowAttributes(dpy_, e.subwindow, &(c->previous_attr()));
+            c->SaveXWindowAttributes();
             btn_pressed_event_ = e;
             XDefineCursor(dpy_, root_window_, cursors_[e.button]);
         }
@@ -437,8 +437,8 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
     Client* c = Client::mapper_[btn_pressed_event_.subwindow];
     if (!c) return;
-    XWindowAttributes& attr = c->previous_attr();
 
+    const XWindowAttributes& attr = c->previous_attr();
     int xdiff = e.x - btn_pressed_event_.x;
     int ydiff = e.y - btn_pressed_event_.y;
     int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
@@ -448,7 +448,7 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
     new_width = (new_width < MIN_WINDOW_WIDTH) ? MIN_WINDOW_WIDTH : new_width;
     new_height = (new_height < MIN_WINDOW_HEIGHT) ? MIN_WINDOW_HEIGHT : new_height;
-    XMoveResizeWindow(dpy_, btn_pressed_event_.subwindow, new_x, new_y, new_width, new_height);
+    c->MoveResize(new_x, new_y, new_width, new_height);
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
@@ -586,31 +586,27 @@ void WindowManager::SetFullscreen(Window w, bool is_fullscreen) {
     if (is_fullscreen) {
         UnmapDocks();
         c->SaveXWindowAttributes();
-        pair<int, int> res = wm_utils::GetDisplayResolution();
-        c->MoveResize(0, 0, res.first, res.second);
-        c->SetBorderWidth(0);
-        c->set_fullscreen(true);
-        c->workspace()->set_fullscreen(true);
+        c->MoveResize(0, 0, wm_utils::GetDisplayResolution());
         c->workspace()->UnmapAllClients();
-        c->workspace()->SetFocusedClient(c->window());
         c->Map();
-        c->SetInputFocus();
-
-        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
-                PropModeReplace, (unsigned char*) &prop_->net[atom::NET_WM_STATE_FULLSCREEN], 1);    
-    } else if (!is_fullscreen) {
+        c->workspace()->SetFocusedClient(c->window());
+    } else {
         MapDocks();
-        XWindowAttributes& attr = c->previous_attr();
+        const XWindowAttributes& attr = c->previous_attr();
         c->MoveResize(attr.x, attr.y, attr.width, attr.height);
-        c->SetBorderWidth(config_->border_width());
-        c->set_fullscreen(false);
-        c->workspace()->set_fullscreen(false);
         c->workspace()->MapAllClients();
         c->workspace()->Arrange(CalculateTilingArea());
-
-        XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
-                PropModeReplace, (unsigned char*) 0, 0);
     }
+
+    c->SetBorderWidth((is_fullscreen) ? 0 : config_->border_width());
+    c->set_fullscreen(is_fullscreen);
+    c->workspace()->set_fullscreen(is_fullscreen);
+
+    // Update window's _NET_WM_STATE_FULLSCREEN property.
+    // If the window is set to be NOT fullscreen, we will simply write a nullptr with 0 elements.
+    Atom* atom = (is_fullscreen) ? &prop_->net[atom::NET_WM_STATE_FULLSCREEN] : nullptr;
+    XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
+            PropModeReplace, (unsigned char*) atom, (is_fullscreen) ? 1 : 0);
 }
 
 void WindowManager::KillClient(Window w) {

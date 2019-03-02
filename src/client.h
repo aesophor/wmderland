@@ -30,6 +30,7 @@ public:
     inline void Move(int x, int y) const;
     inline void Resize(int w, int h) const;
     inline void MoveResize(int x, int y, int w, int h) const;
+    inline void MoveResize(int x, int y, const std::pair<int, int>& size) const;
     inline void SetInputFocus() const;
     inline void SetBorderWidth(unsigned int width) const;
     inline void SetBorderColor(unsigned long color) const;
@@ -37,7 +38,7 @@ public:
 
     Window window() const;
     Workspace* workspace() const;
-    XWindowAttributes& previous_attr();
+    const XWindowAttributes& previous_attr() const;
 
     bool is_floating() const;
     bool is_fullscreen() const;
@@ -78,6 +79,10 @@ inline void Client::Resize(int w, int h) const {
 
 inline void Client::MoveResize(int x, int y, int w, int h) const {
     XMoveResizeWindow(dpy_, window_, x, y, w, h);
+}
+
+inline void Client::MoveResize(int x, int y, const std::pair<int, int>& size) const {
+    XMoveResizeWindow(dpy_, window_, x, y, size.first, size.second);
 }
 
 inline void Client::SetInputFocus() const {

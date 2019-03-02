@@ -31,7 +31,7 @@ Workspace* Client::workspace() const {
     return workspace_;
 }
 
-XWindowAttributes& Client::previous_attr() {
+const XWindowAttributes& Client::previous_attr() const {
     return previous_attr_;
 }
 
