@@ -331,11 +331,10 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     if (c->workspace() == workspaces_[current_] && new_focused_client) {
         c->workspace()->SetFocusedClient(new_focused_client->window());
         c->workspace()->Arrange(CalculateTilingArea());
+        c->workspace()->RaiseAllFloatingClients();
+        RaiseNotifications();
         wm_utils::SetNetActiveWindow(new_focused_client->window());
     }
-
-    c->workspace()->RaiseAllFloatingClients();
-    RaiseNotifications();
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
@@ -508,6 +507,8 @@ void WindowManager::GotoWorkspace(int next) {
     if (focused_client) {
         workspaces_[next]->SetFocusedClient(focused_client->window());
         workspaces_[next]->Arrange(CalculateTilingArea());
+        workspaces_[next]->RaiseAllFloatingClients();
+        RaiseNotifications();
         wm_utils::SetNetActiveWindow(focused_client->window());
 
         // Restore fullscreen application.
@@ -537,6 +538,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     }
 
     XUnmapWindow(dpy_, window);
+
     Client* next_workspace_prev_focused_client = workspaces_[next]->GetFocusedClient();
     workspaces_[next]->UnsetFocusedClient();
     workspaces_[current_]->Move(window, workspaces_[next]);
@@ -552,6 +554,8 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     if (current_workspace_focused_client) {
         workspaces_[current_]->Arrange(CalculateTilingArea());
         workspaces_[current_]->SetFocusedClient(current_workspace_focused_client->window());
+        c->workspace()->RaiseAllFloatingClients();
+        RaiseNotifications();
     } else {
         wm_utils::ClearNetActiveWindow();
     }
