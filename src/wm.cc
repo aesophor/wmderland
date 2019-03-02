@@ -260,6 +260,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
                 workspaces_[target]->Arrange(CalculateTilingArea());
                 workspaces_[target]->SetFocusedClient(e.window);
                 workspaces_[target]->RaiseAllFloatingClients();
+                RaiseNotifications();
                 wm_utils::SetNetActiveWindow(e.window);
             }
         }
@@ -329,12 +330,12 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     Client* new_focused_client = c->workspace()->GetFocusedClient();
     if (c->workspace() == workspaces_[current_] && new_focused_client) {
         c->workspace()->SetFocusedClient(new_focused_client->window());
-        c->workspace()->RaiseAllFloatingClients();
+        c->workspace()->Arrange(CalculateTilingArea());
         wm_utils::SetNetActiveWindow(new_focused_client->window());
     }
 
-    c->workspace()->Arrange(CalculateTilingArea());
     c->workspace()->RaiseAllFloatingClients();
+    RaiseNotifications();
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
@@ -360,6 +361,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
                 if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
                 workspaces_[current_]->Focus(action.type());
                 workspaces_[current_]->RaiseAllFloatingClients();
+                RaiseNotifications();
                 wm_utils::SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
                 break;
            case ActionType::TOGGLE_FLOATING:
@@ -597,6 +599,8 @@ void WindowManager::SetFullscreen(Window w, bool is_fullscreen) {
         c->MoveResize(attr.x, attr.y, attr.width, attr.height);
         c->workspace()->MapAllClients();
         c->workspace()->Arrange(CalculateTilingArea());
+        c->workspace()->RaiseAllFloatingClients();
+        RaiseNotifications();
     }
 
     c->SetBorderWidth((is_fullscreen) ? 0 : config_->border_width());
