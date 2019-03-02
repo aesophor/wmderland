@@ -575,7 +575,7 @@ void WindowManager::Center(Window w) {
 
 void WindowManager::SetFloating(Window w, bool is_floating) {
     Client* c = Client::mapper_[w];
-    if (!c) return;
+    if (!c || c->is_fullscreen()) return;
 
     if (is_floating) {
         c->Resize(DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
