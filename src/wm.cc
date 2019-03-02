@@ -1,19 +1,21 @@
 #include "wm.h"
-#include "client.h"
-#include "util.h"
-#include <memory>
-#include <string>
-#include <sstream>
-#include <cstring>
-#include <algorithm>
+
 extern "C" {
 #include <X11/cursorfont.h>
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
 }
+#include <memory>
+#include <string>
+#include <sstream>
+#include <cstring>
+#include <algorithm>
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
+
+#include "client.h"
+#include "util.h"
 
 using std::hex;
 using std::find;

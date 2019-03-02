@@ -1,16 +1,18 @@
-#include "wm.h"
-#include "config.h"
-#include "stacktrace.h"
 #include <iostream>
 #include <memory>
 #include <string>
 #include <cstring>
-#if GLOG_FOUND
+#if GLOG_FOUND != FALSE
 #include <glog/logging.h>
 #endif
 
+#include "wm.h"
+#include "config.h"
+#include "stacktrace.h"
+
 using std::string;
 using std::unique_ptr;
+
 
 string version() {
     return WIN_MGR_NAME " " VERSION "\n"

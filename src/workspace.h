@@ -4,15 +4,16 @@
 #ifndef WMDERLAND_WORKSPACE_H_
 #define WMDERLAND_WORKSPACE_H_
 
-#include "client.h"
-#include "tree.h"
-#include "config.h"
-#include "util.h"
 extern "C" {
 #include <X11/Xlib.h>
 }
 #include <memory>
 #include <vector>
+
+#include "config.h"
+#include "client.h"
+#include "tree.h"
+#include "util.h"
 
 class Client;
 

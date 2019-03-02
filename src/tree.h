@@ -2,6 +2,7 @@
 #define WMDERLAND_TREE_H_
 
 #include "tree_node.h"
+
 #include <memory>
 #include <vector>
 

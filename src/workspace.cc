@@ -1,9 +1,11 @@
 #include "workspace.h"
-#include "wm.h"
-#include "util.h"
+
 #include <algorithm>
 #include <memory>
 #include <stack>
+
+#include "wm.h"
+#include "util.h"
 
 using std::pair;
 using std::stack;

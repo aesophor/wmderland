@@ -3,12 +3,13 @@
 #ifndef WMDERLAND_COOKIE_H_
 #define WMDERLAND_COOKIE_H_
 
-#include "util.h"
 extern "C" {
 #include <X11/Xutil.h>
 }
 #include <string>
 #include <unordered_map>
+
+#include "util.h"
 
 class Properties;
 

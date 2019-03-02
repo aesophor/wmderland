@@ -1,8 +1,10 @@
 #include "cookie.h"
-#include "util.h"
+
 #include <fstream>
 #include <sstream>
 #include <vector>
+
+#include "util.h"
 
 using std::endl;
 using std::pair;

@@ -1,11 +1,22 @@
 #ifndef WMDERLAND_CONFIG_H_
 #define WMDERLAND_CONFIG_H_
 
-#include "action.h"
-#include "util.h"
 #include <unordered_map>
 #include <vector>
 #include <string>
+
+#include "action.h"
+#include "util.h"
+
+// If glog is not installed on the compiling machine, then this macro will do nothing.
+#if GLOG_FOUND
+    #include <glog/logging.h>
+    #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
+    #define WM_LOG(severity, msg) LOG(severity) << msg
+#else
+    #define WM_INIT_LOGGING(executable_name)
+    #define WM_LOG(severity, msg)
+#endif
 
 #define WIN_MGR_NAME "@PROJECT_NAME@"
 #define VERSION "@PROJECT_VERSION@"
@@ -28,16 +39,6 @@
 
 #define VARIABLE_PREFIX "$"
 #define DEFAULT_EXIT_KEY "Mod4+Shift+Escape"
-
-// If glog is not installed on the compiling machine, then
-// this macro will do nothing.
-#if GLOG_FOUND
-    #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
-    #define WM_LOG(severity, msg) LOG(severity) << msg
-#else
-    #define WM_INIT_LOGGING(executable_name)
-    #define WM_LOG(severity, msg)
-#endif
 
 
 enum class ConfigKeyword {

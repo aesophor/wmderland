@@ -1,11 +1,13 @@
-#include "action.h"
 #include "config.h"
-#include "util.h"
+
 #include <fstream>
 #include <sstream>
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
+
+#include "action.h"
+#include "util.h"
 
 using std::hex;
 using std::pair;

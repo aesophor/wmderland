@@ -41,6 +41,7 @@ enum {
 
 } // namespace atom
 
+
 struct Properties {
     Properties(Display* dpy);
     Atom utf8string;

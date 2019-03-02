@@ -1,11 +1,6 @@
 #ifndef WMDERLAND_WM_H_
 #define WMDERLAND_WM_H_
 
-#include "properties.h"
-#include "workspace.h"
-#include "config.h"
-#include "cookie.h"
-#include "util.h"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -13,6 +8,12 @@ extern "C" {
 }
 #include <memory>
 #include <vector>
+
+#include "properties.h"
+#include "workspace.h"
+#include "config.h"
+#include "cookie.h"
+#include "util.h"
 
 #define MOUSE_LEFT_BTN 1
 #define MOUSE_MID_BTN 2

@@ -4,15 +4,16 @@
 #ifndef WMDERLAND_CLIENT_H_
 #define WMDERLAND_CLIENT_H_
 
-#include "workspace.h"
-#include "properties.h"
-#include "util.h"
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 }
 #include <unordered_map>
 #include <string>
+
+#include "workspace.h"
+#include "properties.h"
+#include "util.h"
 
 class Workspace;
 
