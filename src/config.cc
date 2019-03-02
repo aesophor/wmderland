@@ -86,8 +86,7 @@ void Config::Load(const string& filename) {
                     break; }
                 default: {
                     WM_LOG(INFO, "Ignored unrecognized symbol in config: " << tokens[0]);
-                    break;
-                }
+                    break; }
             }
         }
     }

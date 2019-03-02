@@ -542,7 +542,6 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     }
 
     XUnmapWindow(dpy_, window);
-
     Client* next_workspace_prev_focused_client = workspaces_[next]->GetFocusedClient();
     workspaces_[next]->UnsetFocusedClient();
     workspaces_[current_]->Move(window, workspaces_[next]);
