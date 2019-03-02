@@ -265,8 +265,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             }
         }
 
-        if (should_float && cookie_->Has(e.window)) {
-            ResizeWindowFromCookie(e.window, cookie_->Get(e.window));
+        if (should_float) {
+            DetermineFloatingWindowArea(e.window);
         }
 
         // If the window we're launching has _NET_WM_STATE_FULLSCREEN, or is requested in config,
@@ -444,8 +444,10 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
     int new_width = attr.width + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
     int new_height = attr.height + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? ydiff : 0);
 
-    new_width = (new_width < MIN_WINDOW_WIDTH) ? MIN_WINDOW_WIDTH : new_width;
-    new_height = (new_height < MIN_WINDOW_HEIGHT) ? MIN_WINDOW_HEIGHT : new_height;
+    int min_width = (c->size_hints().min_width > 0) ? c->size_hints().min_width : MIN_WINDOW_WIDTH;
+    int min_height = (c->size_hints().min_height > 0) ? c->size_hints().min_height : MIN_WINDOW_HEIGHT;
+    new_width = (new_width < min_width) ? min_width : new_width;
+    new_height = (new_height < min_height) ? min_height : new_height;
     c->MoveResize(new_x, new_y, new_width, new_height);
 }
 
@@ -687,10 +689,9 @@ Area WindowManager::CalculateTilingArea() {
     return tiling_area;
 }
 
-// TODO: This method needs to be re-written, since it does not simply resize window from cookie,
-// but also resize the window based on its properties.
-void WindowManager::ResizeWindowFromCookie(Window w, const Area& cookie_area) {
+void WindowManager::DetermineFloatingWindowArea(Window w) {
     XSizeHints hints = wm_utils::GetWmNormalHints(w);
+    const Area& cookie_area = cookie_->Get(w);
 
     // Set window size. (Priority: cookie > hints)
     if (cookie_area.width > 0 && cookie_area.height > 0) {

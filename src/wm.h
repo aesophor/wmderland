@@ -70,7 +70,7 @@ private:
 
     // Window position and size
     Area CalculateTilingArea();
-    void ResizeWindowFromCookie(Window w, const Area& cookie_area);
+    void DetermineFloatingWindowArea(Window w);
 
     // Misc
     void UpdateClientList();

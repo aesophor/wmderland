@@ -41,12 +41,8 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
 Cookie::~Cookie() {}
 
 
-bool Cookie::Has(Window w) const {
-    return window_area_map_.find(GetCookieKey(w)) != window_area_map_.end();
-}
-
 Area Cookie::Get(Window w) const {
-    return window_area_map_.at(GetCookieKey(w));
+    return (Has(w)) ? window_area_map_.at(GetCookieKey(w)) : Area();
 }
 
 void Cookie::Put(Window w, const Area& window_area) {
@@ -67,6 +63,10 @@ void Cookie::WriteToFile() const {
     file.close();
 }
 
+
+bool Cookie::Has(Window w) const {
+    return window_area_map_.find(GetCookieKey(w)) != window_area_map_.end();
+}
 
 string Cookie::GetCookieKey(Window w) const {
     pair<string, string> hint = wm_utils::GetXClassHint(w);

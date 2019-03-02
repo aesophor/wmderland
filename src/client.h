@@ -38,6 +38,7 @@ public:
 
     Window window() const;
     Workspace* workspace() const;
+    const XSizeHints& size_hints() const;
     const XWindowAttributes& previous_attr() const;
 
     bool is_floating() const;
@@ -50,6 +51,7 @@ private:
     Display* dpy_;
     Window window_;
     Workspace* workspace_;
+    XSizeHints size_hints_;
     XWindowAttributes previous_attr_;
 
     bool is_floating_;

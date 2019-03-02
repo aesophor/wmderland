@@ -6,12 +6,9 @@ using std::size_t;
 using std::string;
 using std::vector;
 
-Area::Area() {
-    Area(0, 0, 0, 0);
-}
+Area::Area() : x(0), y(0), width(0), height(0) {}
 
 Area::Area(int x, int y, int width, int height) : x(x), y(y), width(width), height(height) {}
-
 
 bool Area::operator==(const Area& other) {
     return (x == other.x) && (y == other.y) && (width == other.width) && (height == other.height);

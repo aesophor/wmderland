@@ -18,12 +18,12 @@ public:
     Cookie(Display* dpy, Properties* prop, const std::string filename);
     virtual ~Cookie();
 
-    bool Has(Window w) const;
     Area Get(Window w) const;
     void Put(Window w, const Area& window_area);
     void WriteToFile() const;
 
 private:
+    bool Has(Window w) const;
     std::string GetCookieKey(Window w) const;
 
     Display* dpy_;

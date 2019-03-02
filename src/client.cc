@@ -6,7 +6,13 @@ using std::string;
 std::unordered_map<Window, Client*> Client::mapper_;
 
 Client::Client(Display* dpy, Window w, Workspace* workspace)
-    : dpy_(dpy), window_(w), workspace_(workspace), is_floating_(false), is_fullscreen_(false) {
+    : dpy_(dpy),
+      window_(w),
+      workspace_(workspace),
+      size_hints_(wm_utils::GetWmNormalHints(w)),
+      previous_attr_(), // this will be set when Client::SaveXWindowAttributes() is called
+      is_floating_(false),
+      is_fullscreen_(false) {
     mapper_[window_] = this;
     SetBorderWidth(workspace->config()->border_width());
     SetBorderColor(workspace->config()->unfocused_color());
@@ -29,6 +35,10 @@ Window Client::window() const {
 
 Workspace* Client::workspace() const {
     return workspace_;
+}
+
+const XSizeHints& Client::size_hints() const {
+    return size_hints_;
 }
 
 const XWindowAttributes& Client::previous_attr() const {
