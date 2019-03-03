@@ -65,8 +65,8 @@ The following illustration shows how Wmderland stores its clients, where R is th
          
 ```
 
-* For the Tree API, see [tree.cpp](https://github.com/aesophor/Wmderland/blob/master/src/tree.cpp) and [tree_node.cpp](https://github.com/aesophor/Wmderland/blob/master/src/tree_node.cpp)
-* For the Tiling Algorithm, see [workspace.cpp](https://github.com/aesophor/Wmderland/blob/master/src/workspace.cpp)
+* For the Tree API, see [tree.cc](https://github.com/aesophor/Wmderland/blob/master/src/tree.cc) and [tree_node.cc](https://github.com/aesophor/Wmderland/blob/master/src/tree_node.cc)
+* For the Tiling Algorithm, see [workspace.cc](https://github.com/aesophor/Wmderland/blob/master/src/workspace.cc)
 
 ## Build Requirements
 * g++ (requires C++11)
