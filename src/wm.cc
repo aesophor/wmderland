@@ -458,6 +458,8 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
         if (e.data.l[0] >= 0 && e.data.l[0] < WORKSPACE_COUNT) {
             GotoWorkspace(e.data.l[0]);
         }
+    } else if (e.message_type == prop_->wmderland_client_event) {
+
     }
 }
 

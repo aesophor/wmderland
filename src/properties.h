@@ -45,6 +45,7 @@ enum {
 struct Properties {
     Properties(Display* dpy);
     Atom utf8string;
+    Atom wmderland_client_event; // TODO: implement wmderland event manager
     Atom wm[atom::WM_ATOM_SIZE];
     Atom net[atom::NET_ATOM_SIZE];
 };
