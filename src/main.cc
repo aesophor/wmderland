@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <cstring>
+
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
