@@ -225,6 +225,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
         return;
     }
 
+    wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
+
     // If this window is wine steam dialog, just map it directly and don't manage it.
     pair<string, string> hint = wm_utils::GetXClassHint(e.window);
     if (IsDialog(e.window)) {
@@ -277,8 +279,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
             SetFullscreen(e.window, true);
         }
 
-        // Update WM_STATE and NET_CLIENT_LIST
-        wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
+        // Update NET_CLIENT_LIST
         UpdateClientList();
     }
 }
