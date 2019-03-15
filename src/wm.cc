@@ -139,7 +139,7 @@ void WindowManager::InitXEvents() {
             ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
  
     // Enable substructure redirection on the root window.
-    XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask);
+    XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
 
     // Setup the bitch catcher.
     XSetErrorHandler(&WindowManager::OnXError);
