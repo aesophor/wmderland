@@ -12,22 +12,22 @@ extern "C" {
 #include <vector>
 
 struct Area {
-    Area();
-    Area(int x, int y, int width, int height);
+  Area();
+  Area(int x, int y, int width, int height);
 
-    bool operator==(const Area& other);
-    bool operator!=(const Area& other);
+  bool operator==(const Area& other);
+  bool operator!=(const Area& other);
 
-    int x, y, width, height;
+  int x, y, width, height;
 };
 
 
 namespace tiling {
 
 enum Direction {
-    UNSPECIFIED,
-    HORIZONTAL,
-    VERTICAL
+  UNSPECIFIED,
+  HORIZONTAL,
+  VERTICAL
 };
 
 } // namespace tiling

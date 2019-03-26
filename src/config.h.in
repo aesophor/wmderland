@@ -32,78 +32,78 @@
 
 // If glog is not installed on the compiling machine, then this macro will do nothing.
 #if GLOG_FOUND
-    #include <glog/logging.h>
-    #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
-    #define WM_LOG(severity, msg) LOG(severity) << msg
+  #include <glog/logging.h>
+  #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
+  #define WM_LOG(severity, msg) LOG(severity) << msg
 #else
-    #define WM_INIT_LOGGING(executable_name)
-    #define WM_LOG(severity, msg)
+  #define WM_INIT_LOGGING(executable_name)
+  #define WM_LOG(severity, msg)
 #endif
 
 
 enum class ConfigKeyword {
-    SET,
-    ASSIGN,
-    FLOATING,
-    FULLSCREEN,
-    PROHIBIT,
-    BINDSYM,
-    EXEC,
-    UNDEFINED
+  SET,
+  ASSIGN,
+  FLOATING,
+  FULLSCREEN,
+  PROHIBIT,
+  BINDSYM,
+  EXEC,
+  UNDEFINED
 };
 
 class Config {
 public:
-    Config(Display* dpy, Properties* prop, const std::string& filename);
-    virtual ~Config();
+  Config(Display* dpy, Properties* prop, const std::string& filename);
+  virtual ~Config();
 
-    void Reload();
-    
-    int GetSpawnWorkspaceId(Window w) const;
-    bool ShouldFloat(Window w) const;
-    bool ShouldFullscreen(Window w) const;
-    bool ShouldProhibit(Window w) const;
-    const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
-    void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
+  void Reload();
 
-    unsigned short gap_width() const;
-    unsigned short border_width() const;
-    unsigned short min_window_width() const;
-    unsigned short min_window_height() const;
-    unsigned long focused_color() const;
-    unsigned long unfocused_color() const;
+  int GetSpawnWorkspaceId(Window w) const;
+  bool ShouldFloat(Window w) const;
+  bool ShouldFullscreen(Window w) const;
+  bool ShouldProhibit(Window w) const;
+  const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
+  void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
 
-    const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
-    const std::vector<std::string>& autostart_rules() const;
+  unsigned short gap_width() const;
+  unsigned short border_width() const;
+  unsigned short min_window_width() const;
+  unsigned short min_window_height() const;
+  unsigned long focused_color() const;
+  unsigned long unfocused_color() const;
+
+  const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
+  const std::vector<std::string>& autostart_rules() const;
 
 private: 
-    void Load(const std::string& filename);
+  void Load(const std::string& filename);
 
-    static ConfigKeyword StrToConfigKeyword(const std::string& s);
-    static std::string ExtractWindowIdentifier(const std::string& s);
-    std::vector<std::string> GeneratePossibleConfigKeys(Window w) const;
-    const std::string& ReplaceSymbols(std::string& s);
-    std::unordered_map<std::string, std::string> symtab_;
+  static ConfigKeyword StrToConfigKeyword(const std::string& s);
+  static std::string ExtractWindowIdentifier(const std::string& s);
+  std::vector<std::string> GeneratePossibleConfigKeys(Window w) const;
+  const std::string& ReplaceSymbols(std::string& s);
+  std::unordered_map<std::string, std::string> symtab_;
 
-    // Global variables
-    unsigned short gap_width_;
-    unsigned short border_width_;
-    unsigned short min_window_width_;
-    unsigned short min_window_height_;
-    unsigned long focused_color_;
-    unsigned long unfocused_color_;
+  // Global variables
+  unsigned short gap_width_;
+  unsigned short border_width_;
+  unsigned short min_window_width_;
+  unsigned short min_window_height_;
+  unsigned long focused_color_;
+  unsigned long unfocused_color_;
 
-    // Rules
-    std::unordered_map<std::string, short> spawn_rules_; // spawn certain apps in certain workspaces.
-    std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
-    std::unordered_map<std::string, bool> fullscreen_rules_; // start certain apps in fullscreen mode.
-    std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
-    std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
-    std::vector<std::string> autostart_rules_; // launch certain apps when wm starts.
+  // Rules
+  std::unordered_map<std::string, short> spawn_rules_; // spawn certain apps in certain workspaces.
+  std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
+  std::unordered_map<std::string, bool> fullscreen_rules_; // start certain apps in fullscreen mode.
+  std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
+  std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
+  std::vector<std::string> autostart_rules_; // launch certain apps when wm starts.
 
-    Display* dpy_;
-    Properties* prop_;
-    const std::string filename_;
+  Display* dpy_;
+  Properties* prop_;
+  const std::string filename_;
 };
 
 #endif

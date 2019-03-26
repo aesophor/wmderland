@@ -15,22 +15,22 @@ class Properties;
 
 class Cookie {
 public:
-    static const char kDelimiter = ' ';
-    Cookie(Display* dpy, Properties* prop, const std::string filename);
-    virtual ~Cookie();
+  static const char kDelimiter = ' ';
+  Cookie(Display* dpy, Properties* prop, const std::string filename);
+  virtual ~Cookie();
 
-    Area Get(Window w) const;
-    void Put(Window w, const Area& window_area);
-    void WriteToFile() const;
+  Area Get(Window w) const;
+  void Put(Window w, const Area& window_area);
+  void WriteToFile() const;
 
 private:
-    bool Has(Window w) const;
-    std::string GetCookieKey(Window w) const;
+  bool Has(Window w) const;
+  std::string GetCookieKey(Window w) const;
 
-    Display* dpy_;
-    Properties* prop_;
-    std::string filename_;
-    std::unordered_map<std::string, Area> window_area_map_;
+  Display* dpy_;
+  Properties* prop_;
+  std::string filename_;
+  std::unordered_map<std::string, Area> window_area_map_;
 };
 
 #endif
