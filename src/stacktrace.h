@@ -12,11 +12,11 @@ extern "C" {
 
 namespace segv {
 
-  void InstallHandler(void (*Handler)(int),
-                      int stacktrace_function_count=10,
-                      char* stacktrace_log_location="/tmp/Wmderland.STACKTRACE");
+void InstallHandler(void (*Handler)(int),
+                    int stacktrace_function_count=10,
+                    char* stacktrace_log_location="/tmp/Wmderland.STACKTRACE");
 
-  void Handle(int sig);
+void Handle(int sig);
 
 } // namespace segv
 
