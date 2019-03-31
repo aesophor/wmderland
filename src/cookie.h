@@ -15,7 +15,7 @@ class Properties;
 
 class Cookie {
 public:
-    Cookie(Display* dpy, Properties* prop, const std::string filename);
+  Cookie(Display* dpy, Properties* prop, const std::string filename);
   virtual ~Cookie();
 
   Area Get(Window w) const;
