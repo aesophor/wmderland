@@ -42,26 +42,23 @@ TreeNode* Tree::GetTreeNode(Client* client) const {
 
 vector<TreeNode*> Tree::GetAllLeaves() const {
   vector<TreeNode*> leaves;
-  stack<TreeNode*> s;
-  TreeNode* ptr = root_.get();
+  stack<TreeNode*> st;
+  st.push(root_.get());
 
-  while (ptr) {
-    if (!ptr->IsLeaf()) {
-      // If ptr has children, push the address of each child
-      // onto the stack in reverse order.
-      for (int i = ptr->children().size() - 1; i >= 0; i--) {
-        s.push(ptr->children()[i]);
-      }
-    } else {
-      leaves.push_back(ptr);
+  while (!st.empty()) {
+    TreeNode* node = st.top();
+    st.pop();
+    
+    // If this node is a leaf, add it to the leaf vector.
+    if (node->children().empty()) {
+      leaves.push_back(node);
     }
 
-    // Process the next tree node at the top of the stack.
-    if (s.empty()) break;
-    ptr = s.top();
-    s.pop();
+    // Push all children onto the stack in reverse order (if any).
+    for (int i = node->children().size() - 1; i >= 0; i--) {
+      st.push(node->children().at(i));
+    }
   }
-
   return leaves;
 }
 
