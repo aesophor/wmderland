@@ -36,7 +36,6 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
       window_area_map_[tokens[4]] = window_area;
     }
   }
-
   file.close();
 }
 
@@ -44,7 +43,12 @@ Cookie::~Cookie() {}
 
 
 Area Cookie::Get(Window w) const {
-  return (Has(w)) ? window_area_map_.at(GetCookieKey(w)) : Area();
+  string key = GetCookieKey(w);
+
+  if (window_area_map_.find(key) != window_area_map_.end()) {
+    return window_area_map_.at(key);
+  }
+  return Area();
 }
 
 void Cookie::Put(Window w, const Area& window_area) {
@@ -55,20 +59,15 @@ void Cookie::Put(Window w, const Area& window_area) {
 void Cookie::WriteToFile() const {
   std::ofstream file(filename_);
 
-  for (auto& w : window_area_map_) {
+  for (auto& area : window_area_map_) {
     // Write x, y, width, height, res_class,res_name,net_wm_name to cookie.
-    file << w.second.x << kDelimiter << w.second.y << kDelimiter
-      << w.second.width << kDelimiter << w.second.height << kDelimiter
-      << w.first << endl;
+    file << area.second.x << kDelimiter << area.second.y << kDelimiter
+      << area.second.width << kDelimiter << area.second.height << kDelimiter
+      << area.first << endl;
   }
-
   file.close();
 }
 
-
-bool Cookie::Has(Window w) const {
-  return window_area_map_.find(GetCookieKey(w)) != window_area_map_.end();
-}
 
 string Cookie::GetCookieKey(Window w) const {
   pair<string, string> hint = wm_utils::GetXClassHint(w);

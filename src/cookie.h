@@ -15,8 +15,7 @@ class Properties;
 
 class Cookie {
 public:
-  static const char kDelimiter = ' ';
-  Cookie(Display* dpy, Properties* prop, const std::string filename);
+    Cookie(Display* dpy, Properties* prop, const std::string filename);
   virtual ~Cookie();
 
   Area Get(Window w) const;
@@ -24,7 +23,7 @@ public:
   void WriteToFile() const;
 
 private:
-  bool Has(Window w) const;
+  static const char kDelimiter = ' ';
   std::string GetCookieKey(Window w) const;
 
   Display* dpy_;
