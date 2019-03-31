@@ -2,8 +2,9 @@
 #include "config.h"
 
 using std::string;
+using std::unordered_map;
 
-std::unordered_map<Window, Client*> Client::mapper_;
+unordered_map<Window, Client*> Client::mapper_;
 
 Client::Client(Display* dpy, Window w, Workspace* workspace)
     : dpy_(dpy),

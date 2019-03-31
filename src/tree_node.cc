@@ -5,9 +5,15 @@ using std::vector;
 using std::remove;
 using tiling::Direction;
 
-TreeNode::TreeNode(Client* client) : client_(client), tiling_direction_(Direction::UNSPECIFIED) {}
+TreeNode::TreeNode(Client* client)
+    : client_(client),
+      tiling_direction_(Direction::UNSPECIFIED) {
+  TreeNode::mapper_[client] = this;
+}
 
-TreeNode::~TreeNode() {}
+TreeNode::~TreeNode() {
+  TreeNode::mapper_.erase(client_);
+}
 
 
 bool TreeNode::IsLeaf() const {

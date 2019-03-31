@@ -3,6 +3,7 @@
 
 #include "tree_node.h"
 
+#include <unordered_map>
 #include <memory>
 #include <vector>
 

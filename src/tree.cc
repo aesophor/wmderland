@@ -3,7 +3,10 @@
 
 using std::stack;
 using std::vector;
+using std::unordered_map;
 using tiling::Direction;
+
+unordered_map<Client*, TreeNode*> TreeNode::mapper_;
 
 // In Wmderland, the root node will always exist in a client tree at any given time.
 Tree::Tree() : root_(new TreeNode(nullptr)), current_(nullptr) {
@@ -16,27 +19,9 @@ Tree::~Tree() {}
 
 
 TreeNode* Tree::GetTreeNode(Client* client) const {
-  if (!current_) return nullptr;
-
-  TreeNode* ptr = root_.get();
-  stack<TreeNode*> s;
-
-  while (ptr) {
-    if (!ptr->IsLeaf()) {
-      // If ptr has children, push the address of each child
-      // onto the stack in reverse order.
-      for (int i = ptr->children().size() - 1; i >= 0; i--) {
-        s.push(ptr->children()[i]);
-      }
-    } else {
-      if (ptr->client() == client) return ptr;
-    }
-
-    // Pop the first item on the stack which is ptr's first child.
-    ptr = s.top();
-    s.pop();
+  if (TreeNode::mapper_.find(client) != TreeNode::mapper_.end()) {
+    return TreeNode::mapper_.at(client);
   }
-
   return nullptr;
 }
 

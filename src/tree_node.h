@@ -2,6 +2,8 @@
 #define WMDERLAND_TREE_NODE_H_
 
 #include <vector>
+#include <unordered_map>
+
 #include "util.h"
 
 class Client;
@@ -10,6 +12,9 @@ class TreeNode {
 public:
   TreeNode(Client* client);
   virtual ~TreeNode();
+
+  // The lightning fast mapper which maps Client* to TreeNode* in O(1)
+  static std::unordered_map<Client*, TreeNode*> mapper_;
 
   bool IsLeaf() const;
   void AddChild(TreeNode* child);
