@@ -5,9 +5,14 @@ using std::string;
 using std::vector;
 
 Action::Action(const string& s) {
+  // For example, "goto_workspace 1" is an action.
+  // We split this string into two tokens by whitespace.
   vector<string> tokens = string_utils::Split(s, ' ', 1);
+
+  // The first token is an action type.
   type_ = Action::StrToActionType(tokens[0]);
 
+  // The second token (if exists) is an argument.
   if (tokens.size() > 1) {
     arguments_ = tokens[1];
   }
