@@ -213,44 +213,37 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
           }
           break;
         }
-
         case ConfigKeyword::ASSIGN: {
           string window_identifier = config.ExtractWindowIdentifier(line);
           config.spawn_rules_[window_identifier] = stoi(tokens.back());
           break;
         }
-
         case ConfigKeyword::FLOATING: {
           string window_identifier = config.ExtractWindowIdentifier(line);
           stringstream(tokens.back()) >> boolalpha >> config.float_rules_[window_identifier];
           break;
         }
-
         case ConfigKeyword::FULLSCREEN: {
           string window_identifier = config.ExtractWindowIdentifier(line);
           stringstream(tokens.back()) >> boolalpha >> config.fullscreen_rules_[window_identifier];
           break;
         }
-
         case ConfigKeyword::PROHIBIT: {
           string window_identifier = config.ExtractWindowIdentifier(line);
           stringstream(tokens.back()) >> boolalpha >> config.prohibit_rules_[window_identifier];
           break;
         }
-
         case ConfigKeyword::BINDSYM: {
           string modifier_and_key = tokens[1];
           string action_series_str = string_utils::Split(line, ' ', 2)[2];
           config.SetKeybindActions(modifier_and_key, action_series_str);
           break;
         }
-
         case ConfigKeyword::EXEC: {
           string shell_cmd = string_utils::Split(line, ' ', 1)[1];
           config.autostart_rules_.push_back(shell_cmd);
           break;
         }
-
         default: {
           WM_LOG(ERROR, "config: unrecognized symbol: " << tokens[0]);
           break;
