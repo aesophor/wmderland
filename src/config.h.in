@@ -1,9 +1,10 @@
 #ifndef WMDERLAND_CONFIG_H_
 #define WMDERLAND_CONFIG_H_
 
-#include <unordered_map>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <unordered_map>
 
 #include "action.h"
 #include "util.h"
@@ -14,7 +15,7 @@
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 
-#define WORKSPACE_UNSPECIFIED -1
+#define UNSPECIFIED_WORKSPACE -1
 #define WORKSPACE_COUNT 9
 
 #define MIN_WINDOW_WIDTH 50
@@ -56,8 +57,7 @@ class Config {
 public:
   Config(Display* dpy, Properties* prop, const std::string& filename);
   virtual ~Config();
-
-  void Reload();
+  void Load();
 
   int GetSpawnWorkspaceId(Window w) const;
   bool ShouldFloat(Window w) const;
@@ -66,35 +66,34 @@ public:
   const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
   void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
 
-  unsigned short gap_width() const;
-  unsigned short border_width() const;
-  unsigned short min_window_width() const;
-  unsigned short min_window_height() const;
+  unsigned int gap_width() const;
+  unsigned int border_width() const;
+  unsigned int min_window_width() const;
+  unsigned int min_window_height() const;
   unsigned long focused_color() const;
   unsigned long unfocused_color() const;
-
   const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
   const std::vector<std::string>& autostart_rules() const;
+  
+  friend std::ifstream& operator>> (std::ifstream& ifs, Config& config);
 
 private: 
-  void Load(const std::string& filename);
-
   static ConfigKeyword StrToConfigKeyword(const std::string& s);
   static std::string ExtractWindowIdentifier(const std::string& s);
   std::vector<std::string> GeneratePossibleConfigKeys(Window w) const;
   const std::string& ReplaceSymbols(std::string& s);
-  std::unordered_map<std::string, std::string> symtab_;
-
-  // Global variables
-  unsigned short gap_width_;
-  unsigned short border_width_;
-  unsigned short min_window_width_;
-  unsigned short min_window_height_;
+  
+  // WM variables
+  unsigned int gap_width_;
+  unsigned int border_width_;
+  unsigned int min_window_width_;
+  unsigned int min_window_height_;
   unsigned long focused_color_;
   unsigned long unfocused_color_;
+  std::unordered_map<std::string, std::string> symtab_; // for storing user-declared identifiers.
 
   // Rules
-  std::unordered_map<std::string, short> spawn_rules_; // spawn certain apps in certain workspaces.
+  std::unordered_map<std::string, int> spawn_rules_; // spawn certain apps in certain workspaces.
   std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
   std::unordered_map<std::string, bool> fullscreen_rules_; // start certain apps in fullscreen mode.
   std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
@@ -104,6 +103,7 @@ private:
   Display* dpy_;
   Properties* prop_;
   const std::string filename_;
+  static const char kCommentSymbol = ';';
 };
 
 #endif

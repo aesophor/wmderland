@@ -244,7 +244,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   // Spawn this window in the specified workspace if such rule exists,
   // otherwise spawn it in current workspace.
   int target = config_->GetSpawnWorkspaceId(e.window);
-  if (target == WORKSPACE_UNSPECIFIED) target = current_;
+  if (target == UNSPECIFIED_WORKSPACE) target = current_;
 
   // Manage this window by adding it to the target workspace.
   if (!workspaces_[target]->Has(e.window)) {
@@ -392,7 +392,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         system((action.arguments() + '&').c_str());
         break;
       case ActionType::RELOAD:
-        config_->Reload();
+        config_->Load();
         OnConfigReload();
         break;
       default:
