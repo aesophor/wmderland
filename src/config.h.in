@@ -33,12 +33,12 @@
 
 // If glog is not installed on the compiling machine, then this macro will do nothing.
 #if GLOG_FOUND
-  #include <glog/logging.h>
-  #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
-  #define WM_LOG(severity, msg) LOG(severity) << msg
+#include <glog/logging.h>
+#define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
+#define WM_LOG(severity, msg) LOG(severity) << msg
 #else
-  #define WM_INIT_LOGGING(executable_name)
-  #define WM_LOG(severity, msg)
+#define WM_INIT_LOGGING(executable_name)
+#define WM_LOG(severity, msg)
 #endif
 
 
