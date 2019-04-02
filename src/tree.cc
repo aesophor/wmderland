@@ -8,8 +8,10 @@ using tiling::Direction;
 
 unordered_map<Client*, TreeNode*> TreeNode::mapper_;
 
-// In Wmderland, the root node will always exist in a client tree at any given time.
 Tree::Tree() : root_(new TreeNode(nullptr)), current_(nullptr) {
+  // NOTE: In Wmderland, the root node will always exist in a client tree
+  // at any given time.
+  
   // Initialize a TreeNode with no client associated with it,
   // and set its tiling direction to HORIZONTAL by default.
   root_->set_tiling_direction(Direction::HORIZONTAL);
