@@ -17,7 +17,6 @@ extern "C" {
 #include "client.h"
 #include "util.h"
 
-using std::hex;
 using std::find;
 using std::stoi;
 using std::pair;
