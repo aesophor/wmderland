@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(Wmderland VERSION 0.9.3)
+project(Wmderland VERSION 0.9.4)
 
 # There are two CMake scripts in ./cmake
 # 1. BuildType.cmake - determine build type on demand
