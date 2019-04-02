@@ -7,6 +7,7 @@ extern "C" {
 #include <X11/Xutil.h>
 }
 #include <string>
+#include <fstream>
 #include <unordered_map>
 
 #include "util.h"
@@ -20,7 +21,9 @@ public:
 
   Area Get(Window w) const;
   void Put(Window w, const Area& window_area);
-  void WriteToFile() const;
+
+  friend std::ofstream& operator<< (std::ofstream& os, const Cookie& cookie);
+  friend std::ifstream& operator>> (std::ifstream& is, Cookie& cookie);
 
 private:
   static const char kDelimiter = ' ';
