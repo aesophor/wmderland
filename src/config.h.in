@@ -11,6 +11,8 @@
 
 // If glog is not installed on the compiling machine,
 // then this macro will do nothing.
+#define GLOG_FOUND @GLOG_FOUND@
+
 #if GLOG_FOUND
 #include <glog/logging.h>
 #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
@@ -22,7 +24,6 @@
 
 #define WIN_MGR_NAME "@PROJECT_NAME@"
 #define VERSION "@PROJECT_VERSION@"
-#define GLOG_FOUND @GLOG_FOUND@
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.local/share/Wmderland/cookie"
 
