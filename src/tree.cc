@@ -1,4 +1,5 @@
 #include "tree.h"
+
 #include <stack>
 
 using std::stack;
@@ -16,8 +17,6 @@ Tree::Tree() : root_(new TreeNode(nullptr)), current_(nullptr) {
   // and set its tiling direction to HORIZONTAL by default.
   root_->set_tiling_direction(Direction::HORIZONTAL);
 }
-
-Tree::~Tree() {}
 
 
 TreeNode* Tree::GetTreeNode(Client* client) const {

@@ -4,11 +4,12 @@
 #ifndef WMDERLAND_WORKSPACE_H_
 #define WMDERLAND_WORKSPACE_H_
 
+#include <memory>
+#include <vector>
+
 extern "C" {
 #include <X11/Xlib.h>
 }
-#include <memory>
-#include <vector>
 
 #include "config.h"
 #include "client.h"
@@ -18,9 +19,9 @@ extern "C" {
 class Client;
 
 class Workspace {
-public:
+ public:
   Workspace(Display* dpy, Window root_window_, Config* config, int id);
-  virtual ~Workspace();
+  virtual ~Workspace() = default;
 
   bool Has(Window w) const;
   void Add(Window w, bool is_floating) const;
@@ -48,7 +49,7 @@ public:
   bool is_fullscreen() const;
   void set_fullscreen(bool is_fullscreen);
 
-private:
+ private:
   void Tile(TreeNode* node, int x, int y, int width, int height,
             int border_width, int gap_width) const;
   void FocusLeft() const;

@@ -1,15 +1,17 @@
 #include "wm.h"
 
-extern "C" {
-#include <X11/cursorfont.h>
-#include <X11/Xproto.h>
-#include <X11/Xatom.h>
-}
 #include <memory>
 #include <string>
 #include <sstream>
 #include <cstring>
 #include <algorithm>
+
+extern "C" {
+#include <X11/cursorfont.h>
+#include <X11/Xproto.h>
+#include <X11/Xatom.h>
+}
+
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif

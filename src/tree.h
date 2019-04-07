@@ -10,9 +10,9 @@
 class Client;
 
 class Tree {
-public:
+ public:
   Tree();
-  virtual ~Tree();
+  virtual ~Tree() = default;
 
   TreeNode* GetTreeNode(Client* client) const;
   std::vector<TreeNode*> GetAllLeaves() const;
@@ -21,7 +21,7 @@ public:
   TreeNode* current() const;
   void set_current(TreeNode* current);
 
-private:
+ private:
   std::unique_ptr<TreeNode> root_;
   TreeNode* current_;
 };

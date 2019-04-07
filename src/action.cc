@@ -1,4 +1,5 @@
 #include "action.h"
+
 #include "util.h"
 
 using std::string;
@@ -22,8 +23,6 @@ Action::Action(ActionType type) : type_(type) {}
 
 Action::Action(ActionType type, const string& arguments) 
     : type_(type), arguments_(arguments) {}
-
-Action::~Action() {}
 
 
 ActionType Action::type() const {

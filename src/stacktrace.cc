@@ -1,8 +1,10 @@
 #include "stacktrace.h"
 
 namespace {
-  int stacktrace_function_count;
-  char* stacktrace_log_location;
+
+int stacktrace_function_count;
+char* stacktrace_log_location;
+
 } // namespace
 
 

@@ -1,13 +1,14 @@
 #ifndef WMDERLAND_WM_H_
 #define WMDERLAND_WM_H_
 
+#include <memory>
+#include <vector>
+
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 }
-#include <memory>
-#include <vector>
 
 #include "properties.h"
 #include "workspace.h"
@@ -28,12 +29,12 @@ extern "C" {
 #define WM_STATE_ICONIC 3
 
 class WindowManager {
-public:
+ public:
   static std::unique_ptr<WindowManager> GetInstance();
   virtual ~WindowManager();
   void Run();
 
-private:
+ private:
   static WindowManager* instance_;
   WindowManager(Display* dpy);
   void InitWorkspaces(int count);

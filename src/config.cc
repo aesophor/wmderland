@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif

@@ -23,16 +23,16 @@ enum class ActionType {
 };
 
 class Action {
-public:
+ public:
   Action(const std::string& s);
   Action(ActionType type);
   Action(ActionType type, const std::string& arguments);
-  virtual ~Action();
+  virtual ~Action() = default;
 
   ActionType type() const;
   const std::string& arguments() const;
 
-private:
+ private:
   static ActionType StrToActionType(const std::string& s);
 
   ActionType type_;

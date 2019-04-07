@@ -1,4 +1,5 @@
 #include "util.h"
+
 #include <sstream>
 
 using std::pair;
@@ -10,11 +11,11 @@ Area::Area() : x(0), y(0), width(0), height(0) {}
 
 Area::Area(int x, int y, int width, int height) : x(x), y(y), width(width), height(height) {}
 
-bool Area::operator==(const Area& other) {
+bool Area::operator== (const Area& other) {
   return (x == other.x) && (y == other.y) && (width == other.width) && (height == other.height);
 }
 
-bool Area::operator!=(const Area& other) {
+bool Area::operator!= (const Area& other) {
   return (x != other.x) || (y != other.y) || (width != other.width) || (height != other.height);
 }
 

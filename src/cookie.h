@@ -3,21 +3,22 @@
 #ifndef WMDERLAND_COOKIE_H_
 #define WMDERLAND_COOKIE_H_
 
-extern "C" {
-#include <X11/Xutil.h>
-}
 #include <string>
 #include <fstream>
 #include <unordered_map>
+
+extern "C" {
+#include <X11/Xutil.h>
+}
 
 #include "util.h"
 
 class Properties;
 
 class Cookie {
-public:
+ public:
   Cookie(Display* dpy, Properties* prop, const std::string filename);
-  virtual ~Cookie();
+  virtual ~Cookie() = default;
 
   Area Get(Window w) const;
   void Put(Window w, const Area& window_area);
@@ -25,7 +26,7 @@ public:
   friend std::ofstream& operator<< (std::ofstream& os, const Cookie& cookie);
   friend std::ifstream& operator>> (std::ifstream& is, Cookie& cookie);
 
-private:
+ private:
   static const char kDelimiter = ' ';
   std::string GetCookieKey(Window w) const;
 

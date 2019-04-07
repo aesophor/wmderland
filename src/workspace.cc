@@ -25,8 +25,6 @@ Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
       id_(id),
       is_fullscreen_(false) {}
 
-Workspace::~Workspace() {}
-
 
 bool Workspace::Has(Window w) const {
   return GetClient(w) != nullptr;

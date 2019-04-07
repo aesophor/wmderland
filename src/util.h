@@ -2,21 +2,23 @@
 #define WMDERLAND_UTIL_H_
 
 #include "properties.h"
+
+#include <string>
+#include <vector>
+
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 }
-#include <string>
-#include <vector>
 
 struct Area {
   Area();
   Area(int x, int y, int width, int height);
-
-  bool operator==(const Area& other);
-  bool operator!=(const Area& other);
+  
+  bool operator== (const Area& other);
+  bool operator!= (const Area& other);
 
   int x, y, width, height;
 };

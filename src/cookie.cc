@@ -22,8 +22,6 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
   fin.close();
 }
 
-Cookie::~Cookie() {}
-
 
 Area Cookie::Get(Window w) const {
   string key = GetCookieKey(w);

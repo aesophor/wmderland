@@ -1,7 +1,6 @@
 #include <iostream>
-#include <memory>
-#include <string>
 #include <cstring>
+#include <memory>
 
 #if GLOG_FOUND
 #include <glog/logging.h>
