@@ -37,7 +37,7 @@ class WindowManager {
  private:
   static WindowManager* instance_;
   WindowManager(Display* dpy);
-  void InitWorkspaces(int count);
+  void InitWorkspaces();
   void InitProperties();
   void InitXEvents();
   void InitCursors();
@@ -95,7 +95,7 @@ class WindowManager {
   // Workspaces contain clients, where a client is a window that can be tiled
   // by the window manager.
   Workspace* workspaces_[WORKSPACE_COUNT];
-  short current_;
+  int current_; // current workspace
 
   // Window move, resize event cache.
   XButtonEvent btn_pressed_event_;

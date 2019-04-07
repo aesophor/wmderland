@@ -57,7 +57,7 @@ WindowManager::WindowManager(Display* dpy)
       current_(0),
       btn_pressed_event_() {
   wm_utils::Init(dpy_, prop_.get(), root_window_);
-  InitWorkspaces(WORKSPACE_COUNT);
+  InitWorkspaces();
   InitProperties();
   InitXEvents();
   InitCursors();
@@ -65,11 +65,14 @@ WindowManager::WindowManager(Display* dpy)
 
 WindowManager::~WindowManager() {
   XCloseDisplay(dpy_);
+  for (int i = 0; i < WORKSPACE_COUNT; i++) {
+    delete workspaces_[i];
+  }
 }
 
 
-void WindowManager::InitWorkspaces(int count) {
-  for (int i = 0; i < count; i++) {
+void WindowManager::InitWorkspaces() {
+  for (int i = 0; i < WORKSPACE_COUNT; i++) {
     workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
   }
 }
