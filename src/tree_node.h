@@ -9,7 +9,7 @@
 class Client;
 
 class TreeNode {
-public:
+ public:
   TreeNode(Client* client);
   virtual ~TreeNode();
 
@@ -34,7 +34,7 @@ public:
   tiling::Direction tiling_direction() const;
   void set_tiling_direction(tiling::Direction tiling_direction);
 
-private:
+ private:
   std::vector<TreeNode*> children_;
   TreeNode* parent_;
 
