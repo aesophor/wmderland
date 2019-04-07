@@ -9,10 +9,10 @@
 #include "action.h"
 #include "util.h"
 
-// If glog is not installed on the compiling machine,
-// then this macro will do nothing.
 #define GLOG_FOUND @GLOG_FOUND@
 
+// If glog is not installed on the compiling machine,
+// then these macros will do nothing.
 #if GLOG_FOUND
 #include <glog/logging.h>
 #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
