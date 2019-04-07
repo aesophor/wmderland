@@ -106,4 +106,4 @@ class Config {
   static const char kCommentSymbol = ';';
 };
 
-#endif
+#endif // WMDERLAND_CONFIG_H_

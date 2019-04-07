@@ -39,4 +39,4 @@ class Action {
   std::string arguments_;
 };
 
-#endif
+#endif // WMDERLAND_ACTION_H_

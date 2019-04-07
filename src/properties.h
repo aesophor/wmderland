@@ -50,4 +50,4 @@ struct Properties {
   Atom net[atom::NET_ATOM_SIZE];
 };
 
-#endif
+#endif // WMDERLAND_PROPERTIES_H_

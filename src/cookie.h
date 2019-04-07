@@ -36,4 +36,4 @@ class Cookie {
   std::unordered_map<std::string, Area> window_area_map_;
 };
 
-#endif
+#endif // WMDERLAND_COOKIE_H_

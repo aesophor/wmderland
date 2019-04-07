@@ -26,4 +26,4 @@ class Tree {
   TreeNode* current_;
 };
 
-#endif
+#endif // WMDERLAND_TREE_H_

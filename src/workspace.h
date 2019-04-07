@@ -67,4 +67,4 @@ class Workspace {
   bool is_fullscreen_;
 };
 
-#endif
+#endif // WMDERLAND_WORKSPACE_H_

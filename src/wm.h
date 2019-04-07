@@ -101,4 +101,4 @@ class WindowManager {
   XButtonEvent btn_pressed_event_;
 };
 
-#endif
+#endif // WMDERLAND_WM_H_

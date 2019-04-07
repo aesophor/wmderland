@@ -20,4 +20,4 @@ void Handle(int sig);
 
 } // namespace segv
 
-#endif
+#endif // WMDERLAND_STACKTRACE_H_

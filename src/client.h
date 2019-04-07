@@ -101,4 +101,4 @@ inline void Client::SetBorderColor(unsigned long color) const {
   XSetWindowBorder(dpy_, window_, color);
 }
 
-#endif
+#endif // WMDERLAND_CLIENT_H_

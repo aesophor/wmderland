@@ -84,4 +84,4 @@ std::string ToAbsPath(const std::string& path);
 
 } // namespace sys_utils
 
-#endif
+#endif // WMDERLAND_UTIL_H_

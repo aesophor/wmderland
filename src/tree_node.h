@@ -42,4 +42,4 @@ class TreeNode {
   tiling::Direction tiling_direction_;
 };
 
-#endif
+#endif // WMDERLAND_TREE_NODE_H_
