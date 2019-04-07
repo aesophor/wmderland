@@ -19,7 +19,7 @@ extern "C" {
 class Workspace;
 
 class Client {
-public:
+ public:
   // The lightning fast mapper which maps Window to Client* in O(1)
   static std::unordered_map<Window, Client*> mapper_;
 
@@ -49,7 +49,7 @@ public:
   void set_floating(bool is_floating);
   void set_fullscreen(bool is_fullscreen);
 
-private:
+ private:
   Display* dpy_;
   Window window_;
   Workspace* workspace_;
