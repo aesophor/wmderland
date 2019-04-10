@@ -5,7 +5,7 @@ Project started in <a href="https://www.facebook.com/events/256671588330840/">NT
 </div>
 
 ## Overview
-Wmderland is an X11 Dynamic Window Manager that represents the windows as the leaves of a tree.
+Wmderland is an X11 Tiling Window Manager that represents the windows as the leaves of a tree.
 
 It aims to simplify the core functionalities of [i3wm](https://github.com/i3/i3), which features a more approachable config system, and bundle in the essential features required for a modern but minimal Dynamic Window Manager.
 
@@ -78,27 +78,19 @@ CMake will determine if your machine have glog installed. If compiled and linked
 find the log files under /tmp/Wmderland.*
 
 ## Installation
-1. Clone the repo
+1. Run build.sh and install
 ```
-$ git clone https://github.com/aesophor/Wmderland
-$ cd Wmderland
-```
-
-2. Build from source
-```
-$ mkdir build
-$ cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL
-$ make
+$ chmod u+x build.sh && ./build.sh
 $ sudo make install
 ```
 
-3. Copy the config file (**IMPORTANT**)
+2. Copy the config file (**IMPORTANT**)
 ```
 $ mkdir -p ~/.config/Wmderland
 $ cp example/config ~/.config/Wmderland/.
 ```
 
-4. Add this line to your ~/.xinitrc
+3. Add this line to your ~/.xinitrc
 ```
 # Fix Non-reparenting window managers / Grey window /
 # Programs not drawing properly
@@ -108,7 +100,7 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 exec Wmderland
 ```
 
-5. Initialize an X session
+4. Initialize an X session
 ```
 $ startx
 ```
