@@ -90,7 +90,7 @@ $ mkdir -p ~/.config/Wmderland
 $ cp example/config ~/.config/Wmderland/.
 ```
 
-3. Add this line to your ~/.xinitrc
+3. Append the following lines to your ~/.xinitrc
 ```
 # Fix Non-reparenting window managers / Grey window /
 # Programs not drawing properly
