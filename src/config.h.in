@@ -25,7 +25,7 @@
 #define WIN_MGR_NAME "@PROJECT_NAME@"
 #define VERSION "@PROJECT_VERSION@"
 #define CONFIG_FILE "~/.config/Wmderland/config"
-#define COOKIE_FILE "~/.local/share/Wmderland/cookie"
+#define COOKIE_FILE "~/.cache/Wmderland/cookie"
 
 #define UNSPECIFIED_WORKSPACE -1
 #define WORKSPACE_COUNT 9
@@ -57,7 +57,7 @@ enum class ConfigKeyword {
 class Config {
  public:
   Config(Display* dpy, Properties* prop, const std::string& filename);
-  virtual ~Config();
+  virtual ~Config() = default;
   void Load();
 
   int GetSpawnWorkspaceId(Window w) const;

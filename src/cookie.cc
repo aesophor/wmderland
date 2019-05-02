@@ -36,7 +36,7 @@ void Cookie::Put(Window w, const Area& window_area) {
   window_area_map_[GetCookieKey(w)] = window_area;
 
   // Write cookie to file.
-  ofstream fout(filename_);
+  ofstream fout(sys_utils::ToAbsPath(filename_));
   fout << *this;
   fout.close();
 }
@@ -57,13 +57,11 @@ ofstream& operator<< (ofstream& ofs, const Cookie& cookie) {
       << area.second.height << Cookie::kDelimiter
       << area.first << endl;
   }
-
   return ofs;
 }
 
 ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
   string line;
-
   while (std::getline(ifs, line)) {
     string_utils::Strip(line);
 
@@ -81,6 +79,5 @@ ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
       cookie.window_area_map_[tokens[4]] = window_area;
     }
   }
-
   return ifs;
 }

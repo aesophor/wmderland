@@ -25,8 +25,6 @@ Config::Config(Display* dpy, Properties* prop, const string& filename)
   Load();
 }
 
-Config::~Config() {}
-
 
 void Config::Load() {
   // Convert it to full path first (in case it starts with ~)
