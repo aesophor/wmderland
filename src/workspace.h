@@ -49,7 +49,7 @@ class Workspace {
   void set_fullscreen(bool is_fullscreen);
 
  private:
-  void Tile(TreeNode* node, int x, int y, int width, int height,
+  void Tile(Tree::Node* node, int x, int y, int width, int height,
             int border_width, int gap_width) const;
   void FocusLeft() const;
   void FocusRight() const;

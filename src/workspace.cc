@@ -11,8 +11,6 @@
 using std::pair;
 using std::stack;
 using std::vector;
-using std::remove;
-using std::remove_if;
 using std::unique_ptr;
 using wmderland::tiling::Direction;
 
@@ -37,60 +35,60 @@ void Workspace::Add(Window w, bool is_floating) const {
   Client* c = new Client(dpy_, w, (Workspace*) this);
   c->set_floating(is_floating);
 
-  TreeNode* new_node = new TreeNode(c);
+  Tree::Node* new_node = new Tree::Node(c);
 
-  if (!client_tree_->current()) {
+  if (!client_tree_->current_node()) {
     // If there are no windows at all, add the node as the root's child.
-    client_tree_->root()->AddChild(new_node);
+    client_tree_->root_node()->AddChild(new_node);
   } else {
     // If the user has not specified any tiling direction on current node, 
     // then add the new node as its brother.
-    TreeNode* current_node = client_tree_->current();
+    Tree::Node* current_node = client_tree_->current_node();
     current_node->parent()->InsertChildAfter(new_node, current_node);
   }
 
-  client_tree_->set_current(new_node);
+  client_tree_->set_current_node(new_node);
 }
 
 void Workspace::Remove(Window w) const {
   Client* c = GetClient(w);
   if (!c) return;
 
-  TreeNode* node = client_tree_->GetTreeNode(c);
+  Tree::Node* node = client_tree_->GetTreeNode(c);
   if (!node) return;
 
   // Get all leaves and find the index of the node we're going to remove.
-  vector<TreeNode*> nodes = client_tree_->GetAllLeaves();
+  vector<Tree::Node*> nodes = client_tree_->GetAllLeaves();
   ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
 
   // Remove this node from its parent.
-  TreeNode* parent_node = node->parent();
+  Tree::Node* parent_node = node->parent();
   parent_node->RemoveChild(node);
   delete node;
   delete c;
 
   // If its parent has no children left, then remove parent from its grandparent 
   // (If this parent is not the root).
-  while (parent_node != client_tree_->root() && parent_node->children().empty()) {
-    TreeNode* grandparent_node = parent_node->parent();
+  while (parent_node != client_tree_->root_node() && parent_node->children().empty()) {
+    Tree::Node* grandparent_node = parent_node->parent();
     grandparent_node->RemoveChild(parent_node);
     delete parent_node;
     parent_node = grandparent_node;
   }
 
-  // Decide which node shall be set as the new current TreeNode. If there are no
+  // Decide which node shall be set as the new current Tree::Node. If there are no
   // windows left, set current to nullptr.
-  nodes.erase(remove(nodes.begin(), nodes.end(), node), nodes.end());
+  nodes.erase(std::remove(nodes.begin(), nodes.end(), node), nodes.end());
 
   if (nodes.empty()) {
-    client_tree_->set_current(nullptr);
+    client_tree_->set_current_node(nullptr);
     return;
   }
   // If idx is out of bounds, decrement it by one.
   if (idx > (long) nodes.size() - 1) {
     idx--;
   }
-  client_tree_->set_current(nodes[idx]);
+  client_tree_->set_current_node(nodes[idx]);
 }
 
 void Workspace::Move(Window w, Workspace* new_workspace) const {
@@ -105,7 +103,7 @@ void Workspace::Move(Window w, Workspace* new_workspace) const {
 
 void Workspace::Arrange(const Area& tiling_area) const {
   // If there are no clients in this workspace or all clients are floating, return at once.
-  if (!client_tree_->current() || GetTilingClients().empty()) return;
+  if (!client_tree_->current_node() || GetTilingClients().empty()) return;
 
   int border_width = config_->border_width();
   int gap_width = config_->gap_width();
@@ -115,15 +113,15 @@ void Workspace::Arrange(const Area& tiling_area) const {
   int width = tiling_area.width - gap_width;
   int height = tiling_area.height - gap_width;
 
-  Tile(client_tree_->root(), x, y, width, height, border_width, gap_width);
+  Tile(client_tree_->root_node(), x, y, width, height, border_width, gap_width);
 }
 
-void Workspace::Tile(TreeNode* node, int x, int y, int width, int height, 
+void Workspace::Tile(Tree::Node* node, int x, int y, int width, int height, 
                      int border_width, int gap_width) const {
-  vector<TreeNode*> children = node->children(); // pass by value here
+  vector<Tree::Node*> children = node->children(); // pass by value here
 
   // We don't care about floating windows. Remove them.
-  children.erase(remove_if(children.begin(), children.end(), [](TreeNode* n) {
+  children.erase(std::remove_if(children.begin(), children.end(), [](Tree::Node* n) {
         return n->client() && n->client()->is_floating(); }), children.end());
 
   // Calculate each child's x, y, width and height based on node's tiling direction.
@@ -134,11 +132,11 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height,
   int child_height = (dir == Direction::VERTICAL) ? height / children.size() : height;
 
   for (size_t i = 0; i < children.size(); i++) {
-    TreeNode* child = children[i];
+    Tree::Node* child = children[i];
     if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + child_width * i;
     if (node->tiling_direction() == Direction::VERTICAL) child_y = y + child_height * i;
 
-    if (child->IsLeaf()) {
+    if (child->leaf()) {
       int new_x = child_x + gap_width / 2;
       int new_y = child_y + gap_width / 2;
       int new_width = child_width - border_width * 2 - gap_width;
@@ -151,25 +149,25 @@ void Workspace::Tile(TreeNode* node, int x, int y, int width, int height,
 }
 
 void Workspace::SetTilingDirection(Direction tiling_direction) const {
-  if (!client_tree_->current()) {
-    client_tree_->root()->set_tiling_direction(tiling_direction);
-  } else if (client_tree_->current()->parent()->children().size() > 0){
+  if (!client_tree_->current_node()) {
+    client_tree_->root_node()->set_tiling_direction(tiling_direction);
+  } else if (client_tree_->current_node()->parent()->children().size() > 0){
     // If the user has specified a tiling direction on current node, 
     // then set current node as an internal node, add the original
     // current node as this internal node's child and add the new node
     // as this internal node's another child.
-    TreeNode* current_node = client_tree_->current();
+    Tree::Node* current_node = client_tree_->current_node();
     current_node->set_tiling_direction(tiling_direction);
-    current_node->AddChild(new TreeNode(current_node->client()));
+    current_node->AddChild(new Tree::Node(current_node->client()));
     current_node->set_client(nullptr);
-    client_tree_->set_current(current_node->children()[0]);
+    client_tree_->set_current_node(current_node->children()[0]);
   }
 }
 
 
 void Workspace::MapAllClients() const {
   for (auto leaf : client_tree_->GetAllLeaves()) {
-    if (leaf != client_tree_->root()) {
+    if (leaf != client_tree_->root_node()) {
       leaf->client()->Map();
     }
   }
@@ -177,7 +175,7 @@ void Workspace::MapAllClients() const {
 
 void Workspace::UnmapAllClients() const {
   for (auto leaf : client_tree_->GetAllLeaves()) {
-    if (leaf != client_tree_->root()) {
+    if (leaf != client_tree_->root_node()) {
       leaf->client()->Unmap();
     }
   }
@@ -193,7 +191,7 @@ void Workspace::SetFocusedClient(Window w) const {
   Client* c = GetClient(w);
 
   if (c) {
-    client_tree_->set_current(client_tree_->GetTreeNode(c));
+    client_tree_->set_current_node(client_tree_->GetTreeNode(c));
 
     // Raise the window to the top and set input focus to it.
     c->Raise();
@@ -203,9 +201,9 @@ void Workspace::SetFocusedClient(Window w) const {
 }
 
 void Workspace::UnsetFocusedClient() const {
-  if (!client_tree_->current()) return;
+  if (!client_tree_->current_node()) return;
 
-  Client* c = client_tree_->current()->client();
+  Client* c = client_tree_->current_node()->client();
   if (c) {
     c->SetBorderColor(config_->unfocused_color());
   }
@@ -213,8 +211,8 @@ void Workspace::UnsetFocusedClient() const {
 
 
 Client* Workspace::GetFocusedClient() const {
-  if (!client_tree_->current()) return nullptr;
-  return client_tree_->current()->client();
+  if (!client_tree_->current_node()) return nullptr;
+  return client_tree_->current_node()->client();
 }
 
 Client* Workspace::GetClient(Window w) const {
@@ -229,7 +227,7 @@ vector<Client*> Workspace::GetClients() const {
   vector<Client*> clients;
 
   for (auto leaf : client_tree_->GetAllLeaves()) {
-    if (leaf != client_tree_->root()) {
+    if (leaf != client_tree_->root_node()) {
       clients.push_back(leaf->client());
     }
   }
@@ -238,14 +236,14 @@ vector<Client*> Workspace::GetClients() const {
 
 vector<Client*> Workspace::GetFloatingClients() const {
   vector<Client*> clients = GetClients();
-  clients.erase(remove_if(clients.begin(), clients.end(), [](Client* c) {
+  clients.erase(std::remove_if(clients.begin(), clients.end(), [](Client* c) {
         return !c->is_floating(); }), clients.end());
   return clients;
 }
 
 vector<Client*> Workspace::GetTilingClients() const {
   vector<Client*> clients = GetClients();
-  clients.erase(remove_if(clients.begin(), clients.end(), [](Client* c) {
+  clients.erase(std::remove_if(clients.begin(), clients.end(), [](Client* c) {
         return c->is_floating(); }), clients.end());
   return clients;
 }
@@ -271,76 +269,76 @@ void Workspace::Focus(Action::Type focus_action_type) const {
 }
 
 void Workspace::FocusLeft() const {
-  for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
-    TreeNode* left_sibling = ptr->GetLeftSibling();
+  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
+    Tree::Node* left_sibling = ptr->GetLeftSibling();
 
     if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && left_sibling) {
       ptr = left_sibling;
-      while (!ptr->IsLeaf()) {
+      while (!ptr->leaf()) {
         ptr = ptr->children().back();
       }
       UnsetFocusedClient();
       SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current(ptr);
+      client_tree_->set_current_node(ptr);
       return;
-    } else if (ptr->parent() == client_tree_->root()) {
+    } else if (ptr->parent() == client_tree_->root_node()) {
       return;
     }
   }
 }
 
 void Workspace::FocusRight() const {
-  for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
-    TreeNode* right_sibling = ptr->GetRightSibling();
+  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
+    Tree::Node* right_sibling = ptr->GetRightSibling();
 
     if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && right_sibling) {
       ptr = right_sibling;
-      while (!ptr->IsLeaf()) {
+      while (!ptr->leaf()) {
         ptr = ptr->children().front();
       }
       UnsetFocusedClient();
       SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current(ptr);
+      client_tree_->set_current_node(ptr);
       return;
-    } else if (ptr->parent() == client_tree_->root()) {
+    } else if (ptr->parent() == client_tree_->root_node()) {
       return;
     }
   }
 }
 
 void Workspace::FocusUp() const {
-  for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
-    TreeNode* left_sibling = ptr->GetLeftSibling();
+  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
+    Tree::Node* left_sibling = ptr->GetLeftSibling();
 
     if (ptr->parent()->tiling_direction() == Direction::VERTICAL && left_sibling) {
       ptr = left_sibling;
-      while (!ptr->IsLeaf()) {
+      while (!ptr->leaf()) {
         ptr = ptr->children().back();
       }
       UnsetFocusedClient();
       SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current(ptr);
+      client_tree_->set_current_node(ptr);
       return;
-    } else if (ptr->parent() == client_tree_->root()) {
+    } else if (ptr->parent() == client_tree_->root_node()) {
       return;
     }
   }
 }
 
 void Workspace::FocusDown() const {
-  for (TreeNode* ptr = client_tree_->current(); ptr; ptr = ptr->parent()) {
-    TreeNode* right_sibling = ptr->GetRightSibling();
+  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
+    Tree::Node* right_sibling = ptr->GetRightSibling();
 
     if (ptr->parent()->tiling_direction() == Direction::VERTICAL && right_sibling) {
       ptr = right_sibling;
-      while (!ptr->IsLeaf()) {
+      while (!ptr->leaf()) {
         ptr = ptr->children().front();
       }
       UnsetFocusedClient();
       SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current(ptr);
+      client_tree_->set_current_node(ptr);
       return;
-    } else if (ptr->parent() == client_tree_->root()) {
+    } else if (ptr->parent() == client_tree_->root_node()) {
       return;
     }
   }

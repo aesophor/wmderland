@@ -2,6 +2,9 @@
 #include "tree.h"
 
 #include <stack>
+#include <algorithm>
+
+#include "util.h"
 
 using std::stack;
 using std::vector;
@@ -10,32 +13,32 @@ using wmderland::tiling::Direction;
 
 namespace wmderland {
 
-unordered_map<Client*, TreeNode*> TreeNode::mapper_;
+unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
-Tree::Tree() : root_(new TreeNode(nullptr)), current_(nullptr) {
+Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_(nullptr) {
   // NOTE: In Wmderland, the root node will always exist in a client tree
   // at any given time.
   
-  // Initialize a TreeNode with no client associated with it,
+  // Initialize a Tree::Node with no client associated with it,
   // and set its tiling direction to HORIZONTAL by default.
-  root_->set_tiling_direction(Direction::HORIZONTAL);
+  root_node_->set_tiling_direction(Direction::HORIZONTAL);
 }
 
 
-TreeNode* Tree::GetTreeNode(Client* client) const {
-  if (TreeNode::mapper_.find(client) != TreeNode::mapper_.end()) {
-    return TreeNode::mapper_.at(client);
+Tree::Node* Tree::GetTreeNode(Client* client) const {
+  if (Tree::Node::mapper_.find(client) != Tree::Node::mapper_.end()) {
+    return Tree::Node::mapper_.at(client);
   }
   return nullptr;
 }
 
-vector<TreeNode*> Tree::GetAllLeaves() const {
-  vector<TreeNode*> leaves;
-  stack<TreeNode*> st;
-  st.push(root_.get());
+vector<Tree::Node*> Tree::GetAllLeaves() const {
+  vector<Tree::Node*> leaves;
+  stack<Tree::Node*> st;
+  st.push(root_node_.get());
 
   while (!st.empty()) {
-    TreeNode* node = st.top();
+    Tree::Node* node = st.top();
     st.pop();
     
     // If this node is a leaf, add it to the leaf vector.
@@ -52,16 +55,105 @@ vector<TreeNode*> Tree::GetAllLeaves() const {
 }
 
 
-TreeNode* Tree::root() const {
-  return root_.get();
+Tree::Node* Tree::root_node() const {
+  return root_node_.get();
 }
 
-TreeNode* Tree::current() const {
-  return current_;
+Tree::Node* Tree::current_node() const {
+  return current_node_;
 }
 
-void Tree::set_current(TreeNode* current) {
-  current_ = current;
+void Tree::set_current_node(Tree::Node* node) {
+  current_node_ = node;
+}
+
+
+
+Tree::Node::Node(Client* client)
+    : client_(client),
+      tiling_direction_(Direction::UNSPECIFIED) {
+  Tree::Node::mapper_[client] = this;
+}
+
+Tree::Node::~Node() {
+  Tree::Node::mapper_.erase(client_);
+}
+
+
+void Tree::Node::AddChild(Tree::Node* child) {
+  children_.push_back(child);
+  child->set_parent(this);
+}
+
+void Tree::Node::RemoveChild(Tree::Node* child) {
+  children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
+  child->set_parent(nullptr);
+}
+
+void Tree::Node::InsertChildAfter(Tree::Node* child, Tree::Node* ref) {
+  ptrdiff_t ref_idx = find(children_.begin(), children_.end(), ref) - children_.begin();
+  children_.insert(children_.begin() + ref_idx + 1, child);
+  child->set_parent(this);
+}
+
+
+Tree::Node* Tree::Node::GetLeftSibling() const {
+  const vector<Tree::Node*>& siblings = parent_->children();
+
+  if (this == siblings.front()) {
+    return nullptr;
+  } else {
+    ptrdiff_t this_node_idx = find(siblings.begin(), siblings.end(), this) - siblings.begin();
+    return siblings[this_node_idx - 1];
+  }
+}
+
+Tree::Node* Tree::Node::GetRightSibling() const {
+  const vector<Tree::Node*>& siblings = parent_->children();
+
+  if (this == siblings.back()) {
+    return nullptr;
+  } else {
+    ptrdiff_t this_node_idx = find(siblings.begin(), siblings.end(), this) - siblings.begin();
+    return siblings[this_node_idx + 1];
+  }
+}
+
+
+const vector<Tree::Node*>& Tree::Node::children() const {
+  return children_;
+}
+
+
+Tree::Node* Tree::Node::parent() const {
+  return parent_;
+}
+
+void Tree::Node::set_parent(Tree::Node* parent) {
+  parent_ = parent;
+}
+
+
+// Get the client associated with this node.
+Client* Tree::Node::client() const {
+  return client_;
+}
+
+void Tree::Node::set_client(Client* client) {
+  client_ = client;
+}
+
+
+Direction Tree::Node::tiling_direction() const {
+  return tiling_direction_;
+}
+
+void Tree::Node::set_tiling_direction(Direction tiling_direction) {
+  tiling_direction_ = tiling_direction;
+}
+
+bool Tree::Node::leaf() const {
+  return children_.empty();
 }
 
 } // namespace wmderland
