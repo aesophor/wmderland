@@ -251,18 +251,18 @@ vector<Client*> Workspace::GetTilingClients() const {
 }
 
 
-void Workspace::Focus(ActionType focus_action_type) const {
+void Workspace::Focus(Action::Type focus_action_type) const {
   switch (focus_action_type) {
-    case ActionType::FOCUS_LEFT:
+    case Action::Type::FOCUS_LEFT:
       FocusLeft();
       break;
-    case ActionType::FOCUS_RIGHT:
+    case Action::Type::FOCUS_RIGHT:
       FocusRight();
       break;
-    case ActionType::FOCUS_UP:
+    case Action::Type::FOCUS_UP:
       FocusUp();
       break;
-    case ActionType::FOCUS_DOWN:
+    case Action::Type::FOCUS_DOWN:
       FocusDown();
       break;
     default:

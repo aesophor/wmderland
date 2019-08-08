@@ -3,43 +3,42 @@
 #define WMDERLAND_ACTION_H_
 
 #include <string>
-#include <vector>
 
 namespace wmderland {
 
-enum class ActionType {
-  TILE_H,
-  TILE_V,
-  FOCUS_LEFT,
-  FOCUS_RIGHT,
-  FOCUS_DOWN,
-  FOCUS_UP,
-  TOGGLE_FLOATING,
-  TOGGLE_FULLSCREEN,
-  GOTO_WORKSPACE,
-  MOVE_APP_TO_WORKSPACE,
-  KILL,
-  EXIT,
-  EXEC,
-  RELOAD,
-  UNDEFINED
-};
-
 class Action {
  public:
+  enum class Type {
+    TILE_H,
+    TILE_V,
+    FOCUS_LEFT,
+    FOCUS_RIGHT,
+    FOCUS_DOWN,
+    FOCUS_UP,
+    TOGGLE_FLOATING,
+    TOGGLE_FULLSCREEN,
+    GOTO_WORKSPACE,
+    MOVE_APP_TO_WORKSPACE,
+    KILL,
+    EXIT,
+    EXEC,
+    RELOAD,
+    UNDEFINED
+  };
+
   Action(const std::string& s);
-  Action(ActionType type);
-  Action(ActionType type, const std::string& arguments);
+  Action(Action::Type type);
+  Action(Action::Type type, const std::string& argument);
   virtual ~Action() = default;
 
-  ActionType type() const;
-  const std::string& arguments() const;
+  Action::Type type() const;
+  const std::string& argument() const;
 
  private:
-  static ActionType StrToActionType(const std::string& s);
+  static Action::Type StrToActionType(const std::string& s);
 
-  ActionType type_;
-  std::string arguments_;
+  Action::Type type_;
+  std::string argument_;
 };
 
 } // namespace wmderland

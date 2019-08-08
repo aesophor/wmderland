@@ -355,48 +355,48 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 
   for (auto& action : actions) {
     switch (action.type()) {
-      case ActionType::TILE_H:
+      case Action::Type::TILE_H:
         workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
         break;
-      case ActionType::TILE_V:
+      case Action::Type::TILE_V:
         workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
         break;
-      case ActionType::FOCUS_LEFT:
-      case ActionType::FOCUS_RIGHT:
-      case ActionType::FOCUS_UP:
-      case ActionType::FOCUS_DOWN:
+      case Action::Type::FOCUS_LEFT:
+      case Action::Type::FOCUS_RIGHT:
+      case Action::Type::FOCUS_UP:
+      case Action::Type::FOCUS_DOWN:
         if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
         workspaces_[current_]->Focus(action.type());
         workspaces_[current_]->RaiseAllFloatingClients();
         RaiseNotifications();
         wm_utils::SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
         break;
-      case ActionType::TOGGLE_FLOATING:
+      case Action::Type::TOGGLE_FLOATING:
         if (!focused_client) continue;
         SetFloating(focused_client->window(), !focused_client->is_floating());
         break;
-      case ActionType::TOGGLE_FULLSCREEN:
+      case Action::Type::TOGGLE_FULLSCREEN:
         if (!focused_client) continue;
         SetFullscreen(focused_client->window(), !focused_client->is_fullscreen());
         break;
-      case ActionType::GOTO_WORKSPACE:
-        GotoWorkspace(stoi(action.arguments()) - 1);
+      case Action::Type::GOTO_WORKSPACE:
+        GotoWorkspace(stoi(action.argument()) - 1);
         break;
-      case ActionType::MOVE_APP_TO_WORKSPACE:
+      case Action::Type::MOVE_APP_TO_WORKSPACE:
         if (!focused_client) continue;
-        MoveWindowToWorkspace(focused_client->window(), stoi(action.arguments()) - 1);
+        MoveWindowToWorkspace(focused_client->window(), stoi(action.argument()) - 1);
         break;
-      case ActionType::KILL:
+      case Action::Type::KILL:
         if (!focused_client) continue;
         KillClient(focused_client->window());
         break;
-      case ActionType::EXIT:
+      case Action::Type::EXIT:
         system("pkill X");
         break;
-      case ActionType::EXEC:
-        system((action.arguments() + '&').c_str());
+      case Action::Type::EXEC:
+        system((action.argument() + '&').c_str());
         break;
-      case ActionType::RELOAD:
+      case Action::Type::RELOAD:
         config_->Load();
         OnConfigReload();
         break;

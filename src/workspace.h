@@ -35,7 +35,7 @@ class Workspace {
   void SetFocusedClient(Window w) const;
   void UnsetFocusedClient() const;
 
-  void Focus(ActionType focus_action_type) const;
+  void Focus(Action::Type focus_action_type) const;
   Client* GetFocusedClient() const;
   Client* GetClient(Window w) const;
   std::vector<Client*> GetClients() const;

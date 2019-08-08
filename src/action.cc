@@ -1,6 +1,8 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "action.h"
 
+#include <vector>
+
 #include "util.h"
 
 using std::string;
@@ -18,56 +20,56 @@ Action::Action(const string& s) {
 
   // The second token (if exists) is an argument.
   if (tokens.size() > 1) {
-    arguments_ = tokens[1];
+    argument_ = tokens[1];
   }
 }
 
-Action::Action(ActionType type) : type_(type) {}
+Action::Action(Action::Type type) : type_(type) {}
 
-Action::Action(ActionType type, const string& arguments) 
-    : type_(type), arguments_(arguments) {}
+Action::Action(Action::Type type, const string& arguments) 
+    : type_(type), argument_(arguments) {}
 
 
-ActionType Action::type() const {
+Action::Type Action::type() const {
   return type_;
 }
 
-const string& Action::arguments() const {
-  return arguments_;
+const string& Action::argument() const {
+  return argument_;
 }
 
 
-ActionType Action::StrToActionType(const string& s) {
+Action::Type Action::StrToActionType(const string& s) {
   if (s == "tile_horizontally") {
-    return ActionType::TILE_H;
+    return Action::Type::TILE_H;
   } else if (s == "tile_vertically") {
-    return ActionType::TILE_V;
+    return Action::Type::TILE_V;
   } else if (s == "focus_left") {
-    return ActionType::FOCUS_LEFT;
+    return Action::Type::FOCUS_LEFT;
   } else if (s == "focus_right") {
-    return ActionType::FOCUS_RIGHT;
+    return Action::Type::FOCUS_RIGHT;
   } else if (s == "focus_down") {
-    return ActionType::FOCUS_DOWN;
+    return Action::Type::FOCUS_DOWN;
   } else if (s == "focus_up") {
-    return ActionType::FOCUS_UP;
+    return Action::Type::FOCUS_UP;
   } else if (s == "toggle_floating") {
-    return ActionType::TOGGLE_FLOATING;
+    return Action::Type::TOGGLE_FLOATING;
   } else if (s == "toggle_fullscreen") {
-    return ActionType::TOGGLE_FULLSCREEN;
+    return Action::Type::TOGGLE_FULLSCREEN;
   } else if (s == "goto_workspace") {
-    return ActionType::GOTO_WORKSPACE;
+    return Action::Type::GOTO_WORKSPACE;
   } else if (s == "move_app_to_workspace") {
-    return ActionType::MOVE_APP_TO_WORKSPACE;
+    return Action::Type::MOVE_APP_TO_WORKSPACE;
   } else if (s == "kill") {
-    return ActionType::KILL;
+    return Action::Type::KILL;
   } else if (s == "exit") {
-    return ActionType::EXIT;
+    return Action::Type::EXIT;
   } else if (s == "exec") {
-    return ActionType::EXEC;
+    return Action::Type::EXEC;
   } else if (s == "reload") {
-    return ActionType::RELOAD;
+    return Action::Type::RELOAD;
   } else {
-    return ActionType::UNDEFINED;
+    return Action::Type::UNDEFINED;
   }
 }
 
