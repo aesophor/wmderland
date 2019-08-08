@@ -1,4 +1,7 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "properties.h"
+
+namespace wmderland {
 
 Properties::Properties(Display* dpy) : utf8string(XInternAtom(dpy, "UTF8_STRING", false)) {
   wmderland_client_event = XInternAtom(dpy, "WMDERLAND_CLIENT_EVENT", false);
@@ -26,3 +29,5 @@ Properties::Properties(Display* dpy) : utf8string(XInternAtom(dpy, "UTF8_STRING"
   net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", false);
   net[atom::NET_CLIENT_LIST] = XInternAtom(dpy, "_NET_CLIENT_LIST", false);
 };
+
+} // namespace wmderland

@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_CONFIG_H_
 #define WMDERLAND_CONFIG_H_
 
@@ -42,6 +43,8 @@
 
 #define VARIABLE_PREFIX "$"
 #define DEFAULT_EXIT_KEY "Mod4+Shift+Escape"
+
+namespace wmderland {
 
 enum class ConfigKeyword {
   SET,
@@ -106,5 +109,7 @@ class Config {
   const std::string filename_;
   static const char kCommentSymbol = ';';
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_CONFIG_H_

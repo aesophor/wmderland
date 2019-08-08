@@ -1,14 +1,14 @@
-#ifndef WMDERLAND_WM_H_
-#define WMDERLAND_WM_H_
-
-#include <memory>
-#include <vector>
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+#ifndef WMDERLAND_WINDOW_MANAGER_H_
+#define WMDERLAND_WINDOW_MANAGER_H_
 
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 }
+#include <memory>
+#include <vector>
 
 #include "properties.h"
 #include "workspace.h"
@@ -27,6 +27,8 @@ extern "C" {
 #define WM_STATE_WITHDRAWN 0
 #define WM_STATE_NORMAL 1
 #define WM_STATE_ICONIC 3
+
+namespace wmderland {
 
 class WindowManager {
  public:
@@ -101,4 +103,6 @@ class WindowManager {
   XButtonEvent btn_pressed_event_;
 };
 
-#endif // WMDERLAND_WM_H_
+} // namespace wmderland
+
+#endif // WMDERLAND_WINDOW_MANAGER_H_

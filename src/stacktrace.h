@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_STACKTRACE_H_
 #define WMDERLAND_STACKTRACE_H_
 
@@ -9,15 +10,15 @@ extern "C" {
 #include <fcntl.h> // open
 }
 
+namespace wmderland {
 
 namespace segv {
 
-void InstallHandler(void (*Handler)(int),
-                    int stacktrace_function_count=10,
-                    char* stacktrace_log_location="/tmp/Wmderland.STACKTRACE");
-
-void Handle(int sig);
+void InstallHandler(void (*Handler)(int));
+void Handle(int);
 
 } // namespace segv
+
+} // namespace wmderland
 
 #endif // WMDERLAND_STACKTRACE_H_

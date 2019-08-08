@@ -1,11 +1,14 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_TREE_H_
 #define WMDERLAND_TREE_H_
 
-#include "tree_node.h"
-
-#include <unordered_map>
 #include <memory>
 #include <vector>
+#include <unordered_map>
+
+#include "tree_node.h"
+
+namespace wmderland {
 
 class Client;
 
@@ -25,5 +28,7 @@ class Tree {
   std::unique_ptr<TreeNode> root_;
   TreeNode* current_;
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_TREE_H_

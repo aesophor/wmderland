@@ -1,21 +1,20 @@
-#include "wm.h"
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+#include "window_manager.h"
 
+extern "C" {
+#include <X11/Xproto.h>
+#include <X11/Xatom.h>
+#include <X11/cursorfont.h>
+}
 #include <memory>
 #include <string>
 #include <sstream>
 #include <cstring>
 #include <algorithm>
 
-extern "C" {
-#include <X11/cursorfont.h>
-#include <X11/Xproto.h>
-#include <X11/Xatom.h>
-}
-
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
-
 #include "client.h"
 #include "util.h"
 
@@ -28,12 +27,14 @@ using std::unique_ptr;
 using std::stringstream;
 using std::unordered_map;
 
-using tiling::Direction;
-using wm_utils::IsDock;
-using wm_utils::IsDialog;
-using wm_utils::IsSplash;
-using wm_utils::IsUtility;
-using wm_utils::IsNotification;
+using wmderland::tiling::Direction;
+using wmderland::wm_utils::IsDock;
+using wmderland::wm_utils::IsDialog;
+using wmderland::wm_utils::IsSplash;
+using wmderland::wm_utils::IsUtility;
+using wmderland::wm_utils::IsNotification;
+
+namespace wmderland {
 
 WindowManager* WindowManager::instance_;
 
@@ -736,3 +737,5 @@ void WindowManager::UpdateClientList() {
     }
   }
 }
+
+} // namespace wmderland

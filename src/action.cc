@@ -1,9 +1,12 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "action.h"
 
 #include "util.h"
 
 using std::string;
 using std::vector;
+
+namespace wmderland {
 
 Action::Action(const string& s) {
   // For example, "goto_workspace 1" is an action.
@@ -67,3 +70,5 @@ ActionType Action::StrToActionType(const string& s) {
     return ActionType::UNDEFINED;
   }
 }
+
+} // namespace wmderland

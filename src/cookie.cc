@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "cookie.h"
 
 #include <sstream>
@@ -13,6 +14,8 @@ using std::ofstream;
 using std::ifstream;
 using std::stringstream;
 using std::unordered_map;
+
+namespace wmderland {
 
 Cookie::Cookie(Display* dpy, Properties* prop, string filename)
     : dpy_(dpy), prop_(prop), filename_(filename) {
@@ -81,3 +84,5 @@ ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
   }
   return ifs;
 }
+
+} // namespace wmderland

@@ -1,10 +1,13 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "tree_node.h"
 
 #include <algorithm>
 
 using std::vector;
 using std::remove;
-using tiling::Direction;
+using wmderland::tiling::Direction;
+
+namespace wmderland {
 
 TreeNode::TreeNode(Client* client)
     : client_(client),
@@ -92,3 +95,5 @@ Direction TreeNode::tiling_direction() const {
 void TreeNode::set_tiling_direction(Direction tiling_direction) {
   tiling_direction_ = tiling_direction;
 }
+
+} // namespace wmderland

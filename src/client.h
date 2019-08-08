@@ -1,23 +1,24 @@
-// A Client is any window that we have decided to manage. It is a wrapper class 
-// of Window which provides some useful information and methods.
-
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_CLIENT_H_
 #define WMDERLAND_CLIENT_H_
-
-#include <unordered_map>
-#include <string>
 
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 }
+#include <unordered_map>
+#include <string>
 
 #include "workspace.h"
 #include "properties.h"
 #include "util.h"
 
+namespace wmderland {
+
 class Workspace;
 
+// A Client is any window that we have decided to manage. It is a wrapper class 
+// of Window which provides some useful information and methods.
 class Client {
  public:
   // The lightning fast mapper which maps Window to Client* in O(1)
@@ -100,5 +101,7 @@ inline void Client::SetBorderWidth(unsigned int width) const {
 inline void Client::SetBorderColor(unsigned long color) const {
   XSetWindowBorder(dpy_, window_, color);
 }
+
+} // namespace wmderland
 
 #endif // WMDERLAND_CLIENT_H_

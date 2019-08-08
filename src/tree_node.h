@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_TREE_NODE_H_
 #define WMDERLAND_TREE_NODE_H_
 
@@ -5,6 +6,8 @@
 #include <unordered_map>
 
 #include "util.h"
+
+namespace wmderland {
 
 class Client;
 
@@ -41,5 +44,7 @@ class TreeNode {
   Client* client_;
   tiling::Direction tiling_direction_;
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_TREE_NODE_H_

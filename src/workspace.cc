@@ -1,10 +1,11 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "workspace.h"
 
 #include <algorithm>
 #include <memory>
 #include <stack>
 
-#include "wm.h"
+#include "window_manager.h"
 #include "util.h"
 
 using std::pair;
@@ -13,7 +14,9 @@ using std::vector;
 using std::remove;
 using std::remove_if;
 using std::unique_ptr;
-using tiling::Direction;
+using wmderland::tiling::Direction;
+
+namespace wmderland {
 
 class WindowManager;
 
@@ -363,3 +366,5 @@ bool Workspace::is_fullscreen() const {
 void Workspace::set_fullscreen(bool is_fullscreen) {
   is_fullscreen_ = is_fullscreen;
 }
+
+} // namespace wmderland

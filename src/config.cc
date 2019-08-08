@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "config.h"
 
 #include <fstream>
@@ -6,7 +7,6 @@
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
-
 #include "action.h"
 #include "util.h"
 
@@ -19,6 +19,8 @@ using std::vector;
 using std::ifstream;
 using std::stringstream;
 using std::unordered_map;
+
+namespace wmderland {
 
 Config::Config(Display* dpy, Properties* prop, const string& filename)
     : dpy_(dpy), prop_(prop), filename_(filename) {
@@ -253,3 +255,5 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
 
   return ifs;
 }
+
+} // namespace wmderland

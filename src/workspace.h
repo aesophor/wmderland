@@ -1,20 +1,19 @@
-// A Workspace contains its id, the active window in this workspace
-// and a list of windows.
-
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_WORKSPACE_H_
 #define WMDERLAND_WORKSPACE_H_
-
-#include <memory>
-#include <vector>
 
 extern "C" {
 #include <X11/Xlib.h>
 }
+#include <memory>
+#include <vector>
 
 #include "config.h"
 #include "client.h"
 #include "tree.h"
 #include "util.h"
+
+namespace wmderland {
 
 class Client;
 
@@ -66,5 +65,7 @@ class Workspace {
   std::string name_;
   bool is_fullscreen_;
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_WORKSPACE_H_

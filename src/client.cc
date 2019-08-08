@@ -1,9 +1,12 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "client.h"
 
 #include "config.h"
 
 using std::string;
 using std::unordered_map;
+
+namespace wmderland {
 
 unordered_map<Window, Client*> Client::mapper_;
 
@@ -68,3 +71,5 @@ void Client::set_floating(bool is_floating) {
 void Client::set_fullscreen(bool is_fullscreen) {
   is_fullscreen_ = is_fullscreen;
 }
+
+} // namespace wmderland

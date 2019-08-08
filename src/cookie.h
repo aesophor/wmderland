@@ -1,20 +1,21 @@
-// Cookie holds the user-prefered positions and sizes of windows.
-
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_COOKIE_H_
 #define WMDERLAND_COOKIE_H_
-
-#include <string>
-#include <fstream>
-#include <unordered_map>
 
 extern "C" {
 #include <X11/Xutil.h>
 }
+#include <string>
+#include <fstream>
+#include <unordered_map>
 
 #include "util.h"
 
+namespace wmderland {
+
 class Properties;
 
+// Cookie holds the user-prefered positions and sizes of windows.
 class Cookie {
  public:
   Cookie(Display* dpy, Properties* prop, const std::string filename);
@@ -35,5 +36,7 @@ class Cookie {
   std::string filename_;
   std::unordered_map<std::string, Area> window_area_map_;
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_COOKIE_H_

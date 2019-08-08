@@ -1,10 +1,6 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_UTIL_H_
 #define WMDERLAND_UTIL_H_
-
-#include "properties.h"
-
-#include <string>
-#include <vector>
 
 extern "C" {
 #include <X11/Xlib.h>
@@ -12,6 +8,12 @@ extern "C" {
 #include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 }
+#include <string>
+#include <vector>
+
+#include "properties.h"
+
+namespace wmderland {
 
 struct Area {
   Area();
@@ -83,5 +85,7 @@ namespace sys_utils {
 std::string ToAbsPath(const std::string& path);
 
 } // namespace sys_utils
+
+} // namespace wmderland
 
 #endif // WMDERLAND_UTIL_H_

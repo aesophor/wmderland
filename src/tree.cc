@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "tree.h"
 
 #include <stack>
@@ -5,7 +6,9 @@
 using std::stack;
 using std::vector;
 using std::unordered_map;
-using tiling::Direction;
+using wmderland::tiling::Direction;
+
+namespace wmderland {
 
 unordered_map<Client*, TreeNode*> TreeNode::mapper_;
 
@@ -60,3 +63,5 @@ TreeNode* Tree::current() const {
 void Tree::set_current(TreeNode* current) {
   current_ = current;
 }
+
+} // namespace wmderland

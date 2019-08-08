@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "util.h"
 
 #include <sstream>
@@ -6,6 +7,8 @@ using std::pair;
 using std::size_t;
 using std::string;
 using std::vector;
+
+namespace wmderland {
 
 Area::Area() : x(0), y(0), width(0), height(0) {}
 
@@ -325,3 +328,5 @@ string ToAbsPath(const string& path) {
 }
 
 } // namespace sys_utils
+
+} // namespace wmderland

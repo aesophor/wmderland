@@ -1,29 +1,22 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include "stacktrace.h"
 
-namespace {
+#define STACKTRACE_LOG "/tmp/Wmderland.STACKTRACE"
+#define STACKTRACE_FUNC_COUNT 10
 
-int stacktrace_function_count;
-char* stacktrace_log_location;
-
-} // namespace
-
+namespace wmderland {
 
 namespace segv {
 
-void InstallHandler(void (*Handler)(int),
-                    int stacktrace_function_count,
-                    char* stacktrace_log_location) {
-  ::stacktrace_function_count = stacktrace_function_count;
-  ::stacktrace_log_location = stacktrace_log_location;
-
+void InstallHandler(void (*Handler)(int)) {
   signal(SIGSEGV, Handler);
 }
 
-void Handle(int sig) {
-  void* array[10];
-  size_t size = backtrace(array, 10);
+void Handle(int) {
+  void* array[STACKTRACE_FUNC_COUNT];
+  size_t size = backtrace(array, STACKTRACE_FUNC_COUNT);
 
-  int fd = open("/tmp/Wmderland.stacktrace.log", O_CREAT | O_WRONLY, 0600);
+  int fd = open(STACKTRACE_LOG, O_CREAT | O_WRONLY, 0600);
   backtrace_symbols_fd(array + 2, size - 2, fd);
   close(fd);
 
@@ -31,3 +24,5 @@ void Handle(int sig) {
 }
 
 } // namespace segv
+
+} // namespace wmderland

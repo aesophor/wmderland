@@ -1,8 +1,11 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_ACTION_H_
 #define WMDERLAND_ACTION_H_
 
 #include <string>
 #include <vector>
+
+namespace wmderland {
 
 enum class ActionType {
   TILE_H,
@@ -38,5 +41,7 @@ class Action {
   ActionType type_;
   std::string arguments_;
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_ACTION_H_

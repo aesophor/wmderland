@@ -1,17 +1,19 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <iostream>
 #include <cstring>
+#include <string>
 #include <memory>
 
 #if GLOG_FOUND
 #include <glog/logging.h>
 #endif
-
-#include "wm.h"
 #include "config.h"
 #include "stacktrace.h"
+#include "window_manager.h"
 
 using std::string;
 using std::unique_ptr;
+using wmderland::WindowManager;
 
 
 string version() {
@@ -30,7 +32,7 @@ int main(int argc, char* args[]) {
   // Install segfault handler.
   // By default, stacktrace is dumped into /tmp/Wmderland.STACKTRACE
   // with 10 most recent function calls recorded.
-  segv::InstallHandler(&segv::Handle);
+  wmderland::segv::InstallHandler(&wmderland::segv::Handle);
 
   try {
     // Initialize google's c++ logging library (if installed)

@@ -1,3 +1,4 @@
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #ifndef WMDERLAND_PROPERTIES_H_
 #define WMDERLAND_PROPERTIES_H_
 
@@ -5,6 +6,8 @@ extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 }
+
+namespace wmderland {
 
 namespace atom {
 
@@ -49,5 +52,7 @@ struct Properties {
   Atom wm[atom::WM_ATOM_SIZE];
   Atom net[atom::NET_ATOM_SIZE];
 };
+
+} // namespace wmderland
 
 #endif // WMDERLAND_PROPERTIES_H_
