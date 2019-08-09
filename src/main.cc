@@ -29,9 +29,7 @@ int main(int argc, char* args[]) {
     return EXIT_SUCCESS;
   }
 
-  // Install segfault handler.
-  // By default, stacktrace is dumped into /tmp/Wmderland.STACKTRACE
-  // with 10 most recent function calls recorded.
+  // Install segfault handler. See stacktrace.cc
   wmderland::segv::InstallHandler(&wmderland::segv::Handle);
 
   try {

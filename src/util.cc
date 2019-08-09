@@ -38,11 +38,6 @@ void Init(Display* dpy, Properties* prop, Window root_window) {
   ::root_window = root_window;
 }
  
-pair<int, int> GetDisplayResolution() {
-  XWindowAttributes root_window_attr = GetXWindowAttributes(root_window);
-  return {root_window_attr.width, root_window_attr.height};
-}
-
 // Get the XWindowAttributes of a window.
 XWindowAttributes GetXWindowAttributes(Window window) {
   XWindowAttributes ret;

@@ -194,15 +194,15 @@ void Workspace::RaiseAllFloatingClients() const {
 
 void Workspace::SetFocusedClient(Window window) const {
   Client* c = GetClient(window);
-
-  if (c) {
-    client_tree_->set_current_node(client_tree_->GetTreeNode(c));
-
-    // Raise the window to the top and set input focus to it.
-    c->Raise();
-    c->SetInputFocus();
-    c->SetBorderColor(config_->focused_color());
+  if (!c) {
+    return;
   }
+  
+  // Raise the window to the top and set input focus to it.
+  c->Raise();
+  c->SetInputFocus();
+  c->SetBorderColor(config_->focused_color());
+  client_tree_->set_current_node(client_tree_->GetTreeNode(c));
 }
 
 void Workspace::UnsetFocusedClient() const {

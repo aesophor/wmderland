@@ -29,7 +29,6 @@ struct Area {
 namespace wm_utils {
 
 void Init(Display* dpy, Properties* prop, Window root_window);
-std::pair<int, int> GetDisplayResolution();
 XWindowAttributes GetXWindowAttributes(Window window);
 XSizeHints GetWmNormalHints(Window window);
 std::pair<std::string, std::string> GetXClassHint(Window window);

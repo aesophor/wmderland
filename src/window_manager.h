@@ -46,7 +46,8 @@ class WindowManager {
   void OnConfigReload();
   static int OnXError(Display* dpy, XErrorEvent* e);
 
-
+  void ArrangeWindows() const;
+ 
   // Workspace manipulation
   void GotoWorkspace(int next);
   void MoveWindowToWorkspace(Window window, int next); 
@@ -63,7 +64,8 @@ class WindowManager {
   inline void RaiseNotifications() const;
 
   // Window position and size
-  Area CalculateTilingArea();
+  std::pair<int, int> GetDisplayResolution() const;
+  Area CalculateTilingArea() const;
   void DetermineFloatingWindowArea(Window window);
 
   // Misc
