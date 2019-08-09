@@ -96,7 +96,7 @@ void Workspace::Move(Window w, Workspace* new_workspace) const {
 
   if (c) {
     bool is_floating = c->is_floating();
-    Remove(w);
+    this->Remove(w);
     new_workspace->Add(w, is_floating);
   }
 }

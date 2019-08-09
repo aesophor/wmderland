@@ -16,23 +16,11 @@ extern "C" {
 #include "cookie.h"
 #include "util.h"
 
-#define MOUSE_LEFT_BTN 1
-#define MOUSE_MID_BTN 2
-#define MOUSE_RIGHT_BTN 3
-
-#define NORMAL_CURSOR 0
-#define MOVE_CURSOR 1
-#define RESIZE_CURSOR 3
-
-#define WM_STATE_WITHDRAWN 0
-#define WM_STATE_NORMAL 1
-#define WM_STATE_ICONIC 3
-
 namespace wmderland {
 
 class WindowManager {
  public:
-  static std::unique_ptr<WindowManager> GetInstance();
+  static WindowManager* GetInstance();
   virtual ~WindowManager();
   void Run();
 

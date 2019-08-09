@@ -18,15 +18,24 @@ extern "C" {
 #include "client.h"
 #include "util.h"
 
-using std::find;
-using std::stoi;
+#define MOUSE_LEFT_BTN 1
+#define MOUSE_MID_BTN 2
+#define MOUSE_RIGHT_BTN 3
+
+#define NORMAL_CURSOR 0
+#define MOVE_CURSOR 1
+#define RESIZE_CURSOR 3
+
+#define WM_STATE_WITHDRAWN 0
+#define WM_STATE_NORMAL 1
+#define WM_STATE_ICONIC 3
+
 using std::pair;
 using std::string;
 using std::vector;
 using std::unique_ptr;
 using std::stringstream;
 using std::unordered_map;
-
 using wmderland::tiling::Direction;
 using wmderland::wm_utils::IsDock;
 using wmderland::wm_utils::IsDialog;
@@ -36,9 +45,9 @@ using wmderland::wm_utils::IsNotification;
 
 namespace wmderland {
 
-WindowManager* WindowManager::instance_;
+WindowManager* WindowManager::instance_ = nullptr;
 
-unique_ptr<WindowManager> WindowManager::GetInstance() {
+WindowManager* WindowManager::GetInstance() {
   // If the instance is not yet initialized, we'll try to open a display
   // to X server. If it fails (i.e., dpy is None), then we return nullptr
   // to the caller. Otherwise we return an instance of WindowManager.
@@ -46,7 +55,7 @@ unique_ptr<WindowManager> WindowManager::GetInstance() {
     Display* dpy;
     instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : nullptr;
   }
-  return unique_ptr<WindowManager>(instance_);
+  return instance_;
 }
 
 WindowManager::WindowManager(Display* dpy) 
@@ -223,7 +232,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   }
 
   // If this window is a dock (or bar), record it, map it and tile the workspace.
-  if (IsDock(e.window) && find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
+  if (IsDock(e.window) && std::find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
     docks_.push_back(e.window);
     workspaces_[current_]->Arrange(CalculateTilingArea());
     XMapWindow(dpy_, e.window);
@@ -249,58 +258,64 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   // Spawn this window in the specified workspace if such rule exists,
   // otherwise spawn it in current workspace.
   int target = config_->GetSpawnWorkspaceId(e.window);
-  if (target == UNSPECIFIED_WORKSPACE) target = current_;
+
+  if (target == UNSPECIFIED_WORKSPACE) {
+    target = current_;
+  }
+
 
   // Manage this window by adding it to the target workspace.
-  if (!workspaces_[target]->Has(e.window)) {
-    Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
-    workspaces_[target]->UnsetFocusedClient();
-    workspaces_[target]->Add(e.window, should_float);
-
-    if (workspaces_[target]->is_fullscreen()) {
-      workspaces_[target]->SetFocusedClient(prev_focused_client->window());
-    }
-
-    if (target == current_) {
-      // If there's currently a fullscreen window, don't arrange the workspace,
-      // or the entire workspace will mess up.
-      if (!workspaces_[target]->is_fullscreen()) {
-        XMapWindow(dpy_, e.window);
-        workspaces_[target]->Arrange(CalculateTilingArea());
-        workspaces_[target]->SetFocusedClient(e.window);
-        workspaces_[target]->RaiseAllFloatingClients();
-        RaiseNotifications();
-        wm_utils::SetNetActiveWindow(e.window);
-      }
-    }
-
-    if (should_float) {
-      DetermineFloatingWindowArea(e.window);
-    }
-
-    // If the window we're launching has _NET_WM_STATE_FULLSCREEN, or is requested in config,
-    // then we should set this window to fullscreen.
-    if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
-      SetFullscreen(e.window, true);
-    }
-
-    // Update NET_CLIENT_LIST
-    UpdateClientList();
+  if (workspaces_[target]->Has(e.window)) {
+    return;
   }
+
+  Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
+  workspaces_[target]->UnsetFocusedClient();
+  workspaces_[target]->Add(e.window, should_float);
+
+  if (workspaces_[target]->is_fullscreen()) {
+    workspaces_[target]->SetFocusedClient(prev_focused_client->window());
+  }
+
+  if (target == current_) {
+    // If there's currently a fullscreen window, don't arrange the workspace,
+    // or the entire workspace will mess up.
+    if (!workspaces_[target]->is_fullscreen()) {
+      XMapWindow(dpy_, e.window);
+      workspaces_[target]->Arrange(CalculateTilingArea());
+      workspaces_[target]->SetFocusedClient(e.window);
+      workspaces_[target]->RaiseAllFloatingClients();
+      RaiseNotifications();
+      wm_utils::SetNetActiveWindow(e.window);
+    }
+  }
+
+  if (should_float) {
+    DetermineFloatingWindowArea(e.window);
+  }
+
+  // If the window we're launching has _NET_WM_STATE_FULLSCREEN, or is requested in config,
+  // then we should set this window to fullscreen.
+  if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
+    SetFullscreen(e.window, true);
+  }
+
+  // Update NET_CLIENT_LIST
+  UpdateClientList();
 }
 
 void WindowManager::OnMapNotify(const XMapEvent& e) {
   // Checking if a window is a notification in OnMapRequest() will fail (especially dunst),
   // So we perform the check here (after the window is mapped) instead.
   if (IsNotification(e.window) 
-      && find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
+      && std::find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
     notifications_.push_back(e.window);
   }
 }
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   // If the window is a dock/bar or notification, remove it and tile the workspace.
-  if (find(docks_.begin(), docks_.end(), e.window) != docks_.end()) {
+  if (std::find(docks_.begin(), docks_.end(), e.window) != docks_.end()) {
     docks_.erase(remove(docks_.begin(), docks_.end(), e.window), docks_.end());
     workspaces_[current_]->Arrange(CalculateTilingArea());
     return;
@@ -380,11 +395,11 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         SetFullscreen(focused_client->window(), !focused_client->is_fullscreen());
         break;
       case Action::Type::GOTO_WORKSPACE:
-        GotoWorkspace(stoi(action.argument()) - 1);
+        GotoWorkspace(std::stoi(action.argument()) - 1);
         break;
       case Action::Type::MOVE_APP_TO_WORKSPACE:
         if (!focused_client) continue;
-        MoveWindowToWorkspace(focused_client->window(), stoi(action.argument()) - 1);
+        MoveWindowToWorkspace(focused_client->window(), std::stoi(action.argument()) - 1);
         break;
       case Action::Type::KILL:
         if (!focused_client) continue;
@@ -636,7 +651,7 @@ void WindowManager::KillClient(Window w) {
   // First try to kill the client gracefully via ICCCM. If the client does not support
   // this method, then we'll perform the brutal XKillClient().
   if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
-      && (find(supported_protocols, supported_protocols + num_supported_protocols, 
+      && (std::find(supported_protocols, supported_protocols + num_supported_protocols, 
           prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
     XEvent msg;
     memset(&msg, 0, sizeof(msg));

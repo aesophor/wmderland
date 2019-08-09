@@ -42,7 +42,7 @@ int main(int argc, char* args[]) {
     // WindowManager is a singleton class. If XOpenDisplay() fails during 
     // WindowManager::GetInstance(), it will return None (in Xlib, 'None'
     // is the universal null resource ID or atom.)
-    unique_ptr<WindowManager> wm = WindowManager::GetInstance();
+    unique_ptr<WindowManager> wm(WindowManager::GetInstance());
     if (!wm) {
       WM_LOG(INFO, "Failed to open display to X server.");
       return EXIT_FAILURE;
