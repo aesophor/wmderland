@@ -33,12 +33,6 @@ extern "C" {
 using std::pair;
 using std::string;
 using std::vector;
-using wmderland::tiling::Direction;
-using wmderland::wm_utils::IsDock;
-using wmderland::wm_utils::IsDialog;
-using wmderland::wm_utils::IsSplash;
-using wmderland::wm_utils::IsUtility;
-using wmderland::wm_utils::IsNotification;
 
 namespace wmderland {
 
@@ -228,30 +222,28 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     return;
   }
 
-  // If this window is a dock (or bar), map it, record it and arrange the workspace.
-  if (IsDock(e.window) && std::find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
+  wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
+
+  // If this window is a dock (or bar), map it, add it to docks_
+  // and arrange the workspace.
+  if (wm_utils::IsDock(e.window)
+      && std::find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
     XMapWindow(dpy_, e.window);
     docks_.push_back(e.window);
     workspaces_[current_]->Arrange(CalculateTilingArea());
     return;
   }
-
-  wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
-
+  
   // If this window is wine steam dialog, just map it directly and don't manage it.
   pair<string, string> hint = wm_utils::GetXClassHint(e.window);
-  if (IsDialog(e.window)) {
+  if (wm_utils::IsDialog(e.window)) {
     if (hint.first == "Wine" && hint.second == "steam.exe") {
       XMapWindow(dpy_, e.window);
       return;
     }
   }
 
-
   // Pass all checks above -> we should manage this window.
-  // Floating criteria: has _NET_WM_WINDOW_TYPE_{DIALOG,SPLASH,UTILITY} or is requested in config.
-  bool should_float = IsDialog(e.window) || IsSplash(e.window) || IsUtility(e.window) || config_->ShouldFloat(e.window);
-
   // Spawn this window in the specified workspace if such rule exists,
   // otherwise spawn it in current workspace.
   int target = config_->GetSpawnWorkspaceId(e.window);
@@ -260,45 +252,46 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     target = current_;
   }
 
-
   // If this window is already in this workspace, don't add it to this workspace again.
   if (workspaces_[target]->Has(e.window)) {
     return;
   }
 
+  bool should_float = config_->ShouldFloat(e.window)
+    || wm_utils::IsDialog(e.window)
+    || wm_utils::IsSplash(e.window)
+    || wm_utils::IsUtility(e.window);
+
+  bool should_fullscreen = config_->ShouldFullscreen(e.window)
+    || wm_utils::HasNetWmStateFullscreen(e.window);
+
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
   workspaces_[target]->UnsetFocusedClient();
-  workspaces_[target]->Add(e.window);
-  Client* current_focused_client = workspaces_[target]->GetClient(e.window);
-  current_focused_client->set_floating(should_float);
+  workspaces_[target]->Add(e.window, should_float);
 
   if (workspaces_[target]->is_fullscreen()) {
     workspaces_[target]->SetFocusedClient(prev_focused_client->window());
   }
 
-  if (target == current_) {
+  if (target == current_ && !workspaces_[current_]->is_fullscreen()) {
     // If there's currently a fullscreen window, don't arrange the workspace,
     // or the entire workspace will mess up.
-    if (!workspaces_[target]->is_fullscreen()) {
-      current_focused_client->Map();
-      workspaces_[target]->Arrange(CalculateTilingArea());
-      workspaces_[target]->SetFocusedClient(e.window);
-      workspaces_[target]->RaiseAllFloatingClients();
-      RaiseNotifications();
-      wm_utils::SetNetActiveWindow(e.window);
-    }
+    workspaces_[current_]->GetClient(e.window)->Map();
+    workspaces_[current_]->Arrange(CalculateTilingArea());
+    workspaces_[current_]->SetFocusedClient(e.window);
+    workspaces_[current_]->RaiseAllFloatingClients();
+    RaiseNotifications();
+    wm_utils::SetNetActiveWindow(e.window);
   }
 
   if (should_float) {
     DetermineFloatingWindowArea(e.window);
   }
 
-  // If the window we're launching has _NET_WM_STATE_FULLSCREEN, or is requested in config,
-  // then we should set this window to fullscreen.
-  if (config_->ShouldFullscreen(e.window) || wm_utils::HasNetWmStateFullscreen(e.window)) {
+  if (should_fullscreen) {
     SetFullscreen(e.window, true);
   }
-
+  
   // Update NET_CLIENT_LIST
   UpdateClientList();
 }
@@ -306,7 +299,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 void WindowManager::OnMapNotify(const XMapEvent& e) {
   // Checking if a window is a notification in OnMapRequest() will fail (especially dunst),
   // So we perform the check here (after the window is mapped) instead.
-  if (IsNotification(e.window) 
+  if (wm_utils::IsNotification(e.window) 
       && std::find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
     notifications_.push_back(e.window);
   }
@@ -318,7 +311,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     docks_.erase(remove(docks_.begin(), docks_.end(), e.window), docks_.end());
     workspaces_[current_]->Arrange(CalculateTilingArea());
     return;
-  } else if (IsNotification(e.window)) {
+  } else if (wm_utils::IsNotification(e.window)) {
     notifications_.erase(remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
     return;
   }
@@ -382,10 +375,10 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         wm_utils::SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
         break;
       case Action::Type::TILE_H:
-        workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
+        workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
         break;
       case Action::Type::TILE_V:
-        workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
+        workspaces_[current_]->SetTilingDirection(TilingDirection::VERTICAL);
         break;
       case Action::Type::TOGGLE_FLOATING:
         if (!focused_client) continue;
@@ -456,12 +449,8 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
-  if (!btn_pressed_event_.subwindow) {
-    return;
-  }
-
   Client* c = Client::mapper_[btn_pressed_event_.subwindow];
-  if (!c) {
+  if (!btn_pressed_event_.subwindow || !c) {
     return;
   }
 
@@ -491,14 +480,14 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
 }
 
 void WindowManager::OnConfigReload() {
-  // 1. Rearrange all workspaces.
+  // 1. Re-arrange all workspaces.
   // 2. Apply new border width and color to existing clients.
   Area tiling_area = CalculateTilingArea();
 
-  for (auto workspace : workspaces_) {
+  for (const auto workspace : workspaces_) {
     workspace->Arrange(tiling_area);
 
-    for (auto client : workspace->GetClients()) {
+    for (const auto client : workspace->GetClients()) {
       client->SetBorderWidth(config_->border_width());
       client->SetBorderColor(config_->unfocused_color());
     }
@@ -560,12 +549,8 @@ void WindowManager::GotoWorkspace(int next) {
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
-  if (current_ == next){
-    return;
-  }
-
   Client* c = Client::mapper_[window];
-  if (!c) {
+  if (current_ == next || !c){
     return;
   }
 
@@ -628,7 +613,7 @@ void WindowManager::SetFloating(Window window, bool floating) {
 
 void WindowManager::SetFullscreen(Window window, bool fullscreen) {
   Client* c = Client::mapper_[window];
-  if (!c) {
+  if (!c || c->is_fullscreen() == fullscreen) {
     return;
   }
 
@@ -684,19 +669,19 @@ void WindowManager::KillClient(Window window) {
 
 
 inline void WindowManager::MapDocks() const {
-  for (auto window : docks_) {
+  for (const auto window : docks_) {
     XMapWindow(dpy_, window);
   }
 }
 
 inline void WindowManager::UnmapDocks() const {
-  for (auto window : docks_) {
+  for (const auto window : docks_) {
     XUnmapWindow(dpy_, window);
   }
 }
 
 inline void WindowManager::RaiseNotifications() const {
-  for (auto window : notifications_) {
+  for (const auto window : notifications_) {
     XRaiseWindow(dpy_, window);
   }
 }
@@ -706,7 +691,7 @@ Area WindowManager::CalculateTilingArea() {
   pair<int, int> res = wm_utils::GetDisplayResolution();
   Area tiling_area = {0, 0, res.first, res.second};
 
-  for (auto window : docks_) {
+  for (const auto window : docks_) {
     XWindowAttributes dock_attr = wm_utils::GetXWindowAttributes(window);
 
     if (dock_attr.y == 0) {
@@ -760,11 +745,11 @@ void WindowManager::DetermineFloatingWindowArea(Window window) {
 void WindowManager::UpdateClientList() {
   XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST]);
 
-  for (auto workspace : workspaces_) {
-    for (auto client : workspace->GetClients()) {
+  for (const auto workspace : workspaces_) {
+    for (const auto client : workspace->GetClients()) {
       Window window = client->window();
       XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST], XA_WINDOW, 32, 
-          PropModeAppend, (unsigned char *) &window, 1);
+          PropModeAppend, reinterpret_cast<unsigned char*>(&window), 1);
     }
   }
 }

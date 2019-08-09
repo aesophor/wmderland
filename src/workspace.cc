@@ -12,7 +12,6 @@ using std::pair;
 using std::stack;
 using std::vector;
 using std::unique_ptr;
-using wmderland::tiling::Direction;
 
 namespace wmderland {
 
@@ -131,16 +130,16 @@ void Workspace::Tile(Tree::Node* node, int x, int y, int width, int height,
         return n->client() && n->client()->is_floating(); }), children.end());
 
   // Calculate each child's x, y, width and height based on node's tiling direction.
-  Direction dir = node->tiling_direction();
+  TilingDirection dir = node->tiling_direction();
   int child_x = x;
   int child_y = y;
-  int child_width = (dir == Direction::HORIZONTAL) ? width / children.size() : width;
-  int child_height = (dir == Direction::VERTICAL) ? height / children.size() : height;
+  int child_width = (dir == TilingDirection::HORIZONTAL) ? width / children.size() : width;
+  int child_height = (dir == TilingDirection::VERTICAL) ? height / children.size() : height;
 
   for (size_t i = 0; i < children.size(); i++) {
     Tree::Node* child = children[i];
-    if (node->tiling_direction() == Direction::HORIZONTAL) child_x = x + child_width * i;
-    if (node->tiling_direction() == Direction::VERTICAL) child_y = y + child_height * i;
+    if (node->tiling_direction() == TilingDirection::HORIZONTAL) child_x = x + child_width * i;
+    if (node->tiling_direction() == TilingDirection::VERTICAL) child_y = y + child_height * i;
 
     if (child->leaf()) {
       int new_x = child_x + gap_width / 2;
@@ -154,7 +153,7 @@ void Workspace::Tile(Tree::Node* node, int x, int y, int width, int height,
   }
 }
 
-void Workspace::SetTilingDirection(Direction tiling_direction) const {
+void Workspace::SetTilingDirection(TilingDirection tiling_direction) const {
   if (!client_tree_->current_node()) {
     client_tree_->root_node()->set_tiling_direction(tiling_direction);
   } else if (client_tree_->current_node()->parent()->children().size() > 0){
@@ -282,7 +281,7 @@ void Workspace::FocusLeft() const {
   for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
     Tree::Node* left_sibling = ptr->GetLeftSibling();
 
-    if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && left_sibling) {
+    if (ptr->parent()->tiling_direction() == TilingDirection::HORIZONTAL && left_sibling) {
       ptr = left_sibling;
       while (!ptr->leaf()) {
         ptr = ptr->children().back();
@@ -301,7 +300,7 @@ void Workspace::FocusRight() const {
   for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
     Tree::Node* right_sibling = ptr->GetRightSibling();
 
-    if (ptr->parent()->tiling_direction() == Direction::HORIZONTAL && right_sibling) {
+    if (ptr->parent()->tiling_direction() == TilingDirection::HORIZONTAL && right_sibling) {
       ptr = right_sibling;
       while (!ptr->leaf()) {
         ptr = ptr->children().front();
@@ -320,7 +319,7 @@ void Workspace::FocusUp() const {
   for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
     Tree::Node* left_sibling = ptr->GetLeftSibling();
 
-    if (ptr->parent()->tiling_direction() == Direction::VERTICAL && left_sibling) {
+    if (ptr->parent()->tiling_direction() == TilingDirection::VERTICAL && left_sibling) {
       ptr = left_sibling;
       while (!ptr->leaf()) {
         ptr = ptr->children().back();
@@ -339,7 +338,7 @@ void Workspace::FocusDown() const {
   for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
     Tree::Node* right_sibling = ptr->GetRightSibling();
 
-    if (ptr->parent()->tiling_direction() == Direction::VERTICAL && right_sibling) {
+    if (ptr->parent()->tiling_direction() == TilingDirection::VERTICAL && right_sibling) {
       ptr = right_sibling;
       while (!ptr->leaf()) {
         ptr = ptr->children().front();

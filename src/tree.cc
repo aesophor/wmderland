@@ -4,12 +4,9 @@
 #include <stack>
 #include <algorithm>
 
-#include "util.h"
-
 using std::stack;
 using std::vector;
 using std::unordered_map;
-using wmderland::tiling::Direction;
 
 namespace wmderland {
 
@@ -21,7 +18,7 @@ Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_(nullptr) {
   
   // Initialize a Tree::Node with no client associated with it,
   // and set its tiling direction to HORIZONTAL by default.
-  root_node_->set_tiling_direction(Direction::HORIZONTAL);
+  root_node_->set_tiling_direction(TilingDirection::HORIZONTAL);
 }
 
 
@@ -71,7 +68,7 @@ void Tree::set_current_node(Tree::Node* node) {
 
 Tree::Node::Node(Client* client)
     : client_(client),
-      tiling_direction_(Direction::UNSPECIFIED) {
+      tiling_direction_(TilingDirection::UNSPECIFIED) {
   Tree::Node::mapper_[client] = this;
 }
 
@@ -144,11 +141,11 @@ void Tree::Node::set_client(Client* client) {
 }
 
 
-Direction Tree::Node::tiling_direction() const {
+TilingDirection Tree::Node::tiling_direction() const {
   return tiling_direction_;
 }
 
-void Tree::Node::set_tiling_direction(Direction tiling_direction) {
+void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
   tiling_direction_ = tiling_direction;
 }
 

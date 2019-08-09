@@ -26,17 +26,6 @@ struct Area {
 };
 
 
-namespace tiling {
-
-enum Direction {
-  UNSPECIFIED,
-  HORIZONTAL,
-  VERTICAL
-};
-
-} // namespace tiling
-
-
 namespace wm_utils {
 
 void Init(Display* dpy, Properties* prop, Window root_window);

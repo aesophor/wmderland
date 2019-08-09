@@ -6,38 +6,42 @@
 #include <vector>
 #include <unordered_map>
 
-#include "util.h"
-
 namespace wmderland {
 
 class Client;
+
+enum class TilingDirection {
+  UNSPECIFIED,
+  HORIZONTAL,
+  VERTICAL
+};
 
 class Tree {
  public:
   Tree();
   virtual ~Tree() = default;
- 
+
   class Node {
    public:
     Node(Client* client);
     virtual ~Node();
-
+  
     void AddChild(Tree::Node* child);
     void RemoveChild(Tree::Node* child);
     void InsertChildAfter(Tree::Node* child, Tree::Node* ref);
-   
+
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
 
     const std::vector<Tree::Node*>& children() const;
     Tree::Node* parent() const;
     Client* client() const;
-    tiling::Direction tiling_direction() const;
+    TilingDirection tiling_direction() const;
     bool leaf() const;
 
     void set_parent(Tree::Node* parent);
     void set_client(Client* client);
-    void set_tiling_direction(tiling::Direction tiling_direction);
+    void set_tiling_direction(TilingDirection tiling_direction);
 
     static std::unordered_map<Client*, Tree::Node*> mapper_;
 
@@ -46,7 +50,7 @@ class Tree {
     Tree::Node* parent_;
 
     Client* client_;
-    tiling::Direction tiling_direction_;
+    TilingDirection tiling_direction_;
   };
 
 

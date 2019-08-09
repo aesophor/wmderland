@@ -11,7 +11,6 @@ extern "C" {
 #include "config.h"
 #include "client.h"
 #include "tree.h"
-#include "util.h"
 
 namespace wmderland {
 
@@ -27,7 +26,7 @@ class Workspace {
   void Remove(Window window) const;
   void Move(Window window, Workspace* new_workspace) const;
   void Arrange(const Area& tiling_area) const;
-  void SetTilingDirection(tiling::Direction tiling_direction) const;
+  void SetTilingDirection(TilingDirection tiling_direction) const;
 
   void MapAllClients() const;
   void UnmapAllClients() const;
