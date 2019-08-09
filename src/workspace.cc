@@ -52,10 +52,14 @@ void Workspace::Add(Window w, bool is_floating) const {
 
 void Workspace::Remove(Window w) const {
   Client* c = GetClient(w);
-  if (!c) return;
+  if (!c) {
+    return;
+  }
 
   Tree::Node* node = client_tree_->GetTreeNode(c);
-  if (!node) return;
+  if (!node) {
+    return;
+  }
 
   // Get all leaves and find the index of the node we're going to remove.
   vector<Tree::Node*> nodes = client_tree_->GetAllLeaves();
@@ -103,7 +107,9 @@ void Workspace::Move(Window w, Workspace* new_workspace) const {
 
 void Workspace::Arrange(const Area& tiling_area) const {
   // If there are no clients in this workspace or all clients are floating, return at once.
-  if (!client_tree_->current_node() || GetTilingClients().empty()) return;
+  if (!client_tree_->current_node() || GetTilingClients().empty()) {
+    return;
+  }
 
   int border_width = config_->border_width();
   int gap_width = config_->gap_width();
@@ -201,7 +207,9 @@ void Workspace::SetFocusedClient(Window w) const {
 }
 
 void Workspace::UnsetFocusedClient() const {
-  if (!client_tree_->current_node()) return;
+  if (!client_tree_->current_node()) {
+    return;
+  }
 
   Client* c = client_tree_->current_node()->client();
   if (c) {
@@ -211,7 +219,9 @@ void Workspace::UnsetFocusedClient() const {
 
 
 Client* Workspace::GetFocusedClient() const {
-  if (!client_tree_->current_node()) return nullptr;
+  if (!client_tree_->current_node()) {
+    return nullptr;
+  }
   return client_tree_->current_node()->client();
 }
 

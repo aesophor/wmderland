@@ -75,8 +75,9 @@ WindowManager::WindowManager(Display* dpy)
 
 WindowManager::~WindowManager() {
   XCloseDisplay(dpy_);
-  for (int i = 0; i < WORKSPACE_COUNT; i++) {
-    delete workspaces_[i];
+
+  for (const auto workspace : workspaces_) {
+    delete workspace;
   }
 }
 
@@ -168,7 +169,7 @@ void WindowManager::InitCursors() {
 
 void WindowManager::Run() {
   // Automatically start the applications specified in config in background.
-  for (auto& s : config_->autostart_rules()) {
+  for (const auto& s : config_->autostart_rules()) {
     system((s + '&').c_str());
   }
 
@@ -264,7 +265,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   }
 
 
-  // Manage this window by adding it to the target workspace.
+  // If this window is already in this workspace, don't add it to this workspace again.
   if (workspaces_[target]->Has(e.window)) {
     return;
   }
@@ -272,6 +273,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
   workspaces_[target]->UnsetFocusedClient();
   workspaces_[target]->Add(e.window, should_float);
+  Client* current_focused_client = workspaces_[target]->GetClient(e.window);
 
   if (workspaces_[target]->is_fullscreen()) {
     workspaces_[target]->SetFocusedClient(prev_focused_client->window());
@@ -281,7 +283,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     // If there's currently a fullscreen window, don't arrange the workspace,
     // or the entire workspace will mess up.
     if (!workspaces_[target]->is_fullscreen()) {
-      XMapWindow(dpy_, e.window);
+      current_focused_client->Map();
       workspaces_[target]->Arrange(CalculateTilingArea());
       workspaces_[target]->SetFocusedClient(e.window);
       workspaces_[target]->RaiseAllFloatingClients();
@@ -330,7 +332,9 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 
   // If we aren't managing this window, there's no need to proceed further.
   Client* c = Client::mapper_[e.window];
-  if (!c) return;
+  if (!c) {
+    return;
+  }
 
   // If the client being destroyed is in fullscreen mode, make sure to unset the workspace's
   // fullscreen state.
@@ -368,7 +372,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
       wm_utils::KeysymToStr(e.keycode) // key str, e.g., "q"
   );
 
-  for (auto& action : actions) {
+  for (const auto& action : actions) {
     switch (action.type()) {
       case Action::Type::TILE_H:
         workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
@@ -422,31 +426,32 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 }
 
 void WindowManager::OnButtonPress(const XButtonEvent& e) {
-  if (!e.subwindow) return;
-
   Client* c = Client::mapper_[e.subwindow];
+  if (!e.subwindow || !c) {
+    return;
+  }
 
-  if (c) {
-    c->workspace()->UnsetFocusedClient();
-    c->workspace()->SetFocusedClient(c->window());
-    c->workspace()->RaiseAllFloatingClients();
-    wm_utils::SetNetActiveWindow(c->window());
+  c->workspace()->UnsetFocusedClient();
+  c->workspace()->SetFocusedClient(c->window());
+  c->workspace()->RaiseAllFloatingClients();
+  wm_utils::SetNetActiveWindow(c->window());
 
-    if (c->is_floating() && !c->is_fullscreen()) {
-      c->SaveXWindowAttributes();
-      btn_pressed_event_ = e;
-      XDefineCursor(dpy_, root_window_, cursors_[e.button]);
-    }
+  if (c->is_floating() && !c->is_fullscreen()) {
+    c->SaveXWindowAttributes();
+    btn_pressed_event_ = e;
+    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
   }
 }
 
 void WindowManager::OnButtonRelease(const XButtonEvent& e) {
-  if (!btn_pressed_event_.subwindow || !e.subwindow) return;
+  if (!btn_pressed_event_.subwindow || !e.subwindow) {
+    return;
+  }
 
   Client* c = Client::mapper_[btn_pressed_event_.subwindow];
   if (c && c->is_floating()) {
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(btn_pressed_event_.subwindow);
-    cookie_->Put(c->window(), Area(attr.x, attr.y, attr.width, attr.height));
+    cookie_->Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
   }
 
   btn_pressed_event_.subwindow = None;
@@ -454,10 +459,14 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
-  if (!btn_pressed_event_.subwindow) return;
+  if (!btn_pressed_event_.subwindow) {
+    return;
+  }
 
   Client* c = Client::mapper_[btn_pressed_event_.subwindow];
-  if (!c) return;
+  if (!c) {
+    return;
+  }
 
   const XWindowAttributes& attr = c->previous_attr();
   int xdiff = e.x - btn_pressed_event_.x;
@@ -520,7 +529,9 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
 
 
 void WindowManager::GotoWorkspace(int next) {
-  if (current_ == next) return;
+  if (current_ == next) {
+    return;
+  }
 
   MapDocks();
   wm_utils::ClearNetActiveWindow();
@@ -552,10 +563,14 @@ void WindowManager::GotoWorkspace(int next) {
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
-  if (current_ == next) return;
+  if (current_ == next){
+    return;
+  }
 
   Client* c = Client::mapper_[window];
-  if (!c) return;
+  if (!c) {
+    return;
+  }
 
   if (workspaces_[current_]->is_fullscreen()) {
     workspaces_[current_]->set_fullscreen(false);
@@ -564,7 +579,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
     MapDocks();
   }
 
-  XUnmapWindow(dpy_, window);
+  c->Unmap();
   Client* next_workspace_prev_focused_client = workspaces_[next]->GetFocusedClient();
   workspaces_[next]->UnsetFocusedClient();
   workspaces_[current_]->Move(window, workspaces_[next]);
@@ -601,7 +616,9 @@ void WindowManager::Center(Window w) {
 
 void WindowManager::SetFloating(Window w, bool is_floating) {
   Client* c = Client::mapper_[w];
-  if (!c || c->is_fullscreen()) return;
+  if (!c || c->is_fullscreen()) {
+    return;
+  }
 
   if (is_floating) {
     c->Resize(DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
@@ -614,7 +631,9 @@ void WindowManager::SetFloating(Window w, bool is_floating) {
 
 void WindowManager::SetFullscreen(Window w, bool is_fullscreen) {
   Client* c = Client::mapper_[w];
-  if (!c) return;
+  if (!c) {
+    return;
+  }
 
   if (is_fullscreen) {
     UnmapDocks();

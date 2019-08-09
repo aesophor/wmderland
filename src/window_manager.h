@@ -27,6 +27,7 @@ class WindowManager {
  private:
   static WindowManager* instance_;
   WindowManager(Display* dpy);
+
   void InitWorkspaces();
   void InitProperties();
   void InitXEvents();
@@ -44,6 +45,7 @@ class WindowManager {
   void OnClientMessage(const XClientMessageEvent& e);
   void OnConfigReload();
   static int OnXError(Display* dpy, XErrorEvent* e);
+
 
   // Workspace manipulation
   void GotoWorkspace(int next);
