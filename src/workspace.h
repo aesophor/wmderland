@@ -22,22 +22,22 @@ class Workspace {
   Workspace(Display* dpy, Window root_window_, Config* config, int id);
   virtual ~Workspace() = default;
 
-  bool Has(Window w) const;
-  void Add(Window w, bool is_floating) const;
-  void Remove(Window w) const;
-  void Move(Window w, Workspace* new_workspace) const;
+  bool Has(Window window) const;
+  void Add(Window window, bool floating=false) const;
+  void Remove(Window window) const;
+  void Move(Window window, Workspace* new_workspace) const;
   void Arrange(const Area& tiling_area) const;
   void SetTilingDirection(tiling::Direction tiling_direction) const;
 
   void MapAllClients() const;
   void UnmapAllClients() const;
   void RaiseAllFloatingClients() const;
-  void SetFocusedClient(Window w) const;
+  void SetFocusedClient(Window window) const;
   void UnsetFocusedClient() const;
 
   void Focus(Action::Type focus_action_type) const;
   Client* GetFocusedClient() const;
-  Client* GetClient(Window w) const;
+  Client* GetClient(Window window) const;
   std::vector<Client*> GetClients() const;
   std::vector<Client*> GetFloatingClients() const;
   std::vector<Client*> GetTilingClients() const;
@@ -46,7 +46,7 @@ class Workspace {
   int id() const;
   const char* name() const;
   bool is_fullscreen() const;
-  void set_fullscreen(bool is_fullscreen);
+  void set_fullscreen(bool fullscreen);
 
  private:
   void Tile(Tree::Node* node, int x, int y, int width, int height,

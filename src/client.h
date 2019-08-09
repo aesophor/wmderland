@@ -47,8 +47,8 @@ class Client {
   bool is_floating() const;
   bool is_fullscreen() const;
   void set_workspace(Workspace* workspace);
-  void set_floating(bool is_floating);
-  void set_fullscreen(bool is_fullscreen);
+  void set_floating(bool floating);
+  void set_fullscreen(bool fullscreen);
 
  private:
   Display* dpy_;

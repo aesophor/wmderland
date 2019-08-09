@@ -27,13 +27,13 @@ Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
       is_fullscreen_(false) {}
 
 
-bool Workspace::Has(Window w) const {
-  return GetClient(w) != nullptr;
+bool Workspace::Has(Window window) const {
+  return GetClient(window) != nullptr;
 }
 
-void Workspace::Add(Window w, bool is_floating) const {
-  Client* c = new Client(dpy_, w, (Workspace*) this);
-  c->set_floating(is_floating);
+void Workspace::Add(Window window, bool floating) const {
+  Client* c = new Client(dpy_, window, (Workspace*) this);
+  c->set_floating(floating);
 
   Tree::Node* new_node = new Tree::Node(c);
 
@@ -50,8 +50,8 @@ void Workspace::Add(Window w, bool is_floating) const {
   client_tree_->set_current_node(new_node);
 }
 
-void Workspace::Remove(Window w) const {
-  Client* c = GetClient(w);
+void Workspace::Remove(Window window) const {
+  Client* c = GetClient(window);
   if (!c) {
     return;
   }
@@ -95,13 +95,13 @@ void Workspace::Remove(Window w) const {
   client_tree_->set_current_node(nodes[idx]);
 }
 
-void Workspace::Move(Window w, Workspace* new_workspace) const {
-  Client* c = GetClient(w);
+void Workspace::Move(Window window, Workspace* new_workspace) const {
+  Client* c = GetClient(window);
 
   if (c) {
     bool is_floating = c->is_floating();
-    this->Remove(w);
-    new_workspace->Add(w, is_floating);
+    this->Remove(window);
+    new_workspace->Add(window, is_floating);
   }
 }
 
@@ -193,8 +193,8 @@ void Workspace::RaiseAllFloatingClients() const {
   }
 }
 
-void Workspace::SetFocusedClient(Window w) const {
-  Client* c = GetClient(w);
+void Workspace::SetFocusedClient(Window window) const {
+  Client* c = GetClient(window);
 
   if (c) {
     client_tree_->set_current_node(client_tree_->GetTreeNode(c));
@@ -225,10 +225,10 @@ Client* Workspace::GetFocusedClient() const {
   return client_tree_->current_node()->client();
 }
 
-Client* Workspace::GetClient(Window w) const {
+Client* Workspace::GetClient(Window window) const {
   // We'll get the corresponding client using the lightning fast
   // client mapper which has bigO(1).
-  Client* c = Client::mapper_[w];
+  Client* c = Client::mapper_[window];
   // But we have to check if it belongs to current workspace!
   return (c && c->workspace() == this) ? c : nullptr;
 }
@@ -371,8 +371,8 @@ bool Workspace::is_fullscreen() const {
   return is_fullscreen_;
 }
 
-void Workspace::set_fullscreen(bool is_fullscreen) {
-  is_fullscreen_ = is_fullscreen;
+void Workspace::set_fullscreen(bool fullscreen) {
+  is_fullscreen_ = fullscreen;
 }
 
 } // namespace wmderland

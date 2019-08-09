@@ -53,9 +53,9 @@ class WindowManager {
 
   // Client manipulation
   void Center(Window w);
-  void SetFloating(Window w, bool is_floating);
-  void SetFullscreen(Window w, bool is_fullscreen);
-  void KillClient(Window w);
+  void SetFloating(Window window, bool floating);
+  void SetFullscreen(Window window, bool fullscreen);
+  void KillClient(Window window);
 
   // Docks, bars and notifications
   inline void MapDocks() const;
@@ -64,7 +64,7 @@ class WindowManager {
 
   // Window position and size
   Area CalculateTilingArea();
-  void DetermineFloatingWindowArea(Window w);
+  void DetermineFloatingWindowArea(Window window);
 
   // Misc
   void UpdateClientList();

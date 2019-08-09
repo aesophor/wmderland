@@ -10,11 +10,11 @@ namespace wmderland {
 
 unordered_map<Window, Client*> Client::mapper_;
 
-Client::Client(Display* dpy, Window w, Workspace* workspace)
+Client::Client(Display* dpy, Window window, Workspace* workspace)
     : dpy_(dpy),
-      window_(w),
+      window_(window),
       workspace_(workspace),
-      size_hints_(wm_utils::GetWmNormalHints(w)),
+      size_hints_(wm_utils::GetWmNormalHints(window)),
       previous_attr_(), // this will be set when Client::SaveXWindowAttributes() is called
       is_floating_(false),
       is_fullscreen_(false) {
@@ -64,12 +64,12 @@ void Client::set_workspace(Workspace* workspace) {
   workspace_ = workspace;
 }
 
-void Client::set_floating(bool is_floating) {
-  is_floating_ = is_floating;
+void Client::set_floating(bool floating) {
+  is_floating_ = floating;
 }
 
-void Client::set_fullscreen(bool is_fullscreen) {
-  is_fullscreen_ = is_fullscreen;
+void Client::set_fullscreen(bool fullscreen) {
+  is_fullscreen_ = fullscreen;
 }
 
 } // namespace wmderland

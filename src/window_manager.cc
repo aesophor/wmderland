@@ -33,9 +33,6 @@ extern "C" {
 using std::pair;
 using std::string;
 using std::vector;
-using std::unique_ptr;
-using std::stringstream;
-using std::unordered_map;
 using wmderland::tiling::Direction;
 using wmderland::wm_utils::IsDock;
 using wmderland::wm_utils::IsDialog;
@@ -64,7 +61,7 @@ WindowManager::WindowManager(Display* dpy)
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
-      current_(0),
+      current_(),
       btn_pressed_event_() {
   wm_utils::Init(dpy_, prop_.get(), root_window_);
   InitWorkspaces();
@@ -129,7 +126,7 @@ void WindowManager::InitProperties() {
   // TODO: User should be able to modify workspace names at runtime.
   const char* names[WORKSPACE_COUNT] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
   XTextProperty text_prop;
-  Xutf8TextListToTextProperty(dpy_, (char**) names, WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
+  Xutf8TextListToTextProperty(dpy_, const_cast<char**>(names), WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
   XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
@@ -226,17 +223,16 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
 }
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
-  // Windows that are prohibited from mapping should be killed immediately.
+  // If user has requested to prohibit this window from being mapped, then don't map it.
   if (config_->ShouldProhibit(e.window)) {
-    XKillClient(dpy_, e.window);
     return;
   }
 
-  // If this window is a dock (or bar), record it, map it and tile the workspace.
+  // If this window is a dock (or bar), map it, record it and arrange the workspace.
   if (IsDock(e.window) && std::find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
+    XMapWindow(dpy_, e.window);
     docks_.push_back(e.window);
     workspaces_[current_]->Arrange(CalculateTilingArea());
-    XMapWindow(dpy_, e.window);
     return;
   }
 
@@ -272,8 +268,9 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
   workspaces_[target]->UnsetFocusedClient();
-  workspaces_[target]->Add(e.window, should_float);
+  workspaces_[target]->Add(e.window);
   Client* current_focused_client = workspaces_[target]->GetClient(e.window);
+  current_focused_client->set_floating(should_float);
 
   if (workspaces_[target]->is_fullscreen()) {
     workspaces_[target]->SetFocusedClient(prev_focused_client->window());
@@ -374,12 +371,6 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 
   for (const auto& action : actions) {
     switch (action.type()) {
-      case Action::Type::TILE_H:
-        workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
-        break;
-      case Action::Type::TILE_V:
-        workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
-        break;
       case Action::Type::FOCUS_LEFT:
       case Action::Type::FOCUS_RIGHT:
       case Action::Type::FOCUS_UP:
@@ -389,6 +380,12 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         workspaces_[current_]->RaiseAllFloatingClients();
         RaiseNotifications();
         wm_utils::SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+        break;
+      case Action::Type::TILE_H:
+        workspaces_[current_]->SetTilingDirection(Direction::HORIZONTAL);
+        break;
+      case Action::Type::TILE_V:
+        workspaces_[current_]->SetTilingDirection(Direction::VERTICAL);
         break;
       case Action::Type::TOGGLE_FLOATING:
         if (!focused_client) continue;
@@ -603,39 +600,39 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 }
 
 
-void WindowManager::Center(Window w) {
+void WindowManager::Center(Window window) {
   pair<short, short> res = wm_utils::GetDisplayResolution();
   short screen_width = res.first;
   short screen_height = res.second;
 
-  XWindowAttributes attr = wm_utils::GetXWindowAttributes(w);
+  XWindowAttributes attr = wm_utils::GetXWindowAttributes(window);
   int new_x = screen_width / 2 - attr.width / 2;
   int new_y = screen_height / 2 - attr.height / 2;
-  XMoveWindow(dpy_, w, new_x, new_y);
+  XMoveWindow(dpy_, window, new_x, new_y);
 }
 
-void WindowManager::SetFloating(Window w, bool is_floating) {
-  Client* c = Client::mapper_[w];
+void WindowManager::SetFloating(Window window, bool floating) {
+  Client* c = Client::mapper_[window];
   if (!c || c->is_fullscreen()) {
     return;
   }
 
-  if (is_floating) {
+  if (floating) {
     c->Resize(DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
     Center(c->window());
   }
 
-  c->set_floating(!c->is_floating());
+  c->set_floating(floating);
   c->workspace()->Arrange(CalculateTilingArea());
 }
 
-void WindowManager::SetFullscreen(Window w, bool is_fullscreen) {
-  Client* c = Client::mapper_[w];
+void WindowManager::SetFullscreen(Window window, bool fullscreen) {
+  Client* c = Client::mapper_[window];
   if (!c) {
     return;
   }
 
-  if (is_fullscreen) {
+  if (fullscreen) {
     UnmapDocks();
     c->SaveXWindowAttributes();
     c->MoveResize(0, 0, wm_utils::GetDisplayResolution());
@@ -652,65 +649,65 @@ void WindowManager::SetFullscreen(Window w, bool is_fullscreen) {
     RaiseNotifications();
   }
 
-  c->SetBorderWidth((is_fullscreen) ? 0 : config_->border_width());
-  c->set_fullscreen(is_fullscreen);
-  c->workspace()->set_fullscreen(is_fullscreen);
+  c->SetBorderWidth((fullscreen) ? 0 : config_->border_width());
+  c->set_fullscreen(fullscreen);
+  c->workspace()->set_fullscreen(fullscreen);
 
   // Update window's _NET_WM_STATE_FULLSCREEN property.
   // If the window is set to be NOT fullscreen, we will simply write a nullptr with 0 elements.
-  Atom* atom = (is_fullscreen) ? &prop_->net[atom::NET_WM_STATE_FULLSCREEN] : nullptr;
-  XChangeProperty(dpy_, w, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
-      PropModeReplace, (unsigned char*) atom, (is_fullscreen) ? 1 : 0);
+  Atom* atom = (fullscreen) ? &prop_->net[atom::NET_WM_STATE_FULLSCREEN] : nullptr;
+  XChangeProperty(dpy_, window, prop_->net[atom::NET_WM_STATE], XA_ATOM, 32,
+      PropModeReplace, (unsigned char*) atom, (fullscreen) ? 1 : 0);
 }
 
-void WindowManager::KillClient(Window w) {
+void WindowManager::KillClient(Window window) {
   Atom* supported_protocols;
   int num_supported_protocols;
 
   // First try to kill the client gracefully via ICCCM. If the client does not support
   // this method, then we'll perform the brutal XKillClient().
-  if (XGetWMProtocols(dpy_, w, &supported_protocols, &num_supported_protocols) 
+  if (XGetWMProtocols(dpy_, window, &supported_protocols, &num_supported_protocols) 
       && (std::find(supported_protocols, supported_protocols + num_supported_protocols, 
           prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
     XEvent msg;
     memset(&msg, 0, sizeof(msg));
     msg.xclient.type = ClientMessage;
     msg.xclient.message_type = prop_->wm[atom::WM_PROTOCOLS];
-    msg.xclient.window = w;
+    msg.xclient.window = window;
     msg.xclient.format = 32;
     msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
-    XSendEvent(dpy_, w, false, 0, &msg);
+    XSendEvent(dpy_, window, false, 0, &msg);
   } else {
-    XKillClient(dpy_, w);
+    XKillClient(dpy_, window);
   }
 }
 
 
 inline void WindowManager::MapDocks() const {
-  for (auto w : docks_) {
-    XMapWindow(dpy_, w);
+  for (auto window : docks_) {
+    XMapWindow(dpy_, window);
   }
 }
 
 inline void WindowManager::UnmapDocks() const {
-  for (auto w : docks_) {
-    XUnmapWindow(dpy_, w);
+  for (auto window : docks_) {
+    XUnmapWindow(dpy_, window);
   }
 }
 
 inline void WindowManager::RaiseNotifications() const {
-  for (auto w : notifications_) {
-    XRaiseWindow(dpy_, w);
+  for (auto window : notifications_) {
+    XRaiseWindow(dpy_, window);
   }
 }
 
 
 Area WindowManager::CalculateTilingArea() {
   pair<int, int> res = wm_utils::GetDisplayResolution();
-  Area tiling_area = { 0, 0, res.first, res.second };
+  Area tiling_area = {0, 0, res.first, res.second};
 
-  for (auto w : docks_) {
-    XWindowAttributes dock_attr = wm_utils::GetXWindowAttributes(w);
+  for (auto window : docks_) {
+    XWindowAttributes dock_attr = wm_utils::GetXWindowAttributes(window);
 
     if (dock_attr.y == 0) {
       // If the dock is at the top of the screen.
@@ -732,30 +729,30 @@ Area WindowManager::CalculateTilingArea() {
   return tiling_area;
 }
 
-void WindowManager::DetermineFloatingWindowArea(Window w) {
-  XSizeHints hints = wm_utils::GetWmNormalHints(w);
-  const Area& cookie_area = cookie_->Get(w);
+void WindowManager::DetermineFloatingWindowArea(Window window) {
+  XSizeHints hints = wm_utils::GetWmNormalHints(window);
+  const Area& cookie_area = cookie_->Get(window);
 
   // Set window size. (Priority: cookie > hints)
   if (cookie_area.width > 0 && cookie_area.height > 0) {
-    XResizeWindow(dpy_, w, cookie_area.width, cookie_area.height);
+    XResizeWindow(dpy_, window, cookie_area.width, cookie_area.height);
   } else if (hints.min_width > 0 && hints.min_height > 0) {
-    XResizeWindow(dpy_, w, hints.min_width, hints.min_height);
+    XResizeWindow(dpy_, window, hints.min_width, hints.min_height);
   } else if (hints.base_width > 0 && hints.base_height > 0) {
-    XResizeWindow(dpy_, w, hints.base_width, hints.base_height);
+    XResizeWindow(dpy_, window, hints.base_width, hints.base_height);
   } else if (hints.width > 0 && hints.height > 0) {
-    XResizeWindow(dpy_, w, hints.width, hints.height);
+    XResizeWindow(dpy_, window, hints.width, hints.height);
   } else {
-    XResizeWindow(dpy_, w, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
+    XResizeWindow(dpy_, window, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
   }
 
   // Set window position. (Priority: cookie > hints)
   if (cookie_area.x > 0 && cookie_area.y > 0) {
-    XMoveWindow(dpy_, w, cookie_area.x, cookie_area.y);
+    XMoveWindow(dpy_, window, cookie_area.x, cookie_area.y);
   } else if (hints.x > 0 && hints.y > 0) {
-    XMoveWindow(dpy_, w, hints.x, hints.y);
+    XMoveWindow(dpy_, window, hints.x, hints.y);
   } else {
-    Center(w);
+    Center(window);
   }
 }
 
@@ -763,11 +760,11 @@ void WindowManager::DetermineFloatingWindowArea(Window w) {
 void WindowManager::UpdateClientList() {
   XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST]);
 
-  for (auto w : workspaces_) {
-    for (auto c : w->GetClients()) {
-      Window w = c->window();
+  for (auto workspace : workspaces_) {
+    for (auto client : workspace->GetClients()) {
+      Window window = client->window();
       XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST], XA_WINDOW, 32, 
-          PropModeAppend, (unsigned char *) &w, 1);
+          PropModeAppend, (unsigned char *) &window, 1);
     }
   }
 }

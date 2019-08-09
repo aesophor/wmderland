@@ -21,8 +21,8 @@ class Cookie {
   Cookie(Display* dpy, Properties* prop, const std::string filename);
   virtual ~Cookie() = default;
 
-  Area Get(Window w) const;
-  void Put(Window w, const Area& window_area);
+  Area Get(Window window) const;
+  void Put(Window window, const Area& window_area);
 
   friend std::ofstream& operator<< (std::ofstream& os, const Cookie& cookie);
   friend std::ifstream& operator>> (std::ifstream& is, Cookie& cookie);

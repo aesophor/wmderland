@@ -26,8 +26,8 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
 }
 
 
-Area Cookie::Get(Window w) const {
-  string key = GetCookieKey(w);
+Area Cookie::Get(Window window) const {
+  string key = GetCookieKey(window);
 
   if (window_area_map_.find(key) != window_area_map_.end()) {
     return window_area_map_.at(key);
@@ -35,8 +35,8 @@ Area Cookie::Get(Window w) const {
   return Area();
 }
 
-void Cookie::Put(Window w, const Area& window_area) {
-  window_area_map_[GetCookieKey(w)] = window_area;
+void Cookie::Put(Window window, const Area& window_area) {
+  window_area_map_[GetCookieKey(window)] = window_area;
 
   // Write cookie to file.
   ofstream fout(sys_utils::ToAbsPath(filename_));

@@ -8,6 +8,12 @@ using std::size_t;
 using std::string;
 using std::vector;
 
+namespace {
+  Display* dpy;
+  wmderland::Properties* prop;
+  Window root_window;
+} // namespace
+
 namespace wmderland {
 
 Area::Area() : x(0), y(0), width(0), height(0) {}
@@ -26,43 +32,37 @@ bool Area::operator!= (const Area& other) {
 
 namespace wm_utils {
 
-namespace {
-  Display* dpy;
-  Properties* prop;
-  Window root_window;
-} // namespace
-
-void Init(Display* d, Properties* p, Window root_win) {
-  dpy = d;
-  prop = p;
-  root_window = root_win;
+void Init(Display* dpy, Properties* prop, Window root_window) {
+  ::dpy = dpy;
+  ::prop = prop;
+  ::root_window = root_window;
 }
  
 pair<int, int> GetDisplayResolution() {
   XWindowAttributes root_window_attr = GetXWindowAttributes(root_window);
-  return pair<short, short>(root_window_attr.width, root_window_attr.height);
+  return {root_window_attr.width, root_window_attr.height};
 }
 
-// Get the XWindowAttributes of window w.
-XWindowAttributes GetXWindowAttributes(Window w) {
+// Get the XWindowAttributes of a window.
+XWindowAttributes GetXWindowAttributes(Window window) {
   XWindowAttributes ret;
-  XGetWindowAttributes(dpy, w, &ret);
+  XGetWindowAttributes(dpy, window, &ret);
   return ret;
 }
 
-// Get the XSizeHints of window w.
-XSizeHints GetWmNormalHints(Window w) {
+// Get the XSizeHints of a window.
+XSizeHints GetWmNormalHints(Window window) {
   XSizeHints hints;
   long msize;
-  XGetWMNormalHints(dpy, w, &hints, &msize);
+  XGetWMNormalHints(dpy, window, &hints, &msize);
   return hints;
 }
 
-// Get the XClassHint (which contains res_class and res_name) of window w.
-pair<string, string> GetXClassHint(Window w) {
+// Get the XClassHint (which contains res_class and res_name) of a window.
+pair<string, string> GetXClassHint(Window window) {
   XClassHint hint;
 
-  if (XGetClassHint(dpy, w, &hint)) {
+  if (XGetClassHint(dpy, window, &hint)) {
     static const string undefined = "undefined";
     string res_class = (hint.res_class) ? hint.res_class : undefined;
     string res_name = (hint.res_name) ? hint.res_name : undefined;
@@ -80,24 +80,24 @@ pair<string, string> GetXClassHint(Window w) {
 }
 
 // Get the utf8string in _NET_WM_NAME property.
-string GetNetWmName(Window w) {
+string GetNetWmName(Window window) {
   XTextProperty name;
-  if (!XGetTextProperty(dpy, w, &name, prop->net[atom::NET_WM_NAME]) || !name.nitems) {
-    return string();
+  if (!XGetTextProperty(dpy, window, &name, prop->net[atom::NET_WM_NAME]) || !name.nitems) {
+    return "";
   }
-  string ret = string((char*) name.value);
+  string ret(reinterpret_cast<char*>(name.value));
   XFree(name.value);
   return ret;
 }
 
-// Get the WM_NAME (i.e., the window title) of window w.
-string GetWmName(Window w) {
+// Get the WM_NAME (i.e., the window title) of a window.
+string GetWmName(Window window) {
   Atom prop = XInternAtom(dpy, "WM_NAME", False), type;
   int form;
   unsigned long remain, len;
   unsigned char* list;
 
-  if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, 
+  if (XGetWindowProperty(dpy, window, prop, 0, 1024, False, 
         AnyPropertyType, &type, &form, &len, &remain, &list) == Success) {
     return string((char*) list);
   }
@@ -106,16 +106,16 @@ string GetWmName(Window w) {
 
 // Set WM_STATE according to the following page to fix WINE application close hang issue:
 // http://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html#WM_STATE_Property
-void SetWindowWmState(Window w, unsigned long state) {
-  unsigned long wm_state[] = { state, None };
-  XChangeProperty(dpy, w,  prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE], 32,
+void SetWindowWmState(Window window, unsigned long state) {
+  unsigned long wm_state[] = {state, None};
+  XChangeProperty(dpy, window,  prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE], 32,
       PropModeReplace, (unsigned char*) wm_state, 2);
 }
 
 // Set root window's _NET_ACTIVE_WINDOW property
-void SetNetActiveWindow(Window w) {
+void SetNetActiveWindow(Window window) {
   XChangeProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
-      PropModeReplace, (unsigned char*) &w, 1);
+      PropModeReplace, (unsigned char*) &window, 1);
 }
 
 // Clear root window's _NET_ACTIVE_WINDOW property
@@ -125,13 +125,13 @@ void ClearNetActiveWindow() {
 
 // Get the atoms contained in the property of window w. The number of atoms retrieved
 // will be stored in *atom_len. XFree() should be called manually on the returned Atom ptr.
-Atom* GetWindowProperty(Window w, Atom property, unsigned long* atom_len) {
+Atom* GetWindowProperty(Window window, Atom property, unsigned long* atom_len) {
   Atom da;
   unsigned char *prop_ret = nullptr;
   int di;
   unsigned long remain;
 
-  if (XGetWindowProperty(dpy, w, property, 0, sizeof(Atom), False,
+  if (XGetWindowProperty(dpy, window, property, 0, sizeof(Atom), False,
         XA_ATOM, &da, &di, atom_len, &remain, &prop_ret) == Success && prop_ret) {
     return (Atom*) prop_ret;
   }
@@ -139,9 +139,9 @@ Atom* GetWindowProperty(Window w, Atom property, unsigned long* atom_len) {
 }
 
 // Check if the property of window w contains the target atom.
-bool WindowPropertyHasAtom(Window w, Atom property, Atom target_atom) {
+bool WindowPropertyHasAtom(Window window, Atom property, Atom target_atom) {
   unsigned long atom_len = 0;
-  Atom* atoms = GetWindowProperty(w, property, &atom_len);
+  Atom* atoms = GetWindowProperty(window, property, &atom_len);
 
   for (int i = 0; atoms && i < (int) atom_len; i++) {
     if (atoms[i] && atoms[i] == target_atom) {
@@ -154,32 +154,32 @@ bool WindowPropertyHasAtom(Window w, Atom property, Atom target_atom) {
 }
 
 
-bool HasNetWmStateFullscreen(Window w) {
-  return WindowPropertyHasAtom(w, prop->net[atom::NET_WM_STATE], prop->net[atom::NET_WM_STATE_FULLSCREEN]);
+bool HasNetWmStateFullscreen(Window window) {
+  return WindowPropertyHasAtom(window, prop->net[atom::NET_WM_STATE], prop->net[atom::NET_WM_STATE_FULLSCREEN]);
 }
 
-bool IsWindowOfType(Window w, Atom type_atom) {
-  return WindowPropertyHasAtom(w, prop->net[atom::NET_WM_WINDOW_TYPE], type_atom);
+bool IsWindowOfType(Window window, Atom type_atom) {
+  return WindowPropertyHasAtom(window, prop->net[atom::NET_WM_WINDOW_TYPE], type_atom);
 }
 
-bool IsDock(Window w) {
-  return IsWindowOfType(w, prop->net[atom::NET_WM_WINDOW_TYPE_DOCK]);
+bool IsDock(Window window) {
+  return IsWindowOfType(window, prop->net[atom::NET_WM_WINDOW_TYPE_DOCK]);
 }
 
-bool IsDialog(Window w) {
-  return IsWindowOfType(w, prop->net[atom::NET_WM_WINDOW_TYPE_DIALOG]);
+bool IsDialog(Window window) {
+  return IsWindowOfType(window, prop->net[atom::NET_WM_WINDOW_TYPE_DIALOG]);
 }
 
-bool IsSplash(Window w) {
-  return IsWindowOfType(w, prop->net[atom::NET_WM_WINDOW_TYPE_SPLASH]);
+bool IsSplash(Window window) {
+  return IsWindowOfType(window, prop->net[atom::NET_WM_WINDOW_TYPE_SPLASH]);
 }
 
-bool IsUtility(Window w) {
-  return IsWindowOfType(w, prop->net[atom::NET_WM_WINDOW_TYPE_UTILITY]);
+bool IsUtility(Window window) {
+  return IsWindowOfType(window, prop->net[atom::NET_WM_WINDOW_TYPE_UTILITY]);
 }
 
-bool IsNotification(Window w) {
-  return IsWindowOfType(w, prop->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]);
+bool IsNotification(Window window) {
+  return IsWindowOfType(window, prop->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]);
 }
 
 

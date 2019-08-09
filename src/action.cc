@@ -40,11 +40,7 @@ const string& Action::argument() const {
 
 
 Action::Type Action::StrToActionType(const string& s) {
-  if (s == "tile_horizontally") {
-    return Action::Type::TILE_H;
-  } else if (s == "tile_vertically") {
-    return Action::Type::TILE_V;
-  } else if (s == "focus_left") {
+  if (s == "focus_left") {
     return Action::Type::FOCUS_LEFT;
   } else if (s == "focus_right") {
     return Action::Type::FOCUS_RIGHT;
@@ -52,6 +48,10 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::FOCUS_DOWN;
   } else if (s == "focus_up") {
     return Action::Type::FOCUS_UP;
+  } else if (s == "tile_horizontally") {
+    return Action::Type::TILE_H;
+  } else if (s == "tile_vertically") {
+    return Action::Type::TILE_V;
   } else if (s == "toggle_floating") {
     return Action::Type::TOGGLE_FLOATING;
   } else if (s == "toggle_fullscreen") {
