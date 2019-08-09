@@ -26,6 +26,7 @@ class WindowManager {
 
  private:
   static WindowManager* instance_;
+  static bool is_running_;
   WindowManager(Display* dpy);
 
   void InitWorkspaces();
@@ -45,6 +46,7 @@ class WindowManager {
   void OnClientMessage(const XClientMessageEvent& e);
   void OnConfigReload();
   static int OnXError(Display* dpy, XErrorEvent* e);
+  static int OnWmDetected(Display* dpy, XErrorEvent* e);
 
   void ArrangeWindows() const;
  
@@ -76,8 +78,7 @@ class WindowManager {
   Window root_window_;
   Window wmcheckwin_;
   Cursor cursors_[4];
-  bool is_running_;
-
+ 
   std::unique_ptr<Properties> prop_;
   std::unique_ptr<Config> config_;
   std::unique_ptr<Cookie> cookie_;

@@ -6,11 +6,12 @@ extern "C" {
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 }
+#include <iostream>
+#include <algorithm>
 #include <memory>
+#include <cstring>
 #include <string>
 #include <sstream>
-#include <cstring>
-#include <algorithm>
 
 #if GLOG_FOUND
 #include <glog/logging.h>
@@ -37,6 +38,7 @@ using std::vector;
 namespace wmderland {
 
 WindowManager* WindowManager::instance_ = nullptr;
+bool WindowManager::is_running_ = true;
 
 WindowManager* WindowManager::GetInstance() {
   // If the instance is not yet initialized, we'll try to open a display
@@ -54,7 +56,6 @@ WindowManager::WindowManager(Display* dpy)
       root_window_(DefaultRootWindow(dpy_)),
       wmcheckwin_(XCreateSimpleWindow(dpy_, root_window_, 0, 0, 1, 1, 0, 0, 0)),
       cursors_(),
-      is_running_(true),
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
@@ -146,10 +147,11 @@ void WindowManager::InitXEvents() {
   XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
       ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
-  // Enable substructure redirection on the root window.
+  // Exit gracefully if another window manager is already running.
+  XSetErrorHandler(&WindowManager::OnWmDetected);
   XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
+  XSync(dpy_, false);
 
-  // Setup the bitch catcher.
   XSetErrorHandler(&WindowManager::OnXError);
 }
 
@@ -161,6 +163,11 @@ void WindowManager::InitCursors() {
 }
 
 void WindowManager::Run() {
+  if (!is_running_) {
+    std::cerr << "Another window manager is already running." << std::endl;
+    return;
+  }
+
   // Automatically start the applications specified in config in background.
   for (const auto& s : config_->autostart_rules()) {
     system((s + '&').c_str());
@@ -487,8 +494,13 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     << "    Error code: " << int(e->error_code)
     << " - " << error_text << "\n"
     << "    Resource ID: " << e->resourceid;
-  return 0; // The return value is ignored.
+  return 0; // the return value is ignored.
   #endif
+}
+
+int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
+  is_running_ = false;
+  return 0; // the return value is ignored.
 }
 
 
