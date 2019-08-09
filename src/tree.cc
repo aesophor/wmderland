@@ -12,13 +12,28 @@ namespace wmderland {
 
 unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
-Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_(nullptr) {
+Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_() {
   // NOTE: In Wmderland, the root node will always exist in a client tree
   // at any given time.
   
   // Initialize a Tree::Node with no client associated with it,
   // and set its tiling direction to HORIZONTAL by default.
   root_node_->set_tiling_direction(TilingDirection::HORIZONTAL);
+}
+
+Tree::~Tree() {
+  TreeDfsCleanUp(root_node_);
+}
+
+void Tree::TreeDfsCleanUp(Tree::Node* node) const {
+  if (!node) {
+    return;
+  }
+
+  for (const auto child : node->children()) {
+    TreeDfsCleanUp(child);
+  }
+  delete node;
 }
 
 
@@ -32,7 +47,7 @@ Tree::Node* Tree::GetTreeNode(Client* client) const {
 vector<Tree::Node*> Tree::GetAllLeaves() const {
   vector<Tree::Node*> leaves;
   stack<Tree::Node*> st;
-  st.push(root_node_.get());
+  st.push(root_node_);
 
   while (!st.empty()) {
     Tree::Node* node = st.top();
@@ -53,7 +68,7 @@ vector<Tree::Node*> Tree::GetAllLeaves() const {
 
 
 Tree::Node* Tree::root_node() const {
-  return root_node_.get();
+  return root_node_;
 }
 
 Tree::Node* Tree::current_node() const {

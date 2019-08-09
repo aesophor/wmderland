@@ -52,6 +52,9 @@ WindowManager* WindowManager::GetInstance() {
 WindowManager::WindowManager(Display* dpy) 
     : dpy_(dpy), 
       root_window_(DefaultRootWindow(dpy_)),
+      wmcheckwin_(XCreateSimpleWindow(dpy_, root_window_, 0, 0, 1, 1, 0, 0, 0)),
+      cursors_(),
+      is_running_(true),
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
@@ -87,7 +90,6 @@ void WindowManager::InitProperties() {
 
   // Supporting window for _NET_WM_SUPPORTING_CHECK which tells other client
   // a compliant window manager exists.
-  wmcheckwin_ = XCreateSimpleWindow(dpy_, root_window_, 0, 0, 1, 1, 0, 0, 0);
   XChangeProperty(dpy_, wmcheckwin_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], XA_WINDOW, 32,
       PropModeReplace, (unsigned char *) &wmcheckwin_, 1);
   XChangeProperty(dpy_, wmcheckwin_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], prop_->utf8string, 8,
@@ -165,7 +167,7 @@ void WindowManager::Run() {
   }
 
   XEvent event;
-  for (;;) {
+  while (is_running_) {
     // Retrieve and dispatch next X event.
     XNextEvent(dpy_, &event);
 
@@ -275,23 +277,16 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     workspaces_[target]->SetFocusedClient(prev_focused_client->window());
   }
 
-  if (target == current_ && !workspaces_[current_]->is_fullscreen()) {
-    // If there's currently a fullscreen window, don't arrange the workspace,
-    // or the entire workspace will mess up.
-    workspaces_[current_]->GetClient(e.window)->Map();
-    workspaces_[current_]->Arrange(CalculateTilingArea());
-    workspaces_[current_]->SetFocusedClient(e.window);
-    workspaces_[current_]->RaiseAllFloatingClients();
-    RaiseNotifications();
-    wm_utils::SetNetActiveWindow(e.window);
-  }
-
   if (should_float) {
     DetermineFloatingWindowArea(e.window);
   }
 
   if (should_fullscreen) {
     SetFullscreen(e.window, true);
+  }
+
+  if (target == current_ && !workspaces_[current_]->is_fullscreen()) {
+    ArrangeWindows();
   }
 }
 
@@ -329,28 +324,12 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   // fullscreen state.
   if (c->is_fullscreen()) {
     c->workspace()->set_fullscreen(false);
-    c->workspace()->MapAllClients();
-    MapDocks();
   }
 
   // Remove the corresponding client from the client tree.
   c->workspace()->Remove(e.window);
   UpdateClientList();
-
-  // Clear _NET_ACTIVE_WINDOW only if the window being destroyed is in current workspace.
-  if (c->workspace() == workspaces_[current_]) {
-    wm_utils::ClearNetActiveWindow();
-  }
-
-  // Transfer focus to another window (if there's still one).
-  Client* new_focused_client = c->workspace()->GetFocusedClient();
-  if (c->workspace() == workspaces_[current_] && new_focused_client) {
-    c->workspace()->SetFocusedClient(new_focused_client->window());
-    c->workspace()->Arrange(CalculateTilingArea());
-    c->workspace()->RaiseAllFloatingClients();
-    RaiseNotifications();
-    wm_utils::SetNetActiveWindow(new_focused_client->window());
-  }
+  ArrangeWindows();
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
@@ -399,7 +378,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         KillClient(focused_client->window());
         break;
       case Action::Type::EXIT:
-        system("pkill X");
+        is_running_ = false;
         break;
       case Action::Type::EXEC:
         system((action.argument() + '&').c_str());
@@ -516,10 +495,6 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
 void WindowManager::ArrangeWindows() const {
   workspaces_[current_]->MapAllClients();
   workspaces_[current_]->Arrange(CalculateTilingArea());
-  workspaces_[current_]->RaiseAllFloatingClients();
-  RaiseNotifications();
-  MapDocks();
-  
   Client* focused_client = workspaces_[current_]->GetFocusedClient();
 
   if (!focused_client) {
@@ -537,6 +512,10 @@ void WindowManager::ArrangeWindows() const {
       UnmapDocks();
     }
   }
+
+  workspaces_[current_]->RaiseAllFloatingClients();
+  RaiseNotifications();
+  MapDocks();
 }
 
 void WindowManager::GotoWorkspace(int next) {

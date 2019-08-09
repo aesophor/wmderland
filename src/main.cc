@@ -11,21 +11,23 @@
 #include "stacktrace.h"
 #include "window_manager.h"
 
-using std::string;
-using std::unique_ptr;
-using wmderland::WindowManager;
+namespace {
 
-
-string version() {
+std::string version() {
   return WIN_MGR_NAME " " VERSION "\n"
     "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
     "This is free software, see the source for copying conditions.  There is No\n"
     "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
 }
 
+std::string wm_start_failed_msg = "Failed to open display to X server.";
+
+} // namespace 
+
+
 int main(int argc, char* args[]) {
   if (argc > 1 && (!strcmp(args[1], "-v") || !strcmp(args[1], "--version"))) {
-    std::cout << version() << std::endl;
+    std::cout << ::version() << std::endl;
     return EXIT_SUCCESS;
   }
 
@@ -40,9 +42,10 @@ int main(int argc, char* args[]) {
     // WindowManager is a singleton class. If XOpenDisplay() fails during 
     // WindowManager::GetInstance(), it will return None (in Xlib, 'None'
     // is the universal null resource ID or atom.)
-    unique_ptr<WindowManager> wm(WindowManager::GetInstance());
+    std::unique_ptr<wmderland::WindowManager> wm(wmderland::WindowManager::GetInstance());
     if (!wm) {
-      WM_LOG(INFO, "Failed to open display to X server.");
+      WM_LOG(INFO, ::wm_start_failed_msg);
+      std::cerr << ::wm_start_failed_msg << std::endl;
       return EXIT_FAILURE;
     }
     wm->Run();

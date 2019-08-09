@@ -76,6 +76,7 @@ class WindowManager {
   Window root_window_;
   Window wmcheckwin_;
   Cursor cursors_[4];
+  bool is_running_;
 
   std::unique_ptr<Properties> prop_;
   std::unique_ptr<Config> config_;
