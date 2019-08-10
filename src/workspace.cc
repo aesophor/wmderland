@@ -129,7 +129,7 @@ void Workspace::Tile(Tree::Node* node, int x, int y, int width, int height,
 
   // We don't care about floating windows. Remove them.
   children.erase(std::remove_if(children.begin(), children.end(), [](Tree::Node* n) {
-        return n->client() && n->client()->is_floating(); }), children.end());
+      return n->client() && n->client()->is_floating(); }), children.end());
 
   // Calculate each child's x, y, width and height based on node's tiling direction.
   TilingDirection dir = node->tiling_direction();
@@ -248,14 +248,14 @@ vector<Client*> Workspace::GetClients() const {
 vector<Client*> Workspace::GetFloatingClients() const {
   vector<Client*> clients = GetClients();
   clients.erase(std::remove_if(clients.begin(), clients.end(), [](Client* c) {
-        return !c->is_floating(); }), clients.end());
+      return !c->is_floating(); }), clients.end());
   return clients;
 }
 
 vector<Client*> Workspace::GetTilingClients() const {
   vector<Client*> clients = GetClients();
   clients.erase(std::remove_if(clients.begin(), clients.end(), [](Client* c) {
-        return c->is_floating(); }), clients.end());
+      return c->is_floating(); }), clients.end());
   return clients;
 }
 
@@ -286,19 +286,19 @@ void Workspace::Focus(Action::Type focus_action_type) const {
   }
 
  
-  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
-    Tree::Node* sibling = (find_leftward) ? ptr->GetLeftSibling() : ptr->GetRightSibling();
+  for (Tree::Node* node = client_tree_->current_node(); node; node = node->parent()) {
+    Tree::Node* sibling = (find_leftward) ? node->GetLeftSibling() : node->GetRightSibling();
 
-    if (ptr->parent()->tiling_direction() == target_direction && sibling) {
-      ptr = sibling;
-      while (!ptr->leaf()) {
-        ptr = (find_leftward) ? ptr->children().back() : ptr->children().front();
+    if (node->parent()->tiling_direction() == target_direction && sibling) {
+      node = sibling;
+      while (!node->leaf()) {
+        node = (find_leftward) ? node->children().back() : node->children().front();
       }
       UnsetFocusedClient();
-      SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current_node(ptr);
+      SetFocusedClient(node->client()->window());
+      client_tree_->set_current_node(node);
       return;
-    } else if (ptr->parent() == client_tree_->root_node()) {
+    } else if (node->parent() == client_tree_->root_node()) {
       return;
     }
   }
