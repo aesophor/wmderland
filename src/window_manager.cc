@@ -490,7 +490,7 @@ void WindowManager::OnConfigReload() {
 }
 
 int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
-  #if GLOG_FOUND
+#if GLOG_FOUND
   const int MAX_ERROR_TEXT_LENGTH = 1024;
   char error_text[MAX_ERROR_TEXT_LENGTH];
   XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
@@ -500,7 +500,7 @@ int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
     << " - " << error_text << "\n"
     << "    Resource ID: " << e->resourceid;
   return 0; // the return value is ignored.
-  #endif
+#endif
 }
 
 int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
