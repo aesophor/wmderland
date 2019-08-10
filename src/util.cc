@@ -3,6 +3,8 @@
 
 #include <sstream>
 
+#include "config.h"
+
 using std::pair;
 using std::size_t;
 using std::string;
@@ -322,9 +324,23 @@ string ToAbsPath(const string& path) {
   return abs_path;
 }
 
-void ExecuteCmd(const string& cmd) {
-  // TODO: replace system with a more secure function.
-  system((cmd + '&').c_str());
+void ExecuteCmd(string cmd) {
+  if (cmd.empty()) {
+    return;
+  }
+
+  string_utils::Strip(cmd);
+  if (cmd.back() != '&') {
+    cmd.push_back('&');
+  }
+
+  if (system(cmd.c_str())) {
+    WM_LOG(ERROR, "Failed to execute: " + cmd);
+  }
+}
+
+void NotifySend(const string& msg, const string& level) {
+  ExecuteCmd("notify-send -u " + level + " 'Wmderland' '" + msg + "'");
 }
 
 } // namespace sys_utils

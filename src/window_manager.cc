@@ -8,14 +8,10 @@ extern "C" {
 }
 #include <iostream>
 #include <algorithm>
-#include <memory>
 #include <cstring>
 #include <string>
-#include <sstream>
+#include <memory>
 
-#if GLOG_FOUND
-#include <glog/logging.h>
-#endif
 #include "client.h"
 #include "util.h"
 
@@ -392,12 +388,14 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         KillClient(focused_client->window());
         break;
       case Action::Type::EXIT:
+        throw std::runtime_error("debugging purpose exception");
         is_running_ = false;
         break;
       case Action::Type::EXEC:
         sys_utils::ExecuteCmd(action.argument());
         break;
       case Action::Type::RELOAD:
+        sys_utils::NotifySend("Reloading config...");
         config_->Load();
         OnConfigReload();
         break;
@@ -490,18 +488,8 @@ void WindowManager::OnConfigReload() {
   }
 }
 
-int WindowManager::OnXError(Display* dpy, XErrorEvent* e) {
-#if GLOG_FOUND
-  const int MAX_ERROR_TEXT_LENGTH = 1024;
-  char error_text[MAX_ERROR_TEXT_LENGTH];
-  XGetErrorText(dpy, e->error_code, error_text, sizeof(error_text));
-  LOG(ERROR) << "Received X error:\n"
-    << "    Request: " << int(e->request_code)
-    << "    Error code: " << int(e->error_code)
-    << " - " << error_text << "\n"
-    << "    Resource ID: " << e->resourceid;
-  return 0; // the return value is ignored.
-#endif
+int WindowManager::OnXError(Display*, XErrorEvent*) {
+  return 0; // the error is discarded and the return value is ignored.
 }
 
 int WindowManager::OnWmDetected(Display*, XErrorEvent*) {

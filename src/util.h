@@ -68,10 +68,16 @@ void Strip(std::string& s);
 } // namespace string_utils
 
 
+
+#define NOTIFY_SEND_LOW "low"
+#define NOTIFY_SEND_NORMAL "normal"
+#define NOTIFY_SEND_CRITICAL "critical"
+
 namespace sys_utils {
 
 std::string ToAbsPath(const std::string& path);
-void ExecuteCmd(const std::string& cmd);
+void ExecuteCmd(std::string cmd);
+void NotifySend(const std::string& msg, const std::string& level=NOTIFY_SEND_NORMAL);
 
 } // namespace sys_utils
 
