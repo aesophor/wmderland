@@ -25,7 +25,7 @@ Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
       client_tree_(new Tree()),
       id_(id),
       name_(std::to_string(id)),
-      is_fullscreen_(false) {}
+      is_fullscreen_() {}
 
 
 bool Workspace::Has(Window window) const {
