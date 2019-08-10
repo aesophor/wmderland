@@ -1,10 +1,18 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #include "tree.h"
 
-#include <stack>
 #include <algorithm>
+#include <stack>
+#include <queue>
 
+#include "client.h"
+#include "util.h"
+
+using std::ifstream;
+using std::ofstream;
+using std::string;
 using std::stack;
+using std::queue;
 using std::vector;
 using std::unordered_map;
 
@@ -22,16 +30,16 @@ Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_() {
 }
 
 Tree::~Tree() {
-  TreeDfsCleanUp(root_node_);
+  DfsCleanUpHelper(root_node_);
 }
 
-void Tree::TreeDfsCleanUp(Tree::Node* node) const {
+void Tree::DfsCleanUpHelper(Tree::Node* node) const {
   if (!node) {
     return;
   }
 
   for (const auto child : node->children()) {
-    TreeDfsCleanUp(child);
+    DfsCleanUpHelper(child);
   }
   delete node;
 }
@@ -166,6 +174,91 @@ void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
 
 bool Tree::Node::leaf() const {
   return children_.empty();
+}
+
+
+ifstream& operator>> (ifstream& ifs, Tree& tree) {
+  string data;
+  std::getline(ifs, data);
+
+  if (data.empty()) {
+    return ifs;
+  }
+
+  queue<string> val_queue;
+  for (const auto& token : string_utils::Split(data, ',')) {
+    val_queue.push(token);
+  }
+
+  string root_val = val_queue.front();
+  val_queue.pop();
+  root_val.erase(0, 1);
+
+  tree.root_node_ = new Tree::Node(nullptr);
+  tree.root_node_->set_tiling_direction(static_cast<TilingDirection>(std::stoi(root_val)));
+  tree.current_node_ = tree.root_node_;
+ 
+  stack<Tree::Node*> st;
+  st.push(tree.root_node_);
+
+  while (!val_queue.empty()) {
+    string val = val_queue.front();
+    val_queue.pop();
+
+    // Backtrack
+    if (val == "b") {
+      st.pop();
+      tree.current_node_ = st.top();
+      continue;
+    }
+
+    // Serialize
+    Tree::Node* new_node = new Tree::Node(nullptr);
+    if (val.front() == 'w') {
+      val.erase(0, 1);
+      new_node->set_client(Client::mapper_[static_cast<Window>(std::stoul(val))]);
+    } else { // val.front() == 'i'
+      val.erase(0, 1);
+      new_node->set_tiling_direction(static_cast<TilingDirection>(std::stoi(val)));
+    }
+
+    tree.current_node_->AddChild(new_node);
+    tree.current_node_ = new_node;
+    st.push(new_node);
+  }
+
+  return ifs;
+}
+
+ofstream& operator<< (ofstream& ofs, const Tree& tree) {
+  string data;
+  tree.DfsSerializeHelper(tree.root_node(), data);
+  ofs << data.erase(data.rfind(",b,"));
+  return ofs;
+}
+
+void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
+  if (!node) {
+    return;
+  }
+
+  // Serialize current node, format:
+  // 1. If node is a leaf: w<Window>
+  // 2. If node is internal: i<TilingDirection>
+  if (node->leaf()) {
+    data += 'w' + std::to_string(node->client()->window());
+  } else {
+    data += 'i' + std::to_string(static_cast<int>(node->tiling_direction()));
+  }
+  data += ',';
+
+  for (const auto child : node->children()) {
+    DfsSerializeHelper(child, data);
+  }
+
+  // Add 'b' which indicates when to backtrack
+  // during deserialization.
+  data += "b,";
 }
 
 } // namespace wmderland
