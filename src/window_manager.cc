@@ -360,13 +360,11 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 
   for (const auto& action : actions) {
     switch (action.type()) {
-      case Action::Type::FOCUS_LEFT:
-      case Action::Type::FOCUS_RIGHT:
-      case Action::Type::FOCUS_UP:
-      case Action::Type::FOCUS_DOWN:
-        if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
-        workspaces_[current_]->Focus(action.type());
-        ArrangeWindows();
+      case Action::Type::NAVIGATE_LEFT:
+      case Action::Type::NAVIGATE_RIGHT:
+      case Action::Type::NAVIGATE_UP:
+      case Action::Type::NAVIGATE_DOWN:
+        workspaces_[current_]->Navigate(action.type());
         break;
       case Action::Type::TILE_H:
         workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);

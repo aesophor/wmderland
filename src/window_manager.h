@@ -11,6 +11,7 @@ extern "C" {
 #include <vector>
 #include <memory>
 
+#include "action.h"
 #include "properties.h"
 #include "workspace.h"
 #include "config.h"
@@ -50,8 +51,9 @@ class WindowManager {
   static int OnXError(Display* dpy, XErrorEvent* e);
   static int OnWmDetected(Display* dpy, XErrorEvent* e);
 
+  friend void Workspace::Navigate(Action::Type) const;
   void ArrangeWindows() const;
- 
+  
   // Workspace manipulation
   void GotoWorkspace(int next);
   void MoveWindowToWorkspace(Window window, int next); 

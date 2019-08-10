@@ -40,14 +40,14 @@ const string& Action::argument() const {
 
 
 Action::Type Action::StrToActionType(const string& s) {
-  if (s == "focus_left") {
-    return Action::Type::FOCUS_LEFT;
-  } else if (s == "focus_right") {
-    return Action::Type::FOCUS_RIGHT;
-  } else if (s == "focus_down") {
-    return Action::Type::FOCUS_DOWN;
-  } else if (s == "focus_up") {
-    return Action::Type::FOCUS_UP;
+  if (s == "navigate_left") {
+    return Action::Type::NAVIGATE_LEFT;
+  } else if (s == "navigate_right") {
+    return Action::Type::NAVIGATE_RIGHT;
+  } else if (s == "navigate_down") {
+    return Action::Type::NAVIGATE_DOWN;
+  } else if (s == "navigate_up") {
+    return Action::Type::NAVIGATE_UP;
   } else if (s == "tile_horizontally") {
     return Action::Type::TILE_H;
   } else if (s == "tile_vertically") {

@@ -260,24 +260,31 @@ vector<Client*> Workspace::GetTilingClients() const {
 }
 
 
-void Workspace::Focus(Action::Type focus_action_type) const {
+void Workspace::Navigate(Action::Type focus_action_type) const {
+  // Do not let user navigate between windows if
+  // 1. there's no currently focused client
+  // 2. current workspace is in fullscreen mode (there's a fullscreen window)
+  if (!client_tree_->current_node() || this->is_fullscreen()) {
+    return;
+  }
+
   TilingDirection target_direction = TilingDirection::HORIZONTAL;
   bool find_leftward = true;
 
   switch (focus_action_type) {
-    case Action::Type::FOCUS_LEFT:
+    case Action::Type::NAVIGATE_LEFT:
       target_direction = TilingDirection::HORIZONTAL;
       find_leftward = true;
       break;
-    case Action::Type::FOCUS_RIGHT:
+    case Action::Type::NAVIGATE_RIGHT:
       target_direction = TilingDirection::HORIZONTAL;
       find_leftward = false;
       break;
-    case Action::Type::FOCUS_UP:
+    case Action::Type::NAVIGATE_UP:
       target_direction = TilingDirection::VERTICAL;
       find_leftward = true;
       break;
-    case Action::Type::FOCUS_DOWN:
+    case Action::Type::NAVIGATE_DOWN:
       target_direction = TilingDirection::VERTICAL;
       find_leftward = false;
       break;
@@ -297,6 +304,7 @@ void Workspace::Focus(Action::Type focus_action_type) const {
       UnsetFocusedClient();
       SetFocusedClient(node->client()->window());
       client_tree_->set_current_node(node);
+      WindowManager::GetInstance()->ArrangeWindows();
       return;
     } else if (node->parent() == client_tree_->root_node()) {
       return;

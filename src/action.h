@@ -9,10 +9,10 @@ namespace wmderland {
 class Action {
  public:
   enum class Type {
-    FOCUS_LEFT,
-    FOCUS_RIGHT,
-    FOCUS_DOWN,
-    FOCUS_UP,
+    NAVIGATE_LEFT,
+    NAVIGATE_RIGHT,
+    NAVIGATE_DOWN,
+    NAVIGATE_UP,
     TILE_H,
     TILE_V,
     TOGGLE_FLOATING,
