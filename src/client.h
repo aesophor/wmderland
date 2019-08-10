@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #ifndef WMDERLAND_CLIENT_H_
 #define WMDERLAND_CLIENT_H_
 

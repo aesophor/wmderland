@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #include "tree.h"
 
 #include <stack>

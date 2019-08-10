@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #ifndef WMDERLAND_STACKTRACE_H_
 #define WMDERLAND_STACKTRACE_H_
 

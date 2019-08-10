@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #ifndef WMDERLAND_ACTION_H_
 #define WMDERLAND_ACTION_H_
 

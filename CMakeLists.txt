@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall")
 # If the BuildType is Debug, then add -rdynamic.
 # (used to print stacktrace with function names)
 if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 endif()
 
 
@@ -23,9 +23,9 @@ endif()
 find_package(X11 REQUIRED)
 find_package(glog)
 
-# CMake will generate config.hpp from config.hpp.in
+# CMake will generate config.h from config.h.in
 # and store it under src/
-include_directories("build" "src")
+include_directories("src" "build")
 configure_file("src/config.h.in" "config.h")
 
 # Grab all files end in .cc
@@ -34,7 +34,7 @@ add_executable(Wmderland ${cpp_sources})
 
 set(LINK_LIBRARIES X11)
 if(GLOG_FOUND)
-    set(LINK_LIBRARIES ${LINK_LIBRARIES} glog)
+  set(LINK_LIBRARIES ${LINK_LIBRARIES} glog)
 endif()
 target_link_libraries(Wmderland ${LINK_LIBRARIES})
 
