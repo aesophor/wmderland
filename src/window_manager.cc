@@ -62,6 +62,7 @@ WindowManager::WindowManager(Display* dpy)
       current_(),
       btn_pressed_event_() {
   if (HasAnotherWmRunning()) {
+    std::cerr << "Another window manager is already running." << std::endl;
     return;
   }
   wm_utils::Init(dpy_, prop_.get(), root_window_);
@@ -178,11 +179,6 @@ void WindowManager::InitWorkspaces() {
 
 
 void WindowManager::Run() {
-  if (!is_running_) {
-    std::cerr << "Another window manager is already running." << std::endl;
-    return;
-  }
-
   // Run the autostart_cmds and autostart_cmds_on_reload defined in user's config.
   for (const auto& cmd : config_->autostart_cmds()) {
     sys_utils::ExecuteCmd(cmd);
@@ -370,9 +366,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
       case Action::Type::FOCUS_DOWN:
         if (!focused_client || workspaces_[current_]->is_fullscreen()) continue;
         workspaces_[current_]->Focus(action.type());
-        workspaces_[current_]->RaiseAllFloatingClients();
-        RaiseNotifications();
-        wm_utils::SetNetActiveWindow(workspaces_[current_]->GetFocusedClient()->window());
+        ArrangeWindows();
         break;
       case Action::Type::TILE_H:
         workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
@@ -421,15 +415,17 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
     return;
   }
 
+  wm_utils::SetNetActiveWindow(c->window());
   c->workspace()->UnsetFocusedClient();
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
-  wm_utils::SetNetActiveWindow(c->window());
-
+ 
   if (c->is_floating() && !c->is_fullscreen()) {
+    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
+
+    c->Raise();
     c->SaveXWindowAttributes();
     btn_pressed_event_ = e;
-    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
   }
 }
 
@@ -480,24 +476,16 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
 }
 
 void WindowManager::OnConfigReload() {
-  // 1. Re-arrange all workspaces.
-  // 2. Apply new border width and color to existing clients.
+  // 1. Apply new border width and color to existing clients.
+  // 2. Re-arrange windows in current workspace.
   // 3. Run all commands in config->autostart_cmds_on_reload_
-  Area tiling_area = CalculateTilingArea();
-
   for (const auto workspace : workspaces_) {
-    workspace->Arrange(tiling_area);
-
     for (const auto client : workspace->GetClients()) {
       client->SetBorderWidth(config_->border_width());
       client->SetBorderColor(config_->unfocused_color());
     }
-
-    Client* focused_client = workspace->GetFocusedClient();
-    if (focused_client) {
-      focused_client->SetBorderColor(config_->focused_color());
-    }
   }
+  ArrangeWindows();
 
   for (const auto& cmd : config_->autostart_cmds_on_reload()) {
     sys_utils::ExecuteCmd(cmd);
@@ -526,28 +514,32 @@ int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
 
 void WindowManager::ArrangeWindows() const {
   workspaces_[current_]->MapAllClients();
-  workspaces_[current_]->Arrange(CalculateTilingArea());
+  MapDocks();
+ 
   Client* focused_client = workspaces_[current_]->GetFocusedClient();
-
   if (!focused_client) {
     wm_utils::ClearNetActiveWindow();
-  } else {
-    // Update NET_ACTIVE_WINDOW
-    wm_utils::SetNetActiveWindow(focused_client->window());
-
-    // Make sure the focused client is receiving input focus.
-    workspaces_[current_]->SetFocusedClient(focused_client->window());
-
-    // Restore fullscreen application.
-    if (workspaces_[current_]->is_fullscreen()) {
-      focused_client->MoveResize(0, 0, GetDisplayResolution());
-      UnmapDocks();
-    }
+    return;
   }
 
+  // Update NET_ACTIVE_WINDOW
+  wm_utils::SetNetActiveWindow(focused_client->window());
+  workspaces_[current_]->Arrange(CalculateTilingArea());
+
+  // Make sure the focused client is receiving input focus.
+  workspaces_[current_]->SetFocusedClient(focused_client->window());
+
+  // But floating clients including notifications should be on top of
+  // any tiled clients.
   workspaces_[current_]->RaiseAllFloatingClients();
   RaiseNotifications();
-  MapDocks();
+
+  // Restore fullscreen application.
+  if (workspaces_[current_]->is_fullscreen()) {
+    UnmapDocks();
+    focused_client->MoveResize(0, 0, GetDisplayResolution());
+    focused_client->Raise();
+  }
 }
 
 void WindowManager::GotoWorkspace(int next) {
@@ -586,13 +578,11 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 
 
 void WindowManager::Center(Window window) {
-  pair<short, short> res = GetDisplayResolution();
-  short screen_width = res.first;
-  short screen_height = res.second;
-
+  pair<int, int> res = GetDisplayResolution();
   XWindowAttributes attr = wm_utils::GetXWindowAttributes(window);
-  int new_x = screen_width / 2 - attr.width / 2;
-  int new_y = screen_height / 2 - attr.height / 2;
+
+  int new_x = res.first / 2 - attr.width / 2;
+  int new_y = res.second / 2 - attr.height / 2;
   XMoveWindow(dpy_, window, new_x, new_y);
 }
 
@@ -606,9 +596,8 @@ void WindowManager::SetFloating(Window window, bool floating) {
     c->Resize(DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
     Center(c->window());
   }
-
   c->set_floating(floating);
-  c->workspace()->Arrange(CalculateTilingArea());
+  ArrangeWindows();
 }
 
 void WindowManager::SetFullscreen(Window window, bool fullscreen) {
