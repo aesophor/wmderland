@@ -168,9 +168,9 @@ void WindowManager::Run() {
     return;
   }
 
-  // Automatically start the applications specified in config in background.
-  for (const auto& s : config_->autostart_rules()) {
-    system((s + '&').c_str());
+  // Run the autostart_cmds and autostart_cmds_on_reload defined in user's config.
+  for (const auto& cmd : config_->autostart_cmds()) {
+    sys_utils::ExecuteCmd(cmd);
   }
 
   XEvent event;
@@ -309,11 +309,11 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   // If the window is a dock/bar or notification, remove it and tile the workspace.
   if (std::find(docks_.begin(), docks_.end(), e.window) != docks_.end()) {
-    docks_.erase(remove(docks_.begin(), docks_.end(), e.window), docks_.end());
+    docks_.erase(std::remove(docks_.begin(), docks_.end(), e.window), docks_.end());
     workspaces_[current_]->Arrange(CalculateTilingArea());
     return;
   } else if (wm_utils::IsNotification(e.window)) {
-    notifications_.erase(remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
+    notifications_.erase(std::remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
     return;
   }
 
@@ -388,7 +388,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         is_running_ = false;
         break;
       case Action::Type::EXEC:
-        system((action.argument() + '&').c_str());
+        sys_utils::ExecuteCmd(action.argument());
         break;
       case Action::Type::RELOAD:
         config_->Load();
@@ -467,6 +467,7 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
 void WindowManager::OnConfigReload() {
   // 1. Re-arrange all workspaces.
   // 2. Apply new border width and color to existing clients.
+  // 3. Run all commands in config->autostart_cmds_on_reload_
   Area tiling_area = CalculateTilingArea();
 
   for (const auto workspace : workspaces_) {
@@ -481,6 +482,10 @@ void WindowManager::OnConfigReload() {
     if (focused_client) {
       focused_client->SetBorderColor(config_->focused_color());
     }
+  }
+
+  for (const auto& cmd : config_->autostart_cmds_on_reload()) {
+    sys_utils::ExecuteCmd(cmd);
   }
 }
 

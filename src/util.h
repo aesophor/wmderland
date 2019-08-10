@@ -71,6 +71,7 @@ void Strip(std::string& s);
 namespace sys_utils {
 
 std::string ToAbsPath(const std::string& path);
+void ExecuteCmd(const std::string& cmd);
 
 } // namespace sys_utils
 

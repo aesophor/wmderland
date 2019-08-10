@@ -77,7 +77,8 @@ class Config {
   unsigned long focused_color() const;
   unsigned long unfocused_color() const;
   const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
-  const std::vector<std::string>& autostart_rules() const;
+  const std::vector<std::string>& autostart_cmds() const;
+  const std::vector<std::string>& autostart_cmds_on_reload() const;
   
   friend std::ifstream& operator>> (std::ifstream& ifs, Config& config);
 
@@ -102,7 +103,8 @@ class Config {
   std::unordered_map<std::string, bool> fullscreen_rules_; // start certain apps in fullscreen mode.
   std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
   std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
-  std::vector<std::string> autostart_rules_; // launch certain apps when wm starts.
+  std::vector<std::string> autostart_cmds_; // run certain commands when wm starts.
+  std::vector<std::string> autostart_cmds_on_reload_; // run certain commands when wm starts and on config reload.
 
   Display* dpy_;
   Properties* prop_;

@@ -10,9 +10,6 @@
 #include "action.h"
 #include "util.h"
 
-using std::stoi;
-using std::stoul;
-using std::boolalpha;
 using std::pair;
 using std::string;
 using std::vector;
@@ -114,8 +111,12 @@ const unordered_map<string, vector<Action>>& Config::keybind_rules() const {
   return keybind_rules_;
 }
 
-const vector<string>& Config::autostart_rules() const {
-  return autostart_rules_;
+const vector<string>& Config::autostart_cmds() const {
+  return autostart_cmds_;
+}
+
+const vector<string>& Config::autostart_cmds_on_reload() const {
+  return autostart_cmds_on_reload_;
 }
 
 
@@ -132,7 +133,7 @@ ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
     return ConfigKeyword::PROHIBIT;
   } else if (s == "bindsym") {
     return ConfigKeyword::BINDSYM;
-  } else if (s == "exec") {
+  } else if (s == "exec" || s == "exec_on_reload") {
     return ConfigKeyword::EXEC;
   } else {
     return ConfigKeyword::UNDEFINED;
@@ -177,78 +178,86 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   config.min_window_height_ = MIN_WINDOW_HEIGHT;
   config.focused_color_ = DEFAULT_FOCUSED_COLOR;
   config.unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
+  config.autostart_cmds_.clear();
+  config.autostart_cmds_on_reload_.clear();
 
   // Parse user's config file.
   string line;
   while (std::getline(ifs, line)) {
     string_utils::Strip(line); // Strip extra whitespace, just in case.
 
-    if (!line.empty() && line.at(0) != Config::kCommentSymbol) {
-      vector<string> tokens = string_utils::Split(config.ReplaceSymbols(line), ' ');
-      ConfigKeyword keyword = Config::StrToConfigKeyword(tokens[0]);
+    if (line.empty() || line.at(0) == Config::kCommentSymbol) {
+      continue;
+    }
 
-      switch (keyword) {
-        case ConfigKeyword::SET: {
-          string& key = tokens[1];
-          string& value = tokens[3];
-          if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
-            // Prefixed with '$' means user-declared variable.
-            config.symtab_[key] = value;
+    vector<string> tokens = string_utils::Split(config.ReplaceSymbols(line), ' ');
+    ConfigKeyword keyword = Config::StrToConfigKeyword(tokens[0]);
+
+    switch (keyword) {
+      case ConfigKeyword::SET: {
+        string& key = tokens[1];
+        string& value = tokens[3];
+        if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
+          // Prefixed with '$' means user-declared variable.
+          config.symtab_[key] = value;
+        } else {
+          // Otherwise it is declaring value for a built-in variable.
+          if (key == "gap_width") {
+            config.gap_width_ = std::stoi(value);
+          } else if (key == "border_width") {
+            config.border_width_ = std::stoi(value);
+          } else if (key == "min_window_width") {
+            config.min_window_width_ = std::stoi(value);
+          } else if (key == "min_window_height") {
+            config.min_window_height_ = std::stoi(value);
+          } else if (key == "focused_color") {
+            config.focused_color_ = std::stoul(value, nullptr, 16);
+          } else if (key == "unfocused_color") {
+            config.unfocused_color_ = std::stoul(value, nullptr, 16);
           } else {
-            // Otherwise it is declaring value for a built-in variable.
-            if (key == "gap_width") {
-              config.gap_width_ = stoi(value);
-            } else if (key == "border_width") {
-              config.border_width_ = stoi(value);
-            } else if (key == "min_window_width") {
-              config.min_window_width_ = stoi(value);
-            } else if (key == "min_window_height") {
-              config.min_window_height_ = stoi(value);
-            } else if (key == "focused_color") {
-              config.focused_color_ = stoul(value, nullptr, 16);
-            } else if (key == "unfocused_color") {
-              config.unfocused_color_ = stoul(value, nullptr, 16);
-            } else {
-              WM_LOG(ERROR, "config: unrecognized identifier: " << key);
-            }
+            WM_LOG(ERROR, "config: unrecognized identifier: " << key);
           }
-          break;
         }
-        case ConfigKeyword::ASSIGN: {
-          string window_identifier = config.ExtractWindowIdentifier(line);
-          config.spawn_rules_[window_identifier] = stoi(tokens.back());
-          break;
+        break;
+      }
+      case ConfigKeyword::ASSIGN: {
+        string window_identifier = config.ExtractWindowIdentifier(line);
+        config.spawn_rules_[window_identifier] = std::stoi(tokens.back());
+        break;
+      }
+      case ConfigKeyword::FLOATING: {
+        string window_identifier = config.ExtractWindowIdentifier(line);
+        stringstream(tokens.back()) >> std::boolalpha >> config.float_rules_[window_identifier];
+        break;
+      }
+      case ConfigKeyword::FULLSCREEN: {
+        string window_identifier = config.ExtractWindowIdentifier(line);
+        stringstream(tokens.back()) >> std::boolalpha >> config.fullscreen_rules_[window_identifier];
+        break;
+      }
+      case ConfigKeyword::PROHIBIT: {
+        string window_identifier = config.ExtractWindowIdentifier(line);
+        stringstream(tokens.back()) >> std::boolalpha >> config.prohibit_rules_[window_identifier];
+        break;
+      }
+      case ConfigKeyword::BINDSYM: {
+        string modifier_and_key = tokens[1];
+        string action_series_str = string_utils::Split(line, ' ', 2)[2];
+        config.SetKeybindActions(modifier_and_key, action_series_str);
+        break;
+      }
+      case ConfigKeyword::EXEC: {
+        string shell_cmd = string_utils::Split(line, ' ', 1)[1];
+        config.autostart_cmds_.push_back(shell_cmd);
+
+        if (tokens[0] == "exec_on_reload") {
+          config.autostart_cmds_on_reload_.push_back(shell_cmd);
         }
-        case ConfigKeyword::FLOATING: {
-          string window_identifier = config.ExtractWindowIdentifier(line);
-          stringstream(tokens.back()) >> boolalpha >> config.float_rules_[window_identifier];
-          break;
-        }
-        case ConfigKeyword::FULLSCREEN: {
-          string window_identifier = config.ExtractWindowIdentifier(line);
-          stringstream(tokens.back()) >> boolalpha >> config.fullscreen_rules_[window_identifier];
-          break;
-        }
-        case ConfigKeyword::PROHIBIT: {
-          string window_identifier = config.ExtractWindowIdentifier(line);
-          stringstream(tokens.back()) >> boolalpha >> config.prohibit_rules_[window_identifier];
-          break;
-        }
-        case ConfigKeyword::BINDSYM: {
-          string modifier_and_key = tokens[1];
-          string action_series_str = string_utils::Split(line, ' ', 2)[2];
-          config.SetKeybindActions(modifier_and_key, action_series_str);
-          break;
-        }
-        case ConfigKeyword::EXEC: {
-          string shell_cmd = string_utils::Split(line, ' ', 1)[1];
-          config.autostart_rules_.push_back(shell_cmd);
-          break;
-        }
-        default: {
-          WM_LOG(ERROR, "config: unrecognized symbol: " << tokens[0]);
-          break;
-        }
+        break;
+      }
+      default: {
+        WM_LOG(ERROR, "config: unrecognized symbol: " << tokens[0]);
+        break;
       }
     }
   }

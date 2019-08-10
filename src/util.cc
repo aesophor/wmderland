@@ -322,6 +322,11 @@ string ToAbsPath(const string& path) {
   return abs_path;
 }
 
+void ExecuteCmd(const string& cmd) {
+  // TODO: replace system with a more secure function.
+  system((cmd + '&').c_str());
+}
+
 } // namespace sys_utils
 
 } // namespace wmderland
