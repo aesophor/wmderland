@@ -61,6 +61,9 @@ WindowManager::WindowManager(Display* dpy)
       cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
       current_(),
       btn_pressed_event_() {
+  if (HasAnotherWmRunning()) {
+    return;
+  }
   wm_utils::Init(dpy_, prop_.get(), root_window_);
   InitWorkspaces();
   InitProperties();
@@ -77,10 +80,41 @@ WindowManager::~WindowManager() {
 }
 
 
-void WindowManager::InitWorkspaces() {
-  for (int i = 0; i < WORKSPACE_COUNT; i++) {
-    workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
+bool WindowManager::HasAnotherWmRunning() {
+  // Exit gracefully if another WM is already running.
+  XSetErrorHandler(&WindowManager::OnWmDetected);
+  XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
+  XSync(dpy_, false);
+  XSetErrorHandler(&WindowManager::OnXError);
+  return !is_running_;
+}
+
+void WindowManager::InitXEvents() {
+  // Define the key combinations which will send us X events based on the key combinations 
+  // defined in user's config.
+  for (const auto& r : config_->keybind_rules()) {
+    vector<string> modifier_and_key = string_utils::Split(r.first, '+');
+    bool shifted = string_utils::Contains(r.first, "Shift");
+
+    string modifier = modifier_and_key[0];
+    string key = modifier_and_key[(shifted) ? 2 : 1];
+
+    int keycode = wm_utils::StrToKeycode(key);
+    int mod_mask = wm_utils::StrToKeymask(modifier, shifted);
+    XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy_, keycode, mod_mask | LockMask, root_window_, True, GrabModeAsync, GrabModeAsync);
   }
+
+  // Define which mouse clicks will send us X events.
+  XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
+      ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+}
+
+void WindowManager::InitCursors() {
+  cursors_[NORMAL_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
+  cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
+  cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
+  XDefineCursor(dpy_, root_window_, cursors_[NORMAL_CURSOR]);
 }
 
 void WindowManager::InitProperties() {
@@ -127,40 +161,12 @@ void WindowManager::InitProperties() {
   XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
-void WindowManager::InitXEvents() {
-  // Define the key combinations which will send us X events based on the key combinations 
-  // defined in config.
-  for (const auto& r : config_->keybind_rules()) {
-    vector<string> modifier_and_key = string_utils::Split(r.first, '+');
-    bool shifted = string_utils::Contains(r.first, "Shift");
-
-    string modifier = modifier_and_key[0];
-    string key = modifier_and_key[(shifted) ? 2 : 1];
-
-    int keycode = wm_utils::StrToKeycode(key);
-    int mod_mask = wm_utils::StrToKeymask(modifier, shifted);
-    XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy_, keycode, mod_mask | LockMask, root_window_, True, GrabModeAsync, GrabModeAsync);
+void WindowManager::InitWorkspaces() {
+  for (int i = 0; i < WORKSPACE_COUNT; i++) {
+    workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
   }
-
-  // Define which mouse clicks will send us X events.
-  XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
-      ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
-
-  // Exit gracefully if another window manager is already running.
-  XSetErrorHandler(&WindowManager::OnWmDetected);
-  XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
-  XSync(dpy_, false);
-
-  XSetErrorHandler(&WindowManager::OnXError);
 }
 
-void WindowManager::InitCursors() {
-  cursors_[NORMAL_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
-  cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
-  cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
-  XDefineCursor(dpy_, root_window_, cursors_[NORMAL_CURSOR]);
-}
 
 void WindowManager::Run() {
   if (!is_running_) {

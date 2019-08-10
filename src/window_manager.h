@@ -29,10 +29,11 @@ class WindowManager {
   static bool is_running_;
   WindowManager(Display* dpy);
 
-  void InitWorkspaces();
-  void InitProperties();
+  bool HasAnotherWmRunning();
   void InitXEvents();
   void InitCursors();
+  void InitProperties();
+  void InitWorkspaces();
 
   // XEvent handlers
   void OnConfigureRequest(const XConfigureRequestEvent& e);
