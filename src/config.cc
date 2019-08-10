@@ -120,23 +120,23 @@ const vector<string>& Config::autostart_cmds_on_reload() const {
 }
 
 
-ConfigKeyword Config::StrToConfigKeyword(const std::string& s) {
+Config::Keyword Config::StrToConfigKeyword(const std::string& s) {
   if (s == "set") {
-    return ConfigKeyword::SET;
+    return Config::Keyword::SET;
   } else if (s == "assign") {
-    return ConfigKeyword::ASSIGN;
+    return Config::Keyword::ASSIGN;
   } else if (s == "floating") {
-    return ConfigKeyword::FLOATING;
+    return Config::Keyword::FLOATING;
   } else if (s == "fullscreen") {
-    return ConfigKeyword::FULLSCREEN;
+    return Config::Keyword::FULLSCREEN;
   } else if (s == "prohibit") {
-    return ConfigKeyword::PROHIBIT;
+    return Config::Keyword::PROHIBIT;
   } else if (s == "bindsym") {
-    return ConfigKeyword::BINDSYM;
+    return Config::Keyword::BINDSYM;
   } else if (s == "exec" || s == "exec_on_reload") {
-    return ConfigKeyword::EXEC;
+    return Config::Keyword::EXEC;
   } else {
-    return ConfigKeyword::UNDEFINED;
+    return Config::Keyword::UNDEFINED;
   }
 }
 
@@ -191,10 +191,10 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
     }
 
     vector<string> tokens = string_utils::Split(config.ReplaceSymbols(line), ' ');
-    ConfigKeyword keyword = Config::StrToConfigKeyword(tokens[0]);
+    Config::Keyword keyword = Config::StrToConfigKeyword(tokens[0]);
 
     switch (keyword) {
-      case ConfigKeyword::SET: {
+      case Config::Keyword::SET: {
         string& key = tokens[1];
         string& value = tokens[3];
         if (string_utils::StartsWith(key, VARIABLE_PREFIX)) {
@@ -220,33 +220,33 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
         }
         break;
       }
-      case ConfigKeyword::ASSIGN: {
+      case Config::Keyword::ASSIGN: {
         string window_identifier = config.ExtractWindowIdentifier(line);
         config.spawn_rules_[window_identifier] = std::stoi(tokens.back());
         break;
       }
-      case ConfigKeyword::FLOATING: {
+      case Config::Keyword::FLOATING: {
         string window_identifier = config.ExtractWindowIdentifier(line);
         stringstream(tokens.back()) >> std::boolalpha >> config.float_rules_[window_identifier];
         break;
       }
-      case ConfigKeyword::FULLSCREEN: {
+      case Config::Keyword::FULLSCREEN: {
         string window_identifier = config.ExtractWindowIdentifier(line);
         stringstream(tokens.back()) >> std::boolalpha >> config.fullscreen_rules_[window_identifier];
         break;
       }
-      case ConfigKeyword::PROHIBIT: {
+      case Config::Keyword::PROHIBIT: {
         string window_identifier = config.ExtractWindowIdentifier(line);
         stringstream(tokens.back()) >> std::boolalpha >> config.prohibit_rules_[window_identifier];
         break;
       }
-      case ConfigKeyword::BINDSYM: {
+      case Config::Keyword::BINDSYM: {
         string modifier_and_key = tokens[1];
         string action_series_str = string_utils::Split(line, ' ', 2)[2];
         config.SetKeybindActions(modifier_and_key, action_series_str);
         break;
       }
-      case ConfigKeyword::EXEC: {
+      case Config::Keyword::EXEC: {
         string shell_cmd = string_utils::Split(line, ' ', 1)[1];
         config.autostart_cmds_.push_back(shell_cmd);
 
