@@ -388,7 +388,6 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         KillClient(focused_client->window());
         break;
       case Action::Type::EXIT:
-        throw std::runtime_error("debugging purpose exception");
         is_running_ = false;
         break;
       case Action::Type::EXEC:
