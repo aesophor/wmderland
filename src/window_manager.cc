@@ -156,19 +156,24 @@ void WindowManager::InitProperties() {
   unsigned long desktop_viewport_cord[2] = {0, 0};
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_DESKTOP_VIEWPORT], XA_CARDINAL,
       32, PropModeReplace, reinterpret_cast<unsigned char*>(desktop_viewport_cord), 2);
-
-  // TODO: Add/remove workspaces at runtime.
-  // TODO: User should be able to modify workspace names at runtime.
-  const char* names[WORKSPACE_COUNT] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
-  XTextProperty text_prop;
-  Xutf8TextListToTextProperty(dpy_, const_cast<char**>(names), WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
-  XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
 void WindowManager::InitWorkspaces() {
+  char* names[workspaces_.size()];
+
   for (size_t i = 0; i < workspaces_.size(); i++) {
+    // Initialize workspace objects.
     workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
+
+    // Copy workspace name const char* to names[i], which is needed later.
+    // See the XSetTextProperty below. 
+    names[i] = const_cast<char*>(workspaces_[i]->name());
   }
+
+  // Set NET_DESKTOP_NAMES to display workspace names in polybar's xworkspace module.
+  XTextProperty text_prop;
+  Xutf8TextListToTextProperty(dpy_, names, workspaces_.size(), XUTF8StringStyle, &text_prop);
+  XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
 

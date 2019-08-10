@@ -7,6 +7,7 @@ extern "C" {
 }
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "config.h"
 #include "client.h"
@@ -45,6 +46,8 @@ class Workspace {
   int id() const;
   const char* name() const;
   bool is_fullscreen() const;
+
+  void set_name(const std::string& name);
   void set_fullscreen(bool fullscreen);
 
  private:

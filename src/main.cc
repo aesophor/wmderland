@@ -1,7 +1,6 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #include <iostream>
 #include <cstring>
-#include <string>
 #include <memory>
 
 #if GLOG_FOUND
@@ -13,20 +12,20 @@
 
 namespace {
 
-std::string version() {
+const char* version() {
   return WIN_MGR_NAME " " VERSION "\n"
     "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
     "This is free software, see the source for copying conditions. There is No\n"
     "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
 }
 
-std::string wm_start_failed_msg = "Failed to open display to X server.";
+const char* wm_start_failed_msg = "Failed to open display to X server.";
 
 } // namespace 
 
 
 int main(int argc, char* args[]) {
-  if (argc > 1 && (!strcmp(args[1], "-v") || !strcmp(args[1], "--version"))) {
+  if (argc > 1 && (!std::strcmp(args[1], "-v") || !std::strcmp(args[1], "--version"))) {
     std::cout << ::version() << std::endl;
     return EXIT_SUCCESS;
   }

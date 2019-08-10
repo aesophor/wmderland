@@ -11,6 +11,7 @@
 using std::pair;
 using std::stack;
 using std::vector;
+using std::string;
 using std::unique_ptr;
 
 namespace wmderland {
@@ -23,6 +24,7 @@ Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
       config_(config),
       client_tree_(new Tree()),
       id_(id),
+      name_(std::to_string(id)),
       is_fullscreen_(false) {}
 
 
@@ -368,6 +370,11 @@ const char* Workspace::name() const {
 
 bool Workspace::is_fullscreen() const {
   return is_fullscreen_;
+}
+
+
+void Workspace::set_name(const string& name) {
+  name_ = name;
 }
 
 void Workspace::set_fullscreen(bool fullscreen) {
