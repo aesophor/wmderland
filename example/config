@@ -19,8 +19,8 @@ set gap_width = 12
 set border_width = 3
 set min_window_width = 100
 set min_window_height = 100
-set focused_color = ff606778
-set unfocused_color = ff393f52
+set focused_color = ff4c5d70
+set unfocused_color = ff32455c
 set $Mod = Mod4
 
 
@@ -29,8 +29,8 @@ set $Mod = Mod4
 ; -----------------------------------------------------------------------
 assign URxvt 1
 assign jetbrains-idea 2
-assign jetbrains-studio 2
 assign Firefox 3
+assign Google-chrome 3
 assign dolphin 4
 assign ark 4
 assign Et 5
@@ -38,11 +38,14 @@ assign Wps 5
 assign Wpp 5
 assign Spotify 6
 assign vlc 6
-assign Gimp-2.8 7
+assign Allegro 7
+assign Gimp-2.10 7
 assign tiled 7
 assign Wine,steam.exe 8
 assign Steam 8
 assign PCSX2 8
+assign PPSSPPQt 8
+assign antimicro 9
 assign VirtualBox Manager 9
 assign Transmission 9
 
@@ -64,6 +67,8 @@ floating Wine,steam.exe true
 floating Wine,tesv.exe true
 floating VirtualBox Machine true
 floating Vigilante true
+floating net-minecraft-launcher-Main true
+floating xfreerdp true
 
 
 ; [Fullscreen Rules]
@@ -76,7 +81,8 @@ fullscreen Wine,tesv.exe true
 ; [Prohibit Rules]
 ; Applications that should be prohibited from being launched
 ; -----------------------------------------------------------------------
-prohibit plasmashell true
+prohibit plasmashell,plasmashell,Desktop — Plasma true
+prohibit Wine,Wine System Tray true
 
 
 ; [Keybind]
@@ -103,12 +109,12 @@ bindsym $Mod+Shift+7 move_app_to_workspace 7
 bindsym $Mod+Shift+8 move_app_to_workspace 8
 bindsym $Mod+Shift+9 move_app_to_workspace 9
 
+bindsym $Mod+h navigate_left
+bindsym $Mod+l navigate_right
+bindsym $Mod+j navigate_down
+bindsym $Mod+k navigate_up
 bindsym $Mod+g tile_horizontally
 bindsym $Mod+v tile_vertically
-bindsym $Mod+h focus_left
-bindsym $Mod+l focus_right
-bindsym $Mod+j focus_down
-bindsym $Mod+k focus_up
 bindsym $Mod+Shift+space toggle_floating
 bindsym $Mod+f toggle_fullscreen
 bindsym $Mod+Shift+q kill
@@ -122,11 +128,12 @@ bindsym $Mod+Return goto_workspace 1; exec urxvt
 ; [Autostart]
 ; Applications to execute when WM starts up (DON'T append '&' at the end)
 ; -----------------------------------------------------------------------
-exec wmctrl -c Plasma
-exec displayctl
-exec dispad
-exec compton --config ~/.config/compton/compton.conf
 exec pulseaudio --start --log-target=syslog
 exec mpd
-exec ~/.config/polybar/launch.sh
 exec dunst
+exec dispad
+exec displayctl
+exec klipper
+exec killall krunner
+exec compton --config ~/.config/compton/compton.conf
+exec_on_reload ~/.config/polybar/launch.sh
