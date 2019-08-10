@@ -53,11 +53,7 @@ class Workspace {
  private:
   void Tile(Tree::Node* node, int x, int y, int width, int height,
             int border_width, int gap_width) const;
-  void FocusLeft() const;
-  void FocusRight() const;
-  void FocusUp() const;
-  void FocusDown() const;
-
+  
   Display* dpy_;
   Window root_window_;
   Config* config_;

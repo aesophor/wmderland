@@ -261,89 +261,38 @@ vector<Client*> Workspace::GetTilingClients() const {
 
 
 void Workspace::Focus(Action::Type focus_action_type) const {
+  TilingDirection target_direction = TilingDirection::HORIZONTAL;
+  bool find_leftward = true;
+
   switch (focus_action_type) {
     case Action::Type::FOCUS_LEFT:
-      FocusLeft();
+      target_direction = TilingDirection::HORIZONTAL;
+      find_leftward = true;
       break;
     case Action::Type::FOCUS_RIGHT:
-      FocusRight();
+      target_direction = TilingDirection::HORIZONTAL;
+      find_leftward = false;
       break;
     case Action::Type::FOCUS_UP:
-      FocusUp();
+      target_direction = TilingDirection::VERTICAL;
+      find_leftward = true;
       break;
     case Action::Type::FOCUS_DOWN:
-      FocusDown();
+      target_direction = TilingDirection::VERTICAL;
+      find_leftward = false;
       break;
     default:
-      break;
+      return;
   }
-}
 
-void Workspace::FocusLeft() const {
+ 
   for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
-    Tree::Node* left_sibling = ptr->GetLeftSibling();
+    Tree::Node* sibling = (find_leftward) ? ptr->GetLeftSibling() : ptr->GetRightSibling();
 
-    if (ptr->parent()->tiling_direction() == TilingDirection::HORIZONTAL && left_sibling) {
-      ptr = left_sibling;
+    if (ptr->parent()->tiling_direction() == target_direction && sibling) {
+      ptr = sibling;
       while (!ptr->leaf()) {
-        ptr = ptr->children().back();
-      }
-      UnsetFocusedClient();
-      SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current_node(ptr);
-      return;
-    } else if (ptr->parent() == client_tree_->root_node()) {
-      return;
-    }
-  }
-}
-
-void Workspace::FocusRight() const {
-  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
-    Tree::Node* right_sibling = ptr->GetRightSibling();
-
-    if (ptr->parent()->tiling_direction() == TilingDirection::HORIZONTAL && right_sibling) {
-      ptr = right_sibling;
-      while (!ptr->leaf()) {
-        ptr = ptr->children().front();
-      }
-      UnsetFocusedClient();
-      SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current_node(ptr);
-      return;
-    } else if (ptr->parent() == client_tree_->root_node()) {
-      return;
-    }
-  }
-}
-
-void Workspace::FocusUp() const {
-  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
-    Tree::Node* left_sibling = ptr->GetLeftSibling();
-
-    if (ptr->parent()->tiling_direction() == TilingDirection::VERTICAL && left_sibling) {
-      ptr = left_sibling;
-      while (!ptr->leaf()) {
-        ptr = ptr->children().back();
-      }
-      UnsetFocusedClient();
-      SetFocusedClient(ptr->client()->window());
-      client_tree_->set_current_node(ptr);
-      return;
-    } else if (ptr->parent() == client_tree_->root_node()) {
-      return;
-    }
-  }
-}
-
-void Workspace::FocusDown() const {
-  for (Tree::Node* ptr = client_tree_->current_node(); ptr; ptr = ptr->parent()) {
-    Tree::Node* right_sibling = ptr->GetRightSibling();
-
-    if (ptr->parent()->tiling_direction() == TilingDirection::VERTICAL && right_sibling) {
-      ptr = right_sibling;
-      while (!ptr->leaf()) {
-        ptr = ptr->children().front();
+        ptr = (find_leftward) ? ptr->children().back() : ptr->children().front();
       }
       UnsetFocusedClient();
       SetFocusedClient(ptr->client()->window());
