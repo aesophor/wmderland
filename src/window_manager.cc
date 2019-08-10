@@ -124,49 +124,49 @@ void WindowManager::InitProperties() {
   // Set the name of window manager (i.e., Wmderland) on the root_window_ window,
   // so that other programs can acknowledge the name of this WM.
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_WM_NAME], prop_->utf8string,
-      8, PropModeReplace, reinterpret_cast<uint8_t*>(win_mgr_name), win_mgr_name_len);
+      8, PropModeReplace, reinterpret_cast<unsigned char*>(win_mgr_name), win_mgr_name_len);
 
   // Supporting window for _NET_WM_SUPPORTING_CHECK which tells other client
   // a compliant window manager exists.
   XChangeProperty(dpy_, wmcheckwin_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], XA_WINDOW,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(&wmcheckwin_), 1);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(&wmcheckwin_), 1);
 
   XChangeProperty(dpy_, wmcheckwin_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], prop_->utf8string,
-      8, PropModeReplace, reinterpret_cast<uint8_t*>(win_mgr_name), win_mgr_name_len);
+      8, PropModeReplace, reinterpret_cast<unsigned char*>(win_mgr_name), win_mgr_name_len);
 
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_SUPPORTING_WM_CHECK], XA_WINDOW,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(&wmcheckwin_), 1);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(&wmcheckwin_), 1);
 
   // Initialize NET_CLIENT_LIST to empty.
   XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST]);
 
   // Set _NET_SUPPORTED to indicate which atoms are supported by this window manager.    
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_SUPPORTED], XA_ATOM,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(prop_->net), atom::NET_ATOM_SIZE);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(prop_->net), atom::NET_ATOM_SIZE);
 
   // Set _NET_NUMBER_OF_DESKTOP, _NET_CURRENT_DESKTOP, _NET_DESKTOP_VIEWPORT and _NET_DESKTOP_NAMES
   // to support polybar's xworkspace module.
-  unsigned long workspace_count = WORKSPACE_COUNT;
+  unsigned long workspace_count = workspaces_.size();
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_NUMBER_OF_DESKTOPS], XA_CARDINAL,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(&workspace_count), 1);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(&workspace_count), 1);
 
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CURRENT_DESKTOP], XA_CARDINAL,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(&current_), 1);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(&current_), 1);
 
   unsigned long desktop_viewport_cord[2] = {0, 0};
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_DESKTOP_VIEWPORT], XA_CARDINAL,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(desktop_viewport_cord), 2);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(desktop_viewport_cord), 2);
 
   // TODO: Add/remove workspaces at runtime.
   // TODO: User should be able to modify workspace names at runtime.
-  const char* names[WORKSPACE_COUNT] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+  const char* names[WORKSPACE_COUNT] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
   XTextProperty text_prop;
   Xutf8TextListToTextProperty(dpy_, const_cast<char**>(names), WORKSPACE_COUNT, XUTF8StringStyle, &text_prop);
   XSetTextProperty(dpy_, root_window_, &text_prop, prop_->net[atom::NET_DESKTOP_NAMES]);
 }
 
 void WindowManager::InitWorkspaces() {
-  for (int i = 0; i < WORKSPACE_COUNT; i++) {
+  for (size_t i = 0; i < workspaces_.size(); i++) {
     workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
   }
 }
@@ -557,7 +557,7 @@ void WindowManager::GotoWorkspace(int next) {
 
   // Update _NET_CURRENT_DESKTOP
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CURRENT_DESKTOP], XA_CARDINAL,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(&next), 1);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(&next), 1);
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
@@ -634,7 +634,7 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
   // If the window is set to be NOT fullscreen, we will simply write a nullptr with 0 elements.
   Atom* atom = (fullscreen) ? &prop_->net[atom::NET_WM_STATE_FULLSCREEN] : nullptr;
   XChangeProperty(dpy_, window, prop_->net[atom::NET_WM_STATE], XA_ATOM,
-      32, PropModeReplace, reinterpret_cast<uint8_t*>(atom), fullscreen);
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(atom), fullscreen);
 }
 
 void WindowManager::KillClient(Window window) {
@@ -746,7 +746,7 @@ void WindowManager::UpdateClientList() {
     for (const auto client : workspace->GetClients()) {
       Window window = client->window();
       XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST], XA_WINDOW,
-          32, PropModeAppend, reinterpret_cast<uint8_t*>(&window), 1);
+          32, PropModeAppend, reinterpret_cast<unsigned char*>(&window), 1);
     }
   }
 }

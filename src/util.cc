@@ -94,23 +94,23 @@ string GetWmName(Window window) {
 
   if (XGetWindowProperty(dpy, window, prop, 0, 1024, False, 
         AnyPropertyType, &type, &form, &len, &remain, &list) == Success) {
-    return string((char*) list);
+    return string(reinterpret_cast<char*>(list));
   }
-  return nullptr;
+  return "";
 }
 
 // Set WM_STATE according to the following page to fix WINE application close hang issue:
 // http://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html#WM_STATE_Property
 void SetWindowWmState(Window window, unsigned long state) {
   unsigned long wm_state[] = {state, None};
-  XChangeProperty(dpy, window,  prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE], 32,
-      PropModeReplace, (unsigned char*) wm_state, 2);
+  XChangeProperty(dpy, window,  prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE],
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(wm_state), 2);
 }
 
 // Set root window's _NET_ACTIVE_WINDOW property
 void SetNetActiveWindow(Window window) {
-  XChangeProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
-      PropModeReplace, (unsigned char*) &window, 1);
+  XChangeProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW,
+      32, PropModeReplace, reinterpret_cast<unsigned char*>(&window), 1);
 }
 
 // Clear root window's _NET_ACTIVE_WINDOW property
@@ -128,7 +128,7 @@ Atom* GetWindowProperty(Window window, Atom property, unsigned long* atom_len) {
 
   if (XGetWindowProperty(dpy, window, property, 0, sizeof(Atom), False,
         XA_ATOM, &da, &di, atom_len, &remain, &prop_ret) == Success && prop_ret) {
-    return (Atom*) prop_ret;
+    return reinterpret_cast<Atom*>(prop_ret);
   }
   return nullptr;
 }

@@ -7,8 +7,9 @@ extern "C" {
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 }
-#include <memory>
+#include <array>
 #include <vector>
+#include <memory>
 
 #include "properties.h"
 #include "workspace.h"
@@ -91,7 +92,7 @@ class WindowManager {
 
   // Workspaces contain clients, where a client is a window that can be tiled
   // by the window manager.
-  Workspace* workspaces_[WORKSPACE_COUNT];
+  std::array<Workspace*, WORKSPACE_COUNT> workspaces_;
   int current_; // current workspace
 
   // Window move, resize event cache.
