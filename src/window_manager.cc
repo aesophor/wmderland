@@ -57,7 +57,6 @@ WindowManager::WindowManager(Display* dpy)
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(dpy_, prop_.get(), COOKIE_FILE),
-      snapshot_(SNAPSHOT_FILE),
       docks_(),
       notifications_(),
       workspaces_(),
@@ -192,19 +191,6 @@ void WindowManager::InitWorkspaces() {
 
 
 void WindowManager::Run() {
-  if (snapshot_.FileExists()) {
-    try {
-      snapshot_.Load();
-    } catch (const exception& ex) {
-      // Rethrow it with SnapshotLoadError.
-      throw Snapshot::SnapshotLoadError();
-    } catch (...) {
-      throw Snapshot::SnapshotLoadError();
-    }
-
-    ArrangeWindows();
-  }
-
   XEvent event;
   while (is_running_) {
     // Retrieve and dispatch next X event.
@@ -427,7 +413,6 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         break;
       case Action::Type::DEBUG_CRASH: {
         sys_utils::NotifySend("Crash on request...", NOTIFY_SEND_CRITICAL);
-        snapshot_.Save();
         throw std::runtime_error("Debug crash");
         break;
       }

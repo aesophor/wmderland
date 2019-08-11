@@ -28,8 +28,8 @@ class Snapshot {
   virtual ~Snapshot() = default;
 
   bool FileExists() const;
-  void Load() const;
-  void Save() const;
+  void Load();
+  void Save();
 
   static const std::string kNone_;
   static const std::string kBacktrack_;
@@ -40,6 +40,7 @@ class Snapshot {
   static const char kDelimiter_;
 
   const std::string filename_;
+  int failed_count_;
 };
 
 } // namespace wmderland

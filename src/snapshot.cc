@@ -25,18 +25,28 @@ const char Snapshot::kInternalPrefix_ = 'i';
 const char Snapshot::kDelimiter_ = ' ';
 
 Snapshot::Snapshot(const string& filename)
-    : filename_(sys_utils::ToAbsPath(filename)) {}
+    : filename_(sys_utils::ToAbsPath(filename)), failed_count_() {}
 
 
 bool Snapshot::FileExists() const {
   return access(filename_.c_str(), F_OK) != -1;
 }
 
-void Snapshot::Load() const {
+void Snapshot::Load() {
   WindowManager* wm = WindowManager::GetInstance();
   ifstream fin(filename_);
 
-  // 1. Client deserailization.
+  // 1. Load failed count.
+  // If wmderland fails to load this snapshot, the file might not get renamed,
+  // since it might not be able to execute till the end of this function.
+  fin >> failed_count_;
+  if (failed_count_ >= 3) {
+    //unlink(filename_.c_str());
+    rename(filename_.c_str(), (filename_ + ".failed_to_load").c_str());
+    throw SnapshotLoadError();
+  }
+
+  // 2. Client deserailization.
   int client_count = 0;
   fin >> client_count;
 
@@ -54,7 +64,7 @@ void Snapshot::Load() const {
   }
   
 
-  // 2. Client Tree deserialization will call Client::mapper_[window],
+  // 3. Client Tree deserialization will call Client::mapper_[window],
   // so we have to restore all clients before doing this. See step 1.
   for (const auto workspace : wm->workspaces_) {
     string data;
@@ -63,7 +73,7 @@ void Snapshot::Load() const {
   }
 
 
-  // 3. Docks/Notifications deserialization.
+  // 4. Docks/Notifications deserialization.
   string line;
 
   std::getline(fin, line);
@@ -81,16 +91,20 @@ void Snapshot::Load() const {
   }
 
 
-  // 4. Delete snapshot file.
+  // 5. Delete snapshot file.
   //unlink(filename_.c_str());
   rename(filename_.c_str(), (filename_ + ".old").c_str());
 }
 
-void Snapshot::Save() const {
+void Snapshot::Save() {
   WindowManager* wm = WindowManager::GetInstance();
   ofstream fout(filename_);
 
-  // 1. Client::mapper_ serialization.
+  // 1. Write failed count.
+  fout << ++failed_count_ << endl;
+
+
+  // 2. Client::mapper_ serialization.
   fout << Client::mapper_.size() << endl;
 
   for (const auto& win_client_pair : Client::mapper_) {
@@ -104,13 +118,13 @@ void Snapshot::Save() const {
   }
 
 
-  // 2. Client Tree serialization.
+  // 3. Client Tree serialization.
   for (const auto workspace : wm->workspaces_) {
     fout << workspace->Serialize() << endl;
   }
 
 
-  // 3. Docks/notifications serialization.
+  // 4. Docks/notifications serialization.
   if (wm->docks_.empty()) {
     fout << Snapshot::kNone_;
   } else {
