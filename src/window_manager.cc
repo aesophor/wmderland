@@ -201,6 +201,8 @@ void WindowManager::Run() {
     } catch (...) {
       throw Snapshot::SnapshotLoadError();
     }
+
+    ArrangeWindows();
   }
 
   XEvent event;

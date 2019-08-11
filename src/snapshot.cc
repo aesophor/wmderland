@@ -18,6 +18,10 @@ using std::ofstream;
 
 namespace wmderland {
 
+const string Snapshot::kNone_ = "none";
+const string Snapshot::kBacktrack_ = "b";
+const char Snapshot::kLeafPrefix_ = 'w';
+const char Snapshot::kInternalPrefix_ = 'i';
 const char Snapshot::kDelimiter_ = ' ';
 
 Snapshot::Snapshot(const string& filename)
@@ -63,14 +67,14 @@ void Snapshot::Load() const {
   string line;
 
   std::getline(fin, line);
-  if (line != "none") {
+  if (line != Snapshot::kNone_) {
     for (const auto& token : string_utils::Split(line, ',')) {
       wm->docks_.push_back(static_cast<Window>(std::stoul(token)));
     }
   }
  
   std::getline(fin, line);
-  if (line != "none") {
+  if (line != Snapshot::kNone_) {
     for (const auto& token : string_utils::Split(line, ',')) {
       wm->notifications_.push_back(static_cast<Window>(std::stoul(token)));
     }
@@ -108,7 +112,7 @@ void Snapshot::Save() const {
 
   // 3. Docks/notifications serialization.
   if (wm->docks_.empty()) {
-    fout << "none";
+    fout << Snapshot::kNone_;
   } else {
     for (size_t i = 0; i < wm->docks_.size(); i++) {
       fout << wm->docks_[i];
@@ -118,7 +122,7 @@ void Snapshot::Save() const {
   fout << endl;
 
   if (wm->notifications_.empty()) {
-    fout << "none";
+    fout << Snapshot::kNone_;
   } else {
     for (size_t i = 0; i < wm->notifications_.size(); i++) {
       fout << wm->notifications_[i];

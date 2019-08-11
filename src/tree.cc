@@ -6,6 +6,7 @@
 #include <queue>
 
 #include "client.h"
+#include "snapshot.h"
 #include "util.h"
 
 using std::string;
@@ -119,7 +120,7 @@ void Tree::Deserialize(string data) {
     val_queue.pop();
 
     // Backtrack
-    if (val == "b") {
+    if (val == Snapshot::kBacktrack_) {
       st.pop();
       current_node_ = st.top();
       continue;
@@ -127,10 +128,10 @@ void Tree::Deserialize(string data) {
 
     // Deserialize
     Tree::Node* new_node = new Tree::Node(nullptr);
-    if (val.front() == 'w') {
+    if (val.front() == Snapshot::kLeafPrefix_) {
       val.erase(0, 1);
       new_node->set_client(Client::mapper_[static_cast<Window>(std::stoul(val))]);
-    } else { // val.front() == 'i'
+    } else { // val.front() == Snapshot::kInternalPrefix_
       val.erase(0, 1);
       new_node->set_tiling_direction(static_cast<TilingDirection>(std::stoi(val)));
     }
@@ -142,7 +143,7 @@ void Tree::Deserialize(string data) {
 
 
   // Restore current_node_.
-  if (current_window == "none") {
+  if (current_window == Snapshot::kNone_) {
     current_node_ = nullptr;
   } else {
     Window window = static_cast<Window>(std::stoul(current_window));
@@ -158,16 +159,17 @@ string Tree::Serialize() const {
   if (current_node_) {
     data += std::to_string(current_node_->client()->window());
   } else {
-    data += "none";
+    data += Snapshot::kNone_;
   }
   data += '|';
 
   // Serialize the entire tree.
   if (root_node_->leaf()) {
-    return data + "i" + std::to_string(static_cast<int>(root_node_->tiling_direction()));
+    return data + Snapshot::kInternalPrefix_ + std::to_string(static_cast<int>(root_node_->tiling_direction()));
   } else {
     DfsSerializeHelper(root_node_, data);
-    return data.erase(data.rfind(",b,")); // there will be extra ',' + "b,"
+    // There will be extra ',' + "b,"
+    return data.erase(data.rfind("," + Snapshot::kBacktrack_+ ","));
   }
 }
 
@@ -185,9 +187,9 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
   //
   // Solution: when the root node is a leaf, we don't have to serialize anything.
   if (node->leaf()) {
-    data += 'w' + std::to_string(node->client()->window());
+    data += Snapshot::kLeafPrefix_ + std::to_string(node->client()->window());
   } else {
-    data += 'i' + std::to_string(static_cast<int>(node->tiling_direction()));
+    data += Snapshot::kInternalPrefix_ + std::to_string(static_cast<int>(node->tiling_direction()));
   }
   data += ',';
 
@@ -197,7 +199,7 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
 
   // Add 'b' which indicates when to backtrack
   // during deserialization.
-  data += "b,";
+  data += Snapshot::kBacktrack_ + ',';
 }
 
 
