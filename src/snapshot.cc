@@ -7,6 +7,7 @@ extern "C"{
 #include <fstream>
 
 #include "client.h"
+#include "window_manager.h"
 #include "util.h"
 
 using std::endl;
@@ -19,11 +20,8 @@ namespace wmderland {
 
 const char Snapshot::kDelimiter_ = ' ';
 
-Snapshot::Snapshot(Display* dpy, array<Workspace*, WORKSPACE_COUNT>& workspaces,
-                   const string& filename)
-    : dpy_(dpy),
-      workspaces_(workspaces),
-      filename_(sys_utils::ToAbsPath(filename)) {}
+Snapshot::Snapshot(const string& filename)
+    : filename_(sys_utils::ToAbsPath(filename)) {}
 
 
 bool Snapshot::FileExists() const {
@@ -31,6 +29,7 @@ bool Snapshot::FileExists() const {
 }
 
 void Snapshot::Load() const {
+  WindowManager* wm = WindowManager::GetInstance();
   ifstream fin(filename_);
 
   // 1. Client deserailization.
@@ -42,27 +41,49 @@ void Snapshot::Load() const {
     int workspace_id = 0;
     bool is_floating = false;
     bool is_fullscreen = false;
-
     fin >> window >> workspace_id >> is_floating >> is_fullscreen;
-    Client* client = new Client(dpy_, window, workspaces_[workspace_id]);
+
+    Client* client = new Client(wm->dpy_, window, wm->workspaces_[workspace_id]);
     client->set_floating(is_floating);
     client->set_fullscreen(is_fullscreen);
-
     Client::mapper_[window] = client;
   }
   
-  // 2. Client Tree deserialization will call Client::mapper_[window],
-  // so we have to restore all clients before doing this.
-  std::string data;
-  fin >> data;
-  workspaces_[0]->Deserialize(data);
 
-  // 3. Delete snapshot file.
+  // 2. Client Tree deserialization will call Client::mapper_[window],
+  // so we have to restore all clients before doing this. See step 1.
+  for (const auto workspace : wm->workspaces_) {
+    string data;
+    fin >> data;
+    workspace->Deserialize(data);
+  }
+
+
+  // 3. Docks/Notifications deserialization.
+  string line;
+
+  std::getline(fin, line);
+  if (line != "none") {
+    for (const auto& token : string_utils::Split(line, ',')) {
+      wm->docks_.push_back(static_cast<Window>(std::stoul(token)));
+    }
+  }
+ 
+  std::getline(fin, line);
+  if (line != "none") {
+    for (const auto& token : string_utils::Split(line, ',')) {
+      wm->notifications_.push_back(static_cast<Window>(std::stoul(token)));
+    }
+  }
+
+
+  // 4. Delete snapshot file.
   //unlink(filename_.c_str());
   rename(filename_.c_str(), (filename_ + ".old").c_str());
 }
 
 void Snapshot::Save() const {
+  WindowManager* wm = WindowManager::GetInstance();
   ofstream fout(filename_);
 
   // 1. Client::mapper_ serialization.
@@ -78,8 +99,33 @@ void Snapshot::Save() const {
       << client->is_fullscreen() << endl;
   }
 
+
   // 2. Client Tree serialization.
-  fout << workspaces_[0]->Serialize() << endl;
+  for (const auto workspace : wm->workspaces_) {
+    fout << workspace->Serialize() << endl;
+  }
+
+
+  // 3. Docks/notifications serialization.
+  if (wm->docks_.empty()) {
+    fout << "none";
+  } else {
+    for (size_t i = 0; i < wm->docks_.size(); i++) {
+      fout << wm->docks_[i];
+      fout << ((i < wm->docks_.size() - 1) ? "," : "");
+    }
+  }
+  fout << endl;
+
+  if (wm->notifications_.empty()) {
+    fout << "none";
+  } else {
+    for (size_t i = 0; i < wm->notifications_.size(); i++) {
+      fout << wm->notifications_[i];
+      fout << ((i < wm->notifications_.size() - 1) ? "," : "");
+    }
+  }
+  fout << endl;
 }
 
 } // namespace wmderland

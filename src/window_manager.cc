@@ -31,6 +31,7 @@ extern "C" {
 using std::pair;
 using std::string;
 using std::vector;
+using std::exception;
 
 namespace wmderland {
 
@@ -56,7 +57,7 @@ WindowManager::WindowManager(Display* dpy)
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(dpy_, prop_.get(), COOKIE_FILE),
-      snapshot_(dpy_, workspaces_, SNAPSHOT_FILE),
+      snapshot_(SNAPSHOT_FILE),
       docks_(),
       notifications_(),
       workspaces_(),
@@ -81,12 +82,6 @@ WindowManager::WindowManager(Display* dpy)
   // Run the autostart_cmds and autostart_cmds_on_reload defined in user's config.
   for (const auto& cmd : config_->autostart_cmds()) {
     sys_utils::ExecuteCmd(cmd);
-  }
-
-  // Try to perform error recovery if needed.
-  if (snapshot_.FileExists()) {
-    WM_LOG(INFO, "Loading snapshot...");
-    snapshot_.Load();
   }
 }
 
@@ -197,6 +192,17 @@ void WindowManager::InitWorkspaces() {
 
 
 void WindowManager::Run() {
+  if (snapshot_.FileExists()) {
+    try {
+      snapshot_.Load();
+    } catch (const exception& ex) {
+      // Rethrow it with SnapshotLoadError.
+      throw Snapshot::SnapshotLoadError();
+    } catch (...) {
+      throw Snapshot::SnapshotLoadError();
+    }
+  }
+
   XEvent event;
   while (is_running_) {
     // Retrieve and dispatch next X event.

@@ -7,6 +7,7 @@ extern "C" {
 }
 #include <array>
 #include <string>
+#include <exception>
 
 #include "config.h"
 #include "workspace.h"
@@ -15,8 +16,15 @@ namespace wmderland {
 
 class Snapshot {
  public:
-  Snapshot(Display* dpy, std::array<Workspace*, WORKSPACE_COUNT>& workspaces,
-           const std::string& filename);
+  class SnapshotLoadError : public std::exception {
+   public:
+    virtual ~SnapshotLoadError() = default;
+    virtual const char* what() const throw() {
+      return "Failed to load snapshot (possibly corrupted). Giving up...";
+    }
+  };
+
+  Snapshot(const std::string& filename);
   virtual ~Snapshot() = default;
 
   bool FileExists() const;
@@ -25,9 +33,6 @@ class Snapshot {
 
  private:
   static const char kDelimiter_;
-
-  Display* dpy_;
-  std::array<Workspace*, WORKSPACE_COUNT>& workspaces_;
   const std::string filename_;
 };
 

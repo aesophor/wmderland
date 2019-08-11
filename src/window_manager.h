@@ -88,6 +88,7 @@ class WindowManager {
   std::unique_ptr<Config> config_; // user config
   Cookie cookie_; // remembers pos/size of each window
   Snapshot snapshot_; // error recovery
+  friend class Snapshot;
 
   // The floating windows vector contain windows that should not be tiled but
   // must be kept on the top, e.g., dock, notifications, etc.
@@ -101,8 +102,6 @@ class WindowManager {
 
   // Window move, resize event cache.
   XButtonEvent btn_pressed_event_;
-
-  friend class Snapshot;
 };
 
 } // namespace wmderland

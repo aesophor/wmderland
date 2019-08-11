@@ -7,6 +7,7 @@
 #include <glog/logging.h>
 #endif
 #include "config.h"
+#include "snapshot.h"
 #include "stacktrace.h"
 #include "window_manager.h"
 #include "util.h"
@@ -49,10 +50,21 @@ int main(int argc, char* args[]) {
       return EXIT_FAILURE;
     }
     wm->Run();
+  } catch (const wmderland::Snapshot::SnapshotLoadError& ex) {
+    // If we cannot recover from errors using the snapshot,
+    // then return with EXIT_FAILURE.
+    WM_LOG(ERROR, ex.what());
+    return EXIT_FAILURE;
   } catch (const std::exception& ex) {
+    // Try to exec itself and recover from errors the snapshot.
+    // If snapshot fails to load, it will throw an SnapshotLoadError.
+    // See the previous catch block.
     WM_LOG(ERROR, ex.what());
     wmderland::sys_utils::NotifySend("An error occurred. Recovering...", NOTIFY_SEND_CRITICAL);
     execl(args[0], args[0], nullptr);
+  } catch (...) {
+    // For debugging purpose. This should never happen!
+    WM_LOG(ERROR, "An exception which isn't a std::exception is caught!");
     return EXIT_FAILURE;
   }
 
