@@ -65,8 +65,8 @@ The following illustration shows how Wmderland stores its clients, where R is th
          
 ```
 
-* For the Tree API, see [tree.cc](https://github.com/aesophor/Wmderland/blob/master/src/tree.cc) and [tree_node.cc](https://github.com/aesophor/Wmderland/blob/master/src/tree_node.cc)
-* For the Tiling Algorithm, see [workspace.cc](https://github.com/aesophor/Wmderland/blob/master/src/workspace.cc)
+* For Tree API, see [tree.cc](https://github.com/aesophor/Wmderland/blob/master/src/tree.cc)
+* For Window management algorithms, see [workspace.cc](https://github.com/aesophor/Wmderland/blob/master/src/workspace.cc)
 
 ## Build Requirements
 * g++ (requires C++11)
@@ -113,6 +113,19 @@ $ startx
 * Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cpp`
 * Remembers the positions/sizes of floating windows (~/.local/share/Wmderland/cookie)
+* Will try to recover from error if the wm crashes.
+
+## Error Recovery
+If Wmderland crashes, it will try to perform error recovery from a **snapshot file**.
+
+When a C++ exception is caugh, **except Snapshot::SnapshotLoadError**, it will:
+1. serialize all window trees (or client trees) into snapshot file.
+2. write all docks/notifications window id(s) into snapshot file.
+3. execl(args[0], args[0])
+4. try to deserialize everything from the snapshot.
+
+Also, if it fails to load the snapshot, or the same error occurs consecutively over 3 times,
+wmderland will still shutdown. The user will have to manually restart it.
 
 ## Compatibility with WINE
 Most WINE applications should work fine, except the following bugs:
