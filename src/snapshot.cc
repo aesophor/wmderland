@@ -37,12 +37,10 @@ void Snapshot::Load() {
   ifstream fin(filename_);
 
   // 1. Load failed count.
-  // If wmderland fails to load this snapshot, the file might not get renamed,
-  // since it might not be able to execute till the end of this function.
+  // If the same error occurs constantly, throw this exception
+  // to immediately halt the window manager.
   fin >> failed_count_;
   if (failed_count_ >= 3) {
-    //unlink(filename_.c_str());
-    rename(filename_.c_str(), (filename_ + ".failed_to_load").c_str());
     throw SnapshotLoadError();
   }
 
@@ -94,6 +92,7 @@ void Snapshot::Load() {
   // 5. Delete snapshot file.
   //unlink(filename_.c_str());
   rename(filename_.c_str(), (filename_ + ".old").c_str());
+  wm->ArrangeWindows();
 }
 
 void Snapshot::Save() {
@@ -144,6 +143,11 @@ void Snapshot::Save() {
     }
   }
   fout << endl;
+}
+
+
+const string& Snapshot::filename() const {
+  return filename_;
 }
 
 } // namespace wmderland

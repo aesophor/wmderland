@@ -24,7 +24,9 @@ class WindowManager {
  public:
   static WindowManager* GetInstance();
   virtual ~WindowManager();
+
   void Run();
+  void ArrangeWindows() const;
 
  private:
   static WindowManager* instance_;
@@ -51,8 +53,6 @@ class WindowManager {
   static int OnXError(Display* dpy, XErrorEvent* e);
   static int OnWmDetected(Display* dpy, XErrorEvent* e);
 
-  void ArrangeWindows() const;
-  
   // Workspace manipulation
   void GotoWorkspace(int next);
   void MoveWindowToWorkspace(Window window, int next); 
@@ -100,7 +100,6 @@ class WindowManager {
   XButtonEvent btn_pressed_event_;
 
   friend class Snapshot;
-  friend void Workspace::Navigate(Action::Type);
 };
 
 } // namespace wmderland

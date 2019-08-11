@@ -31,6 +31,8 @@ class Snapshot {
   void Load();
   void Save();
 
+  const std::string& filename() const;
+
   static const std::string kNone_;
   static const std::string kBacktrack_;
   static const char kLeafPrefix_;

@@ -1,4 +1,7 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+extern "C" {
+#include <unistd.h>
+}
 #include <iostream>
 #include <cstring>
 #include <memory>
@@ -64,6 +67,7 @@ int main(int argc, char* args[]) {
     // If we cannot recover from errors using the snapshot,
     // then return with EXIT_FAILURE.
     WM_LOG(ERROR, ex.what());
+    rename(snapshot->filename().c_str(), (snapshot->filename() + ".failed_to_load").c_str());
     return EXIT_FAILURE;
   } catch (const std::exception& ex) {
     // Try to exec itself and recover from errors the snapshot.
@@ -75,7 +79,7 @@ int main(int argc, char* args[]) {
     execl(args[0], args[0], nullptr);
   } catch (...) {
     // For debugging purpose. This should never happen!
-    WM_LOG(ERROR, "An exception which isn't a std::exception is caught!");
+    WM_LOG(ERROR, "Unknown exception caught!");
     return EXIT_FAILURE;
   }
 

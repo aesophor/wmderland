@@ -230,6 +230,36 @@ void WindowManager::Run() {
   }
 }
 
+void WindowManager::ArrangeWindows() const {
+  workspaces_[current_]->MapAllClients();
+  MapDocks();
+ 
+  Client* focused_client = workspaces_[current_]->GetFocusedClient();
+  if (!focused_client) {
+    wm_utils::ClearNetActiveWindow();
+    return;
+  }
+
+  // Update NET_ACTIVE_WINDOW
+  wm_utils::SetNetActiveWindow(focused_client->window());
+  workspaces_[current_]->Arrange(CalculateTilingArea());
+
+  // Make sure the focused client is receiving input focus.
+  workspaces_[current_]->SetFocusedClient(focused_client->window());
+
+  // But floating clients including notifications should be on top of
+  // any tiled clients.
+  workspaces_[current_]->RaiseAllFloatingClients();
+  RaiseNotifications();
+
+  // Restore fullscreen application.
+  if (workspaces_[current_]->is_fullscreen()) {
+    UnmapDocks();
+    focused_client->MoveResize(0, 0, GetDisplayResolution());
+    focused_client->Raise();
+  }
+}
+
 
 void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
   XWindowChanges changes;
@@ -412,7 +442,7 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         OnConfigReload();
         break;
       case Action::Type::DEBUG_CRASH: {
-        sys_utils::NotifySend("Crash on request...", NOTIFY_SEND_CRITICAL);
+        WM_LOG(INFO, "Debug crash on demand.");
         throw std::runtime_error("Debug crash");
         break;
       }
@@ -517,36 +547,6 @@ int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
   return 0; // the return value is ignored.
 }
 
-
-void WindowManager::ArrangeWindows() const {
-  workspaces_[current_]->MapAllClients();
-  MapDocks();
- 
-  Client* focused_client = workspaces_[current_]->GetFocusedClient();
-  if (!focused_client) {
-    wm_utils::ClearNetActiveWindow();
-    return;
-  }
-
-  // Update NET_ACTIVE_WINDOW
-  wm_utils::SetNetActiveWindow(focused_client->window());
-  workspaces_[current_]->Arrange(CalculateTilingArea());
-
-  // Make sure the focused client is receiving input focus.
-  workspaces_[current_]->SetFocusedClient(focused_client->window());
-
-  // But floating clients including notifications should be on top of
-  // any tiled clients.
-  workspaces_[current_]->RaiseAllFloatingClients();
-  RaiseNotifications();
-
-  // Restore fullscreen application.
-  if (workspaces_[current_]->is_fullscreen()) {
-    UnmapDocks();
-    focused_client->MoveResize(0, 0, GetDisplayResolution());
-    focused_client->Raise();
-  }
-}
 
 void WindowManager::GotoWorkspace(int next) {
   if (current_ == next) {
