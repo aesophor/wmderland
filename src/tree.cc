@@ -88,25 +88,31 @@ void Tree::set_current_node(Tree::Node* node) {
 
 
 void Tree::Deserialize(string data) {
-  if (data.empty()) {
-    return;
-  }
+  // Extract current window id at the beginning (before '|'),
+  // and then erase it including the '|' character.
+  size_t delim_pos = data.find('|');
+  string current_window = data.substr(0, delim_pos);
+  data.erase(0, delim_pos + 1);
 
+  // Split nodes into a queue.
+  // A token can be a leaf or an internal node.
   queue<string> val_queue;
   for (const auto& token : string_utils::Split(data, ',')) {
     val_queue.push(token);
   }
 
+  // Construct root_node_.
   string root_val = val_queue.front();
   val_queue.pop();
   root_val.erase(0, 1);
-
   root_node_ = new Tree::Node(nullptr);
   root_node_->set_tiling_direction(static_cast<TilingDirection>(std::stoi(root_val)));
-  current_node_ = root_node_;
  
+
+  // Push the root node onto the stack and perform iterative DFS.
   stack<Tree::Node*> st;
   st.push(root_node_);
+  current_node_ = st.top();
 
   while (!val_queue.empty()) {
     string val = val_queue.front();
@@ -133,14 +139,32 @@ void Tree::Deserialize(string data) {
     current_node_ = new_node;
     st.push(new_node);
   }
+
+
+  // Restore current_node_.
+  if (current_window == "none") {
+    current_node_ = nullptr;
+  } else {
+    Window window = static_cast<Window>(std::stoul(current_window));
+    Client* client = Client::mapper_.at(window);
+    current_node_ = Tree::Node::mapper_.at(client);
+  }
 }
 
 string Tree::Serialize() const {
+  string data;
+
+  if (current_node_) {
+    data += std::to_string(current_node_->client()->window());
+  } else {
+    data += "none";
+  }
+  data += '|';
+
   if (root_node_->leaf()) {
-    return "i" + std::to_string(static_cast<int>(root_node_->tiling_direction()));
+    return data + "i" + std::to_string(static_cast<int>(root_node_->tiling_direction()));
   }
 
-  string data;
   DfsSerializeHelper(root_node_, data);
   return data.erase(data.rfind(",b,")); // there will be extra ',' + "b,"
 }
