@@ -58,7 +58,8 @@ void Snapshot::Load() const {
   workspaces_[0]->Deserialize(data);
 
   // 3. Delete snapshot file.
-  unlink(filename_.c_str());
+  //unlink(filename_.c_str());
+  rename(filename_.c_str(), (filename_ + ".old").c_str());
 }
 
 void Snapshot::Save() const {

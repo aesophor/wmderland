@@ -119,7 +119,7 @@ void Tree::Deserialize(string data) {
       continue;
     }
 
-    // Serialize
+    // Deserialize
     Tree::Node* new_node = new Tree::Node(nullptr);
     if (val.front() == 'w') {
       val.erase(0, 1);
@@ -249,6 +249,8 @@ Client* Tree::Node::client() const {
 }
 
 void Tree::Node::set_client(Client* client) {
+  Tree::Node::mapper_.erase(client_);
+  Tree::Node::mapper_[client] = this;
   client_ = client;
 }
 
