@@ -154,6 +154,7 @@ void Tree::Deserialize(string data) {
 string Tree::Serialize() const {
   string data;
 
+  // The current_node_ is serialized and stored at the beginning of data.
   if (current_node_) {
     data += std::to_string(current_node_->client()->window());
   } else {
@@ -161,12 +162,13 @@ string Tree::Serialize() const {
   }
   data += '|';
 
+  // Serialize the entire tree.
   if (root_node_->leaf()) {
     return data + "i" + std::to_string(static_cast<int>(root_node_->tiling_direction()));
+  } else {
+    DfsSerializeHelper(root_node_, data);
+    return data.erase(data.rfind(",b,")); // there will be extra ',' + "b,"
   }
-
-  DfsSerializeHelper(root_node_, data);
-  return data.erase(data.rfind(",b,")); // there will be extra ',' + "b,"
 }
 
 void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
