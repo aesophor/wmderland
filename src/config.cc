@@ -177,6 +177,12 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   config.min_window_height_ = MIN_WINDOW_HEIGHT;
   config.focused_color_ = DEFAULT_FOCUSED_COLOR;
   config.unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
+
+  config.spawn_rules_.clear();
+  config.float_rules_.clear();
+  config.fullscreen_rules_.clear();
+  config.prohibit_rules_.clear();
+  config.keybind_rules_.clear();
   config.autostart_cmds_.clear();
   config.autostart_cmds_on_reload_.clear();
 
