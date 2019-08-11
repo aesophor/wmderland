@@ -28,7 +28,7 @@ class Cookie {
   friend std::ifstream& operator>> (std::ifstream& is, Cookie& cookie);
 
  private:
-  static const char kDelimiter = ' ';
+  static const char kDelimiter_;
   std::string GetCookieKey(Window w) const;
 
   Display* dpy_;

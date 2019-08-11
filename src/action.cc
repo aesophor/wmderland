@@ -68,6 +68,8 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::EXEC;
   } else if (s == "reload") {
     return Action::Type::RELOAD;
+  } else if (s == "debug_crash") {
+    return Action::Type::DEBUG_CRASH;
   } else {
     return Action::Type::UNDEFINED;
   }

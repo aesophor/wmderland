@@ -17,12 +17,13 @@ using std::unordered_map;
 
 namespace wmderland {
 
+const char Cookie::kDelimiter_ = ' ';
+
 Cookie::Cookie(Display* dpy, Properties* prop, string filename)
-    : dpy_(dpy), prop_(prop), filename_(filename) {
+    : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {
   // Load cookie from file.
-  ifstream fin(sys_utils::ToAbsPath(filename_));
+  ifstream fin(filename_);
   fin >> *this;
-  fin.close();
 }
 
 
@@ -39,9 +40,8 @@ void Cookie::Put(Window window, const Area& window_area) {
   window_area_map_[GetCookieKey(window)] = window_area;
 
   // Write cookie to file.
-  ofstream fout(sys_utils::ToAbsPath(filename_));
+  ofstream fout(filename_);
   fout << *this;
-  fout.close();
 }
 
 string Cookie::GetCookieKey(Window w) const {
@@ -54,10 +54,10 @@ string Cookie::GetCookieKey(Window w) const {
 ofstream& operator<< (ofstream& ofs, const Cookie& cookie) {
   for (auto& area : cookie.window_area_map_) {
     // Write x, y, width, height, res_class,res_name,net_wm_name to cookie.
-    ofs << area.second.x << Cookie::kDelimiter
-      << area.second.y << Cookie::kDelimiter
-      << area.second.width << Cookie::kDelimiter
-      << area.second.height << Cookie::kDelimiter
+    ofs << area.second.x << Cookie::kDelimiter_
+      << area.second.y << Cookie::kDelimiter_
+      << area.second.width << Cookie::kDelimiter_
+      << area.second.height << Cookie::kDelimiter_
       << area.first << endl;
   }
   return ofs;
@@ -69,7 +69,7 @@ ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
     string_utils::Strip(line);
 
     if (!line.empty()) {
-      vector<string> tokens = string_utils::Split(line, Cookie::kDelimiter, 4);
+      vector<string> tokens = string_utils::Split(line, Cookie::kDelimiter_, 4);
 
       // The first 4 item is x, y, width, height of a window.
       Area window_area;

@@ -20,16 +20,15 @@ using std::unordered_map;
 namespace wmderland {
 
 Config::Config(Display* dpy, Properties* prop, const string& filename)
-    : dpy_(dpy), prop_(prop), filename_(filename) {
+    : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {
   Load();
 }
 
 
 void Config::Load() {
   // Convert it to full path first (in case it starts with ~)
-  ifstream fin(sys_utils::ToAbsPath(filename_));
+  ifstream fin(filename_);
   fin >> *this;
-  fin.close();
 }
 
 int Config::GetSpawnWorkspaceId(Window w) const {

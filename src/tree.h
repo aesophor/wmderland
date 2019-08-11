@@ -2,7 +2,6 @@
 #ifndef WMDERLAND_TREE_H_
 #define WMDERLAND_TREE_H_
 
-#include <iostream>
 #include <vector>
 #include <unordered_map>
 
@@ -61,8 +60,8 @@ class Tree {
   Tree::Node* current_node() const;
   void set_current_node(Tree::Node* node);
 
-  friend std::ifstream& operator>> (std::ifstream& ifs, Tree& tree);
-  friend std::ofstream& operator<< (std::ofstream& ofs, const Tree& tree);
+  std::string Serialize() const;
+  void Deserialize(std::string data);
 
  private:
   void DfsCleanUpHelper(Tree::Node* node) const;

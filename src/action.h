@@ -23,6 +23,7 @@ class Action {
     EXIT,
     EXEC,
     RELOAD,
+    DEBUG_CRASH,
     UNDEFINED
   };
 

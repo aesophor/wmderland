@@ -11,6 +11,7 @@ extern "C" {
 #include <cstring>
 #include <string>
 #include <memory>
+#include <fstream>
 
 #include "client.h"
 #include "util.h"
@@ -54,18 +55,39 @@ WindowManager::WindowManager(Display* dpy)
       cursors_(),
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
-      cookie_(new Cookie(dpy_, prop_.get(), COOKIE_FILE)),
+      cookie_(dpy_, prop_.get(), COOKIE_FILE),
+      snapshot_(dpy_, workspaces_, SNAPSHOT_FILE),
+      docks_(),
+      notifications_(),
+      workspaces_(),
       current_(),
       btn_pressed_event_() {
+  // In WindowManager::HasAnotherWmRunning, it will use a special error handler
+  // to check if there's already another wm running. If yes, then it will set
+  // WindowManager::is_running_ to false, making WindowManager::Run return immediately.
   if (HasAnotherWmRunning()) {
     std::cerr << "Another window manager is already running." << std::endl;
     return;
   }
+
+  // Initialization.
   wm_utils::Init(dpy_, prop_.get(), root_window_);
   InitWorkspaces();
   InitProperties();
   InitXEvents();
   InitCursors();
+  XSync(dpy_, false);
+
+  // Run the autostart_cmds and autostart_cmds_on_reload defined in user's config.
+  for (const auto& cmd : config_->autostart_cmds()) {
+    sys_utils::ExecuteCmd(cmd);
+  }
+
+  // Try to perform error recovery if needed.
+  if (snapshot_.FileExists()) {
+    WM_LOG(INFO, "Loading snapshot...");
+    snapshot_.Load();
+  }
 }
 
 WindowManager::~WindowManager() {
@@ -175,11 +197,6 @@ void WindowManager::InitWorkspaces() {
 
 
 void WindowManager::Run() {
-  // Run the autostart_cmds and autostart_cmds_on_reload defined in user's config.
-  for (const auto& cmd : config_->autostart_cmds()) {
-    sys_utils::ExecuteCmd(cmd);
-  }
-
   XEvent event;
   while (is_running_) {
     // Retrieve and dispatch next X event.
@@ -329,10 +346,12 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   wm_utils::SetWindowWmState(e.window, WM_STATE_WITHDRAWN);
 
   // If we aren't managing this window, there's no need to proceed further.
-  Client* c = Client::mapper_[e.window];
-  if (!c) {
+  auto it = Client::mapper_.find(e.window);
+  if (it == Client::mapper_.end()) {
     return;
   }
+
+  Client* c = it->second;
 
   // If the client being destroyed is in fullscreen mode, make sure to unset the workspace's
   // fullscreen state.
@@ -398,6 +417,12 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         config_->Load();
         OnConfigReload();
         break;
+      case Action::Type::DEBUG_CRASH: {
+        sys_utils::NotifySend("Crash on request...", NOTIFY_SEND_CRITICAL);
+        snapshot_.Save();
+        throw std::runtime_error("Debug crash");
+        break;
+      }
       default:
         break;
     }
@@ -405,11 +430,12 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 }
 
 void WindowManager::OnButtonPress(const XButtonEvent& e) {
-  Client* c = Client::mapper_[e.subwindow];
-  if (!e.subwindow || !c) {
+  auto it = Client::mapper_.find(e.subwindow);
+  if (it == Client::mapper_.end()) {
     return;
   }
 
+  Client* c = it->second;
   wm_utils::SetNetActiveWindow(c->window());
   c->workspace()->UnsetFocusedClient();
   c->workspace()->SetFocusedClient(c->window());
@@ -424,15 +450,16 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   }
 }
 
-void WindowManager::OnButtonRelease(const XButtonEvent& e) {
-  if (!btn_pressed_event_.subwindow || !e.subwindow) {
+void WindowManager::OnButtonRelease(const XButtonEvent&) {
+  auto it = Client::mapper_.find(btn_pressed_event_.subwindow);
+  if (it == Client::mapper_.end()) {
     return;
   }
 
-  Client* c = Client::mapper_[btn_pressed_event_.subwindow];
-  if (c && c->is_floating()) {
+  Client* c = it->second;
+  if (c->is_floating()) {
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(btn_pressed_event_.subwindow);
-    cookie_->Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
+    cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
   }
 
   btn_pressed_event_.subwindow = None;
@@ -440,11 +467,12 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
-  Client* c = Client::mapper_[btn_pressed_event_.subwindow];
-  if (!btn_pressed_event_.subwindow || !c) {
+  auto it = Client::mapper_.find(btn_pressed_event_.subwindow);
+  if (it == Client::mapper_.end()) {
     return;
   }
 
+  Client* c = it->second;
   const XWindowAttributes& attr = c->previous_attr();
   int xdiff = e.x - btn_pressed_event_.x;
   int ydiff = e.y - btn_pressed_event_.y;
@@ -543,11 +571,12 @@ void WindowManager::GotoWorkspace(int next) {
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
-  Client* c = Client::mapper_[window];
-  if (current_ == next || !c){
+  auto it = Client::mapper_.find(window);
+  if (current_ == next || it == Client::mapper_.end()) {
     return;
   }
 
+  Client* c = it->second;
   if (workspaces_[current_]->is_fullscreen()) {
     workspaces_[current_]->set_fullscreen(false);
     c->set_fullscreen(false);
@@ -572,8 +601,13 @@ void WindowManager::Center(Window window) {
 }
 
 void WindowManager::SetFloating(Window window, bool floating) {
-  Client* c = Client::mapper_[window];
-  if (!c || c->is_fullscreen()) {
+  auto it = Client::mapper_.find(window);
+  if (it == Client::mapper_.end()) {
+    return;
+  }
+
+  Client* c = it->second;
+  if (c->is_fullscreen()) {
     return;
   }
 
@@ -586,8 +620,13 @@ void WindowManager::SetFloating(Window window, bool floating) {
 }
 
 void WindowManager::SetFullscreen(Window window, bool fullscreen) {
-  Client* c = Client::mapper_[window];
-  if (!c || c->is_fullscreen() == fullscreen) {
+  auto it = Client::mapper_.find(window);
+  if (it == Client::mapper_.end()) {
+    return;
+  }
+
+  Client* c = it->second;
+  if (c->is_fullscreen() == fullscreen) {
     return;
   }
 
@@ -692,7 +731,7 @@ Area WindowManager::CalculateTilingArea() const {
 
 void WindowManager::DetermineFloatingWindowArea(Window window) {
   XSizeHints hints = wm_utils::GetWmNormalHints(window);
-  const Area& cookie_area = cookie_->Get(window);
+  const Area& cookie_area = cookie_.Get(window);
 
   // Set window size. (Priority: cookie > hints)
   if (cookie_area.width > 0 && cookie_area.height > 0) {

@@ -12,10 +12,11 @@ extern "C" {
 #include <memory>
 
 #include "action.h"
-#include "properties.h"
-#include "workspace.h"
 #include "config.h"
 #include "cookie.h"
+#include "properties.h"
+#include "workspace.h"
+#include "snapshot.h"
 #include "util.h"
 
 namespace wmderland {
@@ -51,7 +52,7 @@ class WindowManager {
   static int OnXError(Display* dpy, XErrorEvent* e);
   static int OnWmDetected(Display* dpy, XErrorEvent* e);
 
-  friend void Workspace::Navigate(Action::Type) const;
+  friend void Workspace::Navigate(Action::Type);
   void ArrangeWindows() const;
   
   // Workspace manipulation
@@ -83,9 +84,10 @@ class WindowManager {
   Window wmcheckwin_;
   Cursor cursors_[4];
  
-  std::unique_ptr<Properties> prop_;
-  std::unique_ptr<Config> config_;
-  std::unique_ptr<Cookie> cookie_;
+  std::unique_ptr<Properties> prop_; // X and EWMH atoms
+  std::unique_ptr<Config> config_; // user config
+  Cookie cookie_; // remembers pos/size of each window
+  Snapshot snapshot_; // error recovery
 
   // The floating windows vector contain windows that should not be tiled but
   // must be kept on the top, e.g., dock, notifications, etc.
@@ -99,6 +101,8 @@ class WindowManager {
 
   // Window move, resize event cache.
   XButtonEvent btn_pressed_event_;
+
+  friend class Snapshot;
 };
 
 } // namespace wmderland

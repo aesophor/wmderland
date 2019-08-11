@@ -51,7 +51,7 @@ int main(int argc, char* args[]) {
     wm->Run();
   } catch (const std::exception& ex) {
     WM_LOG(ERROR, ex.what());
-    wmderland::sys_utils::NotifySend("Wmderland has crashed. Restarting...", NOTIFY_SEND_CRITICAL);
+    wmderland::sys_utils::NotifySend("An error occurred. Recovering...", NOTIFY_SEND_CRITICAL);
     execl(args[0], args[0], nullptr);
     return EXIT_FAILURE;
   }

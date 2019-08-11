@@ -27,6 +27,7 @@
 #define VERSION "@PROJECT_VERSION@"
 #define CONFIG_FILE "~/.config/Wmderland/config"
 #define COOKIE_FILE "~/.cache/Wmderland/cookie"
+#define SNAPSHOT_FILE "~/.cache/Wmderland/snapshot"
 
 #define UNSPECIFIED_WORKSPACE -1
 #define WORKSPACE_COUNT 9

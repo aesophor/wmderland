@@ -18,14 +18,14 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
       previous_attr_(), // this will be set when Client::SaveXWindowAttributes() is called
       is_floating_(false),
       is_fullscreen_(false) {
-  mapper_[window_] = this;
+  Client::mapper_[window] = this;
   SetBorderWidth(workspace->config()->border_width());
   SetBorderColor(workspace->config()->unfocused_color());
-  XSelectInput(dpy_, window_, StructureNotifyMask | PropertyChangeMask);
+  XSelectInput(dpy_, window, StructureNotifyMask | PropertyChangeMask);
 }
 
 Client::~Client() {
-  mapper_.erase(window_);
+  Client::mapper_.erase(window_);
 }
 
 

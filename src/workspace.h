@@ -5,7 +5,6 @@
 extern "C" {
 #include <X11/Xlib.h>
 }
-#include <memory>
 #include <vector>
 #include <string>
 
@@ -23,19 +22,19 @@ class Workspace {
   virtual ~Workspace() = default;
 
   bool Has(Window window) const;
-  void Add(Window window, bool floating=false) const;
-  void Remove(Window window) const;
-  void Move(Window window, Workspace* new_workspace) const;
+  void Add(Window window, bool floating=false);
+  void Remove(Window window);
+  void Move(Window window, Workspace* new_workspace);
   void Arrange(const Area& tiling_area) const;
-  void SetTilingDirection(TilingDirection tiling_direction) const;
+  void SetTilingDirection(TilingDirection tiling_direction);
 
   void MapAllClients() const;
   void UnmapAllClients() const;
   void RaiseAllFloatingClients() const;
-  void SetFocusedClient(Window window) const;
+  void SetFocusedClient(Window window);
   void UnsetFocusedClient() const;
 
-  void Navigate(Action::Type navigate_action_type) const;
+  void Navigate(Action::Type navigate_action_type);
   Client* GetFocusedClient() const;
   Client* GetClient(Window window) const;
   std::vector<Client*> GetClients() const;
@@ -50,6 +49,9 @@ class Workspace {
   void set_name(const std::string& name);
   void set_fullscreen(bool fullscreen);
 
+  std::string Serialize() const;
+  void Deserialize(std::string data);
+
  private:
   void Tile(Tree::Node* node, int x, int y, int width, int height,
             int border_width, int gap_width) const;
@@ -57,7 +59,7 @@ class Workspace {
   Display* dpy_;
   Window root_window_;
   Config* config_;
-  std::unique_ptr<Tree> client_tree_;
+  Tree client_tree_;
 
   int id_;
   std::string name_;
