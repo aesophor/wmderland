@@ -19,6 +19,8 @@ using std::unordered_map;
 
 namespace wmderland {
 
+const vector<Action> Config::kEmptyActions_;
+
 Config::Config(Display* dpy, Properties* prop, const string& filename)
     : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {
   Load();
@@ -33,8 +35,9 @@ void Config::Load() {
 
 int Config::GetSpawnWorkspaceId(Window w) const {
   for (const auto& key : GeneratePossibleConfigKeys(w)) {
-    if (spawn_rules_.find(key) != spawn_rules_.end()) {
-      return spawn_rules_.at(key) - 1; // Workspace id starts from 0.
+    auto it = spawn_rules_.find(key);
+    if (it != spawn_rules_.end()) {
+      return it->second - 1; // workspace id starts from 0.
     }
   }
   return UNSPECIFIED_WORKSPACE;
@@ -42,8 +45,9 @@ int Config::GetSpawnWorkspaceId(Window w) const {
 
 bool Config::ShouldFloat(Window w) const {
   for (const auto& key : GeneratePossibleConfigKeys(w)) {
-    if (float_rules_.find(key) != float_rules_.end()) {
-      return float_rules_.at(key);
+    auto it = float_rules_.find(key);
+    if (it != float_rules_.end()) {
+      return it->second;
     }
   }
   return false;
@@ -51,8 +55,9 @@ bool Config::ShouldFloat(Window w) const {
 
 bool Config::ShouldFullscreen(Window w) const {
   for (const auto& key: GeneratePossibleConfigKeys(w)) {
-    if (fullscreen_rules_.find(key) != fullscreen_rules_.end()) {
-      return fullscreen_rules_.at(key);
+    auto it = fullscreen_rules_.find(key);
+    if (it != fullscreen_rules_.end()) {
+      return it->second;
     }
   }
   return false;
@@ -60,15 +65,20 @@ bool Config::ShouldFullscreen(Window w) const {
 
 bool Config::ShouldProhibit(Window w) const {
   for (const auto& key : GeneratePossibleConfigKeys(w)) {
-    if (prohibit_rules_.find(key) != prohibit_rules_.end()) {
-      return prohibit_rules_.at(key);
+    auto it = prohibit_rules_.find(key);
+    if (it != prohibit_rules_.end()) {
+      return it->second;
     }
   }
   return false;
 }
 
 const vector<Action>& Config::GetKeybindActions(const string& modifier, const string& key) const {
-  return keybind_rules_.at(modifier + '+' + key);
+  auto it = keybind_rules_.find(modifier + '+' + key);
+  if (it != keybind_rules_.end()) {
+    return it->second;
+  }
+  return Config::kEmptyActions_;
 }
 
 void Config::SetKeybindActions(const string& modifier_and_key, const string& action_series_str) {
