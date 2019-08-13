@@ -47,7 +47,6 @@ int main(int argc, char* args[]) {
   // WindowManager::GetInstance(), it will return None (in Xlib, 'None'
   // is the universal null resource ID or atom.)
   std::unique_ptr<wmderland::WindowManager> wm(wmderland::WindowManager::GetInstance());
-  std::unique_ptr<wmderland::Snapshot> snapshot(new wmderland::Snapshot(SNAPSHOT_FILE));
 
   if (!wm) {
     WM_LOG(INFO, ::wm_start_failed_msg);
@@ -56,9 +55,9 @@ int main(int argc, char* args[]) {
   }
 
   try {
-    // Try to perform error recovery from the snapshot if possible.
-    if (snapshot->FileExists()) {
-      snapshot->Load();
+    // Try to perform error recovery from the snapshot if necessary and possible.
+    if (wm->snapshot().FileExists()) {
+      wm->snapshot().Load();
     }
 
     // Run the window manager.
@@ -67,7 +66,7 @@ int main(int argc, char* args[]) {
     // If we cannot recover from errors using the snapshot,
     // then return with EXIT_FAILURE.
     WM_LOG(ERROR, ex.what());
-    rename(snapshot->filename().c_str(), (snapshot->filename() + ".failed_to_load").c_str());
+    rename(wm->snapshot().filename().c_str(), (wm->snapshot().filename() + ".failed_to_load").c_str());
     return EXIT_FAILURE;
   } catch (const std::exception& ex) {
     // Try to exec itself and recover from errors the snapshot.
@@ -75,7 +74,7 @@ int main(int argc, char* args[]) {
     // See the previous catch block.
     WM_LOG(ERROR, ex.what());
     wmderland::sys_utils::NotifySend("An error occurred. Recovering...", NOTIFY_SEND_CRITICAL);
-    snapshot->Save();
+    wm->snapshot().Save();
     execl(args[0], args[0], nullptr);
   } catch (...) {
     // For debugging purpose. This should never happen!

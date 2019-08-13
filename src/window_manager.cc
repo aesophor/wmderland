@@ -57,6 +57,7 @@ WindowManager::WindowManager(Display* dpy)
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(dpy_, prop_.get(), COOKIE_FILE),
+      snapshot_(SNAPSHOT_FILE),
       docks_(),
       notifications_(),
       workspaces_(),
@@ -760,6 +761,11 @@ void WindowManager::UpdateClientList() {
           32, PropModeAppend, reinterpret_cast<unsigned char*>(&window), 1);
     }
   }
+}
+
+
+Snapshot& WindowManager::snapshot() {
+  return snapshot_;
 }
 
 } // namespace wmderland

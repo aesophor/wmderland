@@ -16,6 +16,7 @@ extern "C" {
 #include "cookie.h"
 #include "properties.h"
 #include "workspace.h"
+#include "snapshot.h"
 #include "util.h"
 
 namespace wmderland {
@@ -27,6 +28,8 @@ class WindowManager {
 
   void Run();
   void ArrangeWindows() const;
+
+  Snapshot& snapshot();
 
  private:
   static WindowManager* instance_;
@@ -85,6 +88,7 @@ class WindowManager {
   std::unique_ptr<Properties> prop_; // X and EWMH atoms
   std::unique_ptr<Config> config_; // user config
   Cookie cookie_; // remembers pos/size of each window
+  Snapshot snapshot_; // error recovery
   
   // The floating windows vector contain windows that should not be tiled but
   // must be kept on the top, e.g., dock, notifications, etc.
