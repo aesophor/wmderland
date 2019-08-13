@@ -201,7 +201,7 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   while (std::getline(ifs, line)) {
     string_utils::Strip(line); // Strip extra whitespace, just in case.
 
-    if (line.empty() || line.at(0) == Config::kCommentSymbol) {
+    if (line.empty() || line.front() == Config::kCommentSymbol) {
       continue;
     }
 
