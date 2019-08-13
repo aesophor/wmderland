@@ -90,7 +90,7 @@ class Config {
   const std::string& ReplaceSymbols(std::string& s);
 
   static const std::vector<Action> kEmptyActions_;
-  
+
   // WM variables
   unsigned int gap_width_;
   unsigned int border_width_;
