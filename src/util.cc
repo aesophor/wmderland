@@ -232,7 +232,7 @@ string KeymaskToStr(int modifier) {
 }
 
 int StrToKeymask(const string& modifier, bool shift) {
-  static int mod_masks[6] = { 0, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask };
+  static const int mod_masks[6] = {0, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask};
   int modifier_id = modifier.at(3) - '0'; // "Mod4": 0123
 
   if (modifier_id >= 1 && modifier_id <= 5) {
