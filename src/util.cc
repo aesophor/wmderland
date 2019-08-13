@@ -315,12 +315,14 @@ void Strip(string& s) {
 namespace sys_utils {
 
 string ToAbsPath(const string& path) {
-  string abs_path = path;
-
-  if (path.at(0) == '~') {
-    abs_path = string(getenv("HOME")) + path.substr(1, string::npos);
+  if (path.empty()) {
+    return "";
   }
 
+  string abs_path = path;
+  if (path.front() == '~') {
+    abs_path = string(getenv("HOME")) + path.substr(1, string::npos);
+  }
   return abs_path;
 }
 
