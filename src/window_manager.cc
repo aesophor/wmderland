@@ -272,6 +272,7 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
   changes.sibling = e.above;
   changes.stack_mode = e.detail;
   XConfigureWindow(dpy_, e.window, e.value_mask, &changes);
+  ArrangeWindows();
 }
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
