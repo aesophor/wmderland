@@ -28,10 +28,9 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
 
 
 Area Cookie::Get(Window window) const {
-  string key = GetCookieKey(window);
-
-  if (window_area_map_.find(key) != window_area_map_.end()) {
-    return window_area_map_.at(key);
+  auto it = window_area_map_.find(GetCookieKey(window));
+  if (it != window_area_map_.end()) {
+    return it->second;
   }
   return Area();
 }
