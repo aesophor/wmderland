@@ -370,7 +370,7 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   // by the user, then we will remove them for user.
   Client* c = it->second;
   if (!c->has_unmap_req_from_user()) {
-    //c->workspace()->Remove(c->window());
+    KillClient(c->window());
   } else {
     c->set_has_unmap_req_from_user(false);
   }
@@ -680,6 +680,8 @@ void WindowManager::KillClient(Window window) {
     msg.xclient.format = 32;
     msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
     XSendEvent(dpy_, window, false, 0, &msg);
+    XSync(dpy_, false); // make sure the event we just sent has been processed by server
+    XDestroyWindow(dpy_, window); // make sure the window is really destroyed
   } else {
     XKillClient(dpy_, window);
   }
