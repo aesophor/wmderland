@@ -338,8 +338,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   }
 
   if (should_float) {
-    static const bool use_default_size = false;
-    SetFloating(e.window, true, use_default_size);
+    SetFloating(e.window, true, /*use_default_size=*/false);
   }
 
   if (should_fullscreen) {
@@ -436,8 +435,8 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         break;
       case Action::Type::TOGGLE_FLOATING:
         if (!focused_client) continue;
-        static const bool use_default_size = true;
-        SetFloating(focused_client->window(), !focused_client->is_floating(), use_default_size);
+        SetFloating(focused_client->window(), !focused_client->is_floating(),
+                    /*use_default_size=*/true);
         break;
       case Action::Type::TOGGLE_FULLSCREEN:
         if (!focused_client) continue;
