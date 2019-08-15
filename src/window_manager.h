@@ -73,7 +73,7 @@ class WindowManager {
 
   // Window position and size
   std::pair<int, int> GetDisplayResolution() const;
-  Client::Area CalculateTilingArea() const;
+  Client::Area GetTilingArea() const;
   Client::Area GetFloatingWindowArea(Window window, bool use_default_size);
 
   // Misc
