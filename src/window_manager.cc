@@ -665,8 +665,8 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
 }
 
 void WindowManager::KillClient(Window window) {
-  Atom* supported_protocols;
-  int num_supported_protocols;
+  Atom* supported_protocols = nullptr;
+  int num_supported_protocols = 0;
 
   // First try to kill the client gracefully via ICCCM. If the client does not support
   // this method, then we'll perform the brutal XKillClient().
