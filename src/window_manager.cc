@@ -207,6 +207,9 @@ void WindowManager::Run() {
       case MapNotify:
         OnMapNotify(event.xmap);
         break;
+      case UnmapNotify:
+        OnUnmapNotify(event.xunmap);
+        break;
       case DestroyNotify:
         OnDestroyNotify(event.xdestroywindow);
         break;
@@ -353,6 +356,23 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
   if (wm_utils::IsNotification(e.window) 
       && std::find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
     notifications_.push_back(e.window);
+  }
+}
+
+void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
+  auto it = Client::mapper_.find(e.window);
+  if (it == Client::mapper_.end()) {
+    return;
+  }
+
+  // Some program unmaps their windows but does not remove them,
+  // so if this window has just been unmapped, but it was not unmapped
+  // by the user, then we will remove them for user.
+  Client* c = it->second;
+  if (!c->has_unmap_req_from_user()) {
+    //c->workspace()->Remove(c->window());
+  } else {
+    c->set_has_unmap_req_from_user(false);
   }
 }
 

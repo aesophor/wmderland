@@ -28,7 +28,7 @@ class Client {
   virtual ~Client();
 
   inline void Map() const;
-  inline void Unmap() const;
+  inline void Unmap();
   inline void Raise() const;
   inline void Move(int x, int y) const;
   inline void Resize(int w, int h) const;
@@ -46,9 +46,12 @@ class Client {
 
   bool is_floating() const;
   bool is_fullscreen() const;
+  bool has_unmap_req_from_user() const;
+
   void set_workspace(Workspace* workspace);
   void set_floating(bool floating);
   void set_fullscreen(bool fullscreen);
+  void set_has_unmap_req_from_user(bool has_unmap_req_from_user);
 
  private:
   Display* dpy_;
@@ -59,6 +62,8 @@ class Client {
 
   bool is_floating_;
   bool is_fullscreen_;
+
+  bool has_unmap_req_from_user_;
 };
 
 
@@ -66,7 +71,8 @@ inline void Client::Map() const {
   XMapWindow(dpy_, window_);
 }
 
-inline void Client::Unmap() const {
+inline void Client::Unmap() {
+  has_unmap_req_from_user_ = true;
   XUnmapWindow(dpy_, window_);
 }
 

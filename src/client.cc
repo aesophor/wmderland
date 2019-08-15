@@ -17,7 +17,8 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
       size_hints_(wm_utils::GetWmNormalHints(window)),
       previous_attr_(), // this will be set when Client::SaveXWindowAttributes() is called
       is_floating_(false),
-      is_fullscreen_(false) {
+      is_fullscreen_(false),
+      has_unmap_req_from_user_(false) {
   Client::mapper_[window] = this;
   SetBorderWidth(workspace->config()->border_width());
   SetBorderColor(workspace->config()->unfocused_color());
@@ -58,6 +59,10 @@ bool Client::is_fullscreen() const {
   return is_fullscreen_;
 }
 
+bool Client::has_unmap_req_from_user() const {
+  return has_unmap_req_from_user_;
+}
+
 
 void Client::set_workspace(Workspace* workspace) {
   workspace_ = workspace;
@@ -69,6 +74,10 @@ void Client::set_floating(bool floating) {
 
 void Client::set_fullscreen(bool fullscreen) {
   is_fullscreen_ = fullscreen;
+}
+
+void Client::set_has_unmap_req_from_user(bool has_unmap_req_from_user) {
+  has_unmap_req_from_user_ = has_unmap_req_from_user;
 }
 
 } // namespace wmderland
