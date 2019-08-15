@@ -62,8 +62,7 @@ class WindowManager {
   void MoveWindowToWorkspace(Window window, int next); 
 
   // Client manipulation
-  void Center(Window w);
-  void SetFloating(Window window, bool floating);
+  void SetFloating(Window window, bool floating, bool use_default_size);
   void SetFullscreen(Window window, bool fullscreen);
   void KillClient(Window window);
 
@@ -74,8 +73,8 @@ class WindowManager {
 
   // Window position and size
   std::pair<int, int> GetDisplayResolution() const;
-  Area CalculateTilingArea() const;
-  void DetermineFloatingWindowArea(Window window);
+  Client::Area CalculateTilingArea() const;
+  Client::Area GetFloatingWindowArea(Window window, bool use_default_size);
 
   // Misc
   void UpdateClientList();

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 
+#include "client.h"
 #include "util.h"
 
 using std::endl;
@@ -27,36 +28,36 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
 }
 
 
-Area Cookie::Get(Window window) const {
-  auto it = window_area_map_.find(GetCookieKey(window));
-  if (it != window_area_map_.end()) {
+Client::Area Cookie::Get(Window window) const {
+  auto it = client_area_map_.find(GetCookieKey(window));
+  if (it != client_area_map_.end()) {
     return it->second;
   }
-  return Area();
+  return Client::Area();
 }
 
-void Cookie::Put(Window window, const Area& window_area) {
-  window_area_map_[GetCookieKey(window)] = window_area;
+void Cookie::Put(Window window, const Client::Area& area) {
+  client_area_map_[GetCookieKey(window)] = area;
 
   // Write cookie to file.
   ofstream fout(filename_);
   fout << *this;
 }
 
-string Cookie::GetCookieKey(Window w) const {
-  pair<string, string> hint = wm_utils::GetXClassHint(w);
-  string net_wm_name = wm_utils::GetNetWmName(w);
+string Cookie::GetCookieKey(Window window) const {
+  pair<string, string> hint = wm_utils::GetXClassHint(window);
+  string net_wm_name = wm_utils::GetNetWmName(window);
   return hint.first + ',' + hint.second + ',' + net_wm_name;
 }
 
 
 ofstream& operator<< (ofstream& ofs, const Cookie& cookie) {
-  for (auto& area : cookie.window_area_map_) {
+  for (auto& area : cookie.client_area_map_) {
     // Write x, y, width, height, res_class,res_name,net_wm_name to cookie.
     ofs << area.second.x << Cookie::kDelimiter_
       << area.second.y << Cookie::kDelimiter_
-      << area.second.width << Cookie::kDelimiter_
-      << area.second.height << Cookie::kDelimiter_
+      << area.second.w << Cookie::kDelimiter_
+      << area.second.h << Cookie::kDelimiter_
       << area.first << endl;
   }
   return ofs;
@@ -71,14 +72,14 @@ ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
       vector<string> tokens = string_utils::Split(line, Cookie::kDelimiter_, 4);
 
       // The first 4 item is x, y, width, height of a window.
-      Area window_area;
-      stringstream(tokens[0]) >> window_area.x;
-      stringstream(tokens[1]) >> window_area.y;
-      stringstream(tokens[2]) >> window_area.width;
-      stringstream(tokens[3]) >> window_area.height;
+      Client::Area area;
+      stringstream(tokens[0]) >> area.x;
+      stringstream(tokens[1]) >> area.y;
+      stringstream(tokens[2]) >> area.w;
+      stringstream(tokens[3]) >> area.h;
 
       // The rest will be res_class, res_name and _NET_WM_NAME.
-      cookie.window_area_map_[tokens[4]] = window_area;
+      cookie.client_area_map_[tokens[4]] = area;
     }
   }
   return ifs;

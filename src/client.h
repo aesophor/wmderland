@@ -9,10 +9,6 @@ extern "C" {
 #include <unordered_map>
 #include <string>
 
-#include "workspace.h"
-#include "properties.h"
-#include "util.h"
-
 namespace wmderland {
 
 class Workspace;
@@ -21,6 +17,15 @@ class Workspace;
 // of Window which provides some useful information and methods.
 class Client {
  public:
+  struct Area {
+    Area();
+    Area(int x, int y, int w, int h);
+    bool operator== (const Client::Area& other);
+    bool operator!= (const Client::Area& other);
+
+    int x, y, w, h;
+  };
+
   // The lightning fast mapper which maps Window to Client* in O(1)
   static std::unordered_map<Window, Client*> mapper_;
 
@@ -37,13 +42,13 @@ class Client {
   inline void SetInputFocus() const;
   inline void SetBorderWidth(unsigned int width) const;
   inline void SetBorderColor(unsigned long color) const;
-  void SaveXWindowAttributes();
+  XWindowAttributes GetXWindowAttributes() const;
 
   Window window() const;
   Workspace* workspace() const;
   const XSizeHints& size_hints() const;
-  const XWindowAttributes& previous_attr() const;
-
+  const XWindowAttributes& attr_cache() const;
+ 
   bool is_floating() const;
   bool is_fullscreen() const;
   bool has_unmap_req_from_user() const;
@@ -52,13 +57,14 @@ class Client {
   void set_floating(bool floating);
   void set_fullscreen(bool fullscreen);
   void set_has_unmap_req_from_user(bool has_unmap_req_from_user);
+  void set_attr_cache(const XWindowAttributes& attr);
 
  private:
   Display* dpy_;
   Window window_;
   Workspace* workspace_;
   XSizeHints size_hints_;
-  XWindowAttributes previous_attr_;
+  XWindowAttributes attr_cache_;
 
   bool is_floating_;
   bool is_fullscreen_;

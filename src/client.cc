@@ -2,6 +2,8 @@
 #include "client.h"
 
 #include "config.h"
+#include "workspace.h"
+#include "util.h"
 
 using std::string;
 using std::unordered_map;
@@ -15,7 +17,7 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
       window_(window),
       workspace_(workspace),
       size_hints_(wm_utils::GetWmNormalHints(window)),
-      previous_attr_(), // this will be set when Client::SaveXWindowAttributes() is called
+      attr_cache_(),
       is_floating_(),
       is_fullscreen_(),
       has_unmap_req_from_user_() {
@@ -29,8 +31,8 @@ Client::~Client() {
 }
 
 
-void Client::SaveXWindowAttributes() {
-  previous_attr_ = wm_utils::GetXWindowAttributes(window_);
+XWindowAttributes Client::GetXWindowAttributes() const {
+  return wm_utils::GetXWindowAttributes(window_);
 }
 
 
@@ -46,8 +48,8 @@ const XSizeHints& Client::size_hints() const {
   return size_hints_;
 }
 
-const XWindowAttributes& Client::previous_attr() const {
-  return previous_attr_;
+const XWindowAttributes& Client::attr_cache() const {
+  return attr_cache_;
 }
 
 
@@ -78,6 +80,23 @@ void Client::set_fullscreen(bool fullscreen) {
 
 void Client::set_has_unmap_req_from_user(bool has_unmap_req_from_user) {
   has_unmap_req_from_user_ = has_unmap_req_from_user;
+}
+
+void Client::set_attr_cache(const XWindowAttributes& attr) {
+  attr_cache_ = attr;
+}
+
+
+Client::Area::Area() : x(), y(), w(), h() {}
+
+Client::Area::Area(int x, int y, int w, int h) : x(x), y(y), w(w), h(h) {}
+
+bool Client::Area::operator== (const Client::Area& other) {
+  return (x == other.x) && (y == other.y) && (w== other.w) && (h== other.h);
+}
+
+bool Client::Area::operator!= (const Client::Area& other) {
+  return (x != other.x) || (y != other.y) || (w!= other.w) || (h!= other.h);
 }
 
 } // namespace wmderland

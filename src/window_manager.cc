@@ -338,7 +338,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   }
 
   if (should_float) {
-    DetermineFloatingWindowArea(e.window);
+    static const bool use_default_size = false;
+    SetFloating(e.window, true, use_default_size);
   }
 
   if (should_fullscreen) {
@@ -435,7 +436,8 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         break;
       case Action::Type::TOGGLE_FLOATING:
         if (!focused_client) continue;
-        SetFloating(focused_client->window(), !focused_client->is_floating());
+        static const bool use_default_size = true;
+        SetFloating(focused_client->window(), !focused_client->is_floating(), use_default_size);
         break;
       case Action::Type::TOGGLE_FULLSCREEN:
         if (!focused_client) continue;
@@ -490,7 +492,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
     XDefineCursor(dpy_, root_window_, cursors_[e.button]);
 
     c->Raise();
-    c->SaveXWindowAttributes();
+    c->set_attr_cache(c->GetXWindowAttributes());
     btn_pressed_event_ = e;
   }
 }
@@ -518,7 +520,7 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   }
 
   Client* c = it->second;
-  const XWindowAttributes& attr = c->previous_attr();
+  const XWindowAttributes& attr = c->attr_cache();
   int xdiff = e.x - btn_pressed_event_.x;
   int ydiff = e.y - btn_pressed_event_.y;
   int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
@@ -606,16 +608,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 }
 
 
-void WindowManager::Center(Window window) {
-  pair<int, int> res = GetDisplayResolution();
-  XWindowAttributes attr = wm_utils::GetXWindowAttributes(window);
-
-  int new_x = res.first / 2 - attr.width / 2;
-  int new_y = res.second / 2 - attr.height / 2;
-  XMoveWindow(dpy_, window, new_x, new_y);
-}
-
-void WindowManager::SetFloating(Window window, bool floating) {
+void WindowManager::SetFloating(Window window, bool floating, bool use_default_size) {
   auto it = Client::mapper_.find(window);
   if (it == Client::mapper_.end()) {
     return;
@@ -627,11 +620,12 @@ void WindowManager::SetFloating(Window window, bool floating) {
   }
 
   if (floating) {
-    c->Resize(DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-    Center(c->window());
+    Client::Area area = GetFloatingWindowArea(window, use_default_size);
+    c->MoveResize(area.x, area.y, area.w, area.h);
   }
+
   c->set_floating(floating);
-  ArrangeWindows();
+  ArrangeWindows(); // floating windows won't be tiled
 }
 
 void WindowManager::SetFullscreen(Window window, bool fullscreen) {
@@ -651,14 +645,14 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
 
   if (fullscreen) {
     UnmapDocks();
-    c->SaveXWindowAttributes();
+    c->set_attr_cache(c->GetXWindowAttributes());
     c->MoveResize(0, 0, GetDisplayResolution());
     c->workspace()->UnmapAllClients();
     c->Map();
     c->workspace()->SetFocusedClient(c->window());
   } else {
     MapDocks();
-    const XWindowAttributes& attr = c->previous_attr();
+    const XWindowAttributes& attr = c->attr_cache();
     c->MoveResize(attr.x, attr.y, attr.width, attr.height);
     ArrangeWindows();
   }
@@ -717,9 +711,9 @@ pair<int, int> WindowManager::GetDisplayResolution() const {
   return {root_window_attr.width, root_window_attr.height};
 }
 
-Area WindowManager::CalculateTilingArea() const {
+Client::Area WindowManager::CalculateTilingArea() const {
   pair<int, int> res = GetDisplayResolution();
-  Area tiling_area = {0, 0, res.first, res.second};
+  Client::Area tiling_area = {0, 0, res.first, res.second};
 
   for (const auto window : docks_) {
     XWindowAttributes dock_attr = wm_utils::GetXWindowAttributes(window);
@@ -727,48 +721,78 @@ Area WindowManager::CalculateTilingArea() const {
     if (dock_attr.y == 0) {
       // If the dock is at the top of the screen.
       tiling_area.y += dock_attr.height;
-      tiling_area.height -= dock_attr.height;
-    } else if (dock_attr.y + dock_attr.height == tiling_area.y + tiling_area.height) {
+      tiling_area.h -= dock_attr.height;
+    } else if (dock_attr.y + dock_attr.height == tiling_area.y + tiling_area.h) {
       // If the dock is at the bottom of the screen.
-      tiling_area.height -= dock_attr.height;
+      tiling_area.h -= dock_attr.height;
     } else if (dock_attr.x == 0) {
       // If the dock is at the leftmost of the screen.
       tiling_area.x += dock_attr.width;
-      tiling_area.width -= dock_attr.width;
-    } else if (dock_attr.x + dock_attr.width == tiling_area.x + tiling_area.width) {
+      tiling_area.w -= dock_attr.width;
+    } else if (dock_attr.x + dock_attr.width == tiling_area.x + tiling_area.w) {
       // If the dock is at the rightmost of the screen.
-      tiling_area.width -= dock_attr.width;
+      tiling_area.w -= dock_attr.width;
     }
   }
 
   return tiling_area;
 }
 
-void WindowManager::DetermineFloatingWindowArea(Window window) {
+Client::Area WindowManager::GetFloatingWindowArea(Window window, bool use_default_size) {
+  Client::Area area;
+
+  auto it = Client::mapper_.find(window);
+  if (it == Client::mapper_.end()) {
+    return area;
+  }
+
+  if (use_default_size) {
+    pair<int, int> res = GetDisplayResolution();
+    area.w = DEFAULT_FLOATING_WINDOW_WIDTH;
+    area.h = DEFAULT_FLOATING_WINDOW_HEIGHT;
+    area.x = res.first / 2 - area.w / 2;
+    area.y = res.second / 2 - area.h / 2;
+    return area;
+  }
+
+
+  // If not using default floating window size, then do the following.
+  Client::Area cookie_area = cookie_.Get(window);
   XSizeHints hints = wm_utils::GetWmNormalHints(window);
-  const Area& cookie_area = cookie_.Get(window);
 
-  // Set window size. (Priority: cookie > hints)
-  if (cookie_area.width > 0 && cookie_area.height > 0) {
-    XResizeWindow(dpy_, window, cookie_area.width, cookie_area.height);
-  } else if (hints.min_width > 0 && hints.min_height > 0) {
-    XResizeWindow(dpy_, window, hints.min_width, hints.min_height);
-  } else if (hints.base_width > 0 && hints.base_height > 0) {
-    XResizeWindow(dpy_, window, hints.base_width, hints.base_height);
-  } else if (hints.width > 0 && hints.height > 0) {
-    XResizeWindow(dpy_, window, hints.width, hints.height);
-  } else {
-    XResizeWindow(dpy_, window, DEFAULT_FLOATING_WINDOW_WIDTH, DEFAULT_FLOATING_WINDOW_HEIGHT);
-  }
-
-  // Set window position. (Priority: cookie > hints)
-  if (cookie_area.x > 0 && cookie_area.y > 0) {
-    XMoveWindow(dpy_, window, cookie_area.x, cookie_area.y);
+  // Determine floating window's x and y.
+  if (cookie_area.x > 0 && cookie_area.h > 0) {
+    area.x = cookie_area.x;
+    area.y = cookie_area.y;
   } else if (hints.x > 0 && hints.y > 0) {
-    XMoveWindow(dpy_, window, hints.x, hints.y);
+    area.x = hints.x;
+    area.y = hints.y;
   } else {
-    Center(window);
+    pair<int, int> res = GetDisplayResolution();
+    XWindowAttributes attr = wm_utils::GetXWindowAttributes(window);
+    area.x = res.first / 2 - attr.width / 2;
+    area.y = res.second / 2 - attr.height / 2;
   }
+ 
+  // Determine floating window's w and h.
+  if (cookie_area.w > 0 && cookie_area.h > 0) { // has entry in cookie
+    area.w = cookie_area.w;
+    area.h = cookie_area.h;
+  } else if (hints.flags & PSize) { // program specified size
+    area.w = hints.width;
+    area.h = hints.height;
+  } else if (hints.flags & PMinSize) { // program specified min size
+    area.w = hints.min_width;
+    area.h = hints.min_height;
+  } else if (hints.flags & PBaseSize) { // program specified base size
+    area.w = hints.base_width;
+    area.h = hints.base_height;
+  } else {
+    area.w = DEFAULT_FLOATING_WINDOW_WIDTH;
+    area.h = DEFAULT_FLOATING_WINDOW_HEIGHT;
+  }
+
+  return area;
 }
 
 

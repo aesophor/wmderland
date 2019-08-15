@@ -15,17 +15,6 @@ extern "C" {
 
 namespace wmderland {
 
-struct Area {
-  Area();
-  Area(int x, int y, int width, int height);
-  
-  bool operator== (const Area& other);
-  bool operator!= (const Area& other);
-
-  int x, y, width, height;
-};
-
-
 namespace wm_utils {
 
 void Init(Display* dpy, Properties* prop, Window root_window);

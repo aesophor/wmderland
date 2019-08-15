@@ -9,7 +9,7 @@ extern "C" {
 #include <fstream>
 #include <unordered_map>
 
-#include "util.h"
+#include "client.h"
 
 namespace wmderland {
 
@@ -21,20 +21,20 @@ class Cookie {
   Cookie(Display* dpy, Properties* prop, const std::string filename);
   virtual ~Cookie() = default;
 
-  Area Get(Window window) const;
-  void Put(Window window, const Area& window_area);
+  Client::Area Get(Window window) const;
+  void Put(Window window, const Client::Area& area);
 
   friend std::ofstream& operator<< (std::ofstream& os, const Cookie& cookie);
   friend std::ifstream& operator>> (std::ifstream& is, Cookie& cookie);
 
  private:
   static const char kDelimiter_;
-  std::string GetCookieKey(Window w) const;
+  std::string GetCookieKey(Window window) const;
 
   Display* dpy_;
   Properties* prop_;
   std::string filename_;
-  std::unordered_map<std::string, Area> window_area_map_;
+  std::unordered_map<std::string, Client::Area> client_area_map_;
 };
 
 } // namespace wmderland

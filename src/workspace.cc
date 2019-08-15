@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <stack>
 
+#include "client.h"
 #include "window_manager.h"
 #include "util.h"
 
@@ -104,7 +105,7 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   new_workspace->Add(window, is_floating);
 }
 
-void Workspace::Arrange(const Area& tiling_area) const {
+void Workspace::Arrange(const Client::Area& tiling_area) const {
   // If there are no clients in this workspace or all clients are floating, return at once.
   if (!client_tree_.current_node() || GetTilingClients().empty()) {
     return;
@@ -115,13 +116,13 @@ void Workspace::Arrange(const Area& tiling_area) const {
 
   int x = tiling_area.x + gap_width / 2;
   int y = tiling_area.y + gap_width / 2;
-  int width = tiling_area.width - gap_width;
-  int height = tiling_area.height - gap_width;
+  int w = tiling_area.w - gap_width;
+  int h = tiling_area.h - gap_width;
 
-  Tile(client_tree_.root_node(), x, y, width, height, border_width, gap_width);
+  Tile(client_tree_.root_node(), x, y, w, h, border_width, gap_width);
 }
 
-void Workspace::Tile(Tree::Node* node, int x, int y, int width, int height, 
+void Workspace::Tile(Tree::Node* node, int x, int y, int w, int h, 
                      int border_width, int gap_width) const {
   vector<Tree::Node*> children = node->children(); // pass by value here
 
@@ -133,8 +134,8 @@ void Workspace::Tile(Tree::Node* node, int x, int y, int width, int height,
   TilingDirection dir = node->tiling_direction();
   int child_x = x;
   int child_y = y;
-  int child_width = (dir == TilingDirection::HORIZONTAL) ? width / children.size() : width;
-  int child_height = (dir == TilingDirection::VERTICAL) ? height / children.size() : height;
+  int child_width = (dir == TilingDirection::HORIZONTAL) ? w / children.size() : w;
+  int child_height = (dir == TilingDirection::VERTICAL) ? h / children.size() : h;
 
   for (size_t i = 0; i < children.size(); i++) {
     Tree::Node* child = children[i];

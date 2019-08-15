@@ -8,13 +8,11 @@ extern "C" {
 #include <vector>
 #include <string>
 
-#include "config.h"
 #include "client.h"
+#include "config.h"
 #include "tree.h"
 
 namespace wmderland {
-
-class Client;
 
 class Workspace {
  public:
@@ -25,7 +23,7 @@ class Workspace {
   void Add(Window window, bool floating=false);
   void Remove(Window window);
   void Move(Window window, Workspace* new_workspace);
-  void Arrange(const Area& tiling_area) const;
+  void Arrange(const Client::Area& tiling_area) const;
   void SetTilingDirection(TilingDirection tiling_direction);
 
   void MapAllClients() const;
@@ -53,7 +51,7 @@ class Workspace {
   void Deserialize(std::string data);
 
  private:
-  void Tile(Tree::Node* node, int x, int y, int width, int height,
+  void Tile(Tree::Node* node, int x, int y, int w, int h,
             int border_width, int gap_width) const;
   
   Display* dpy_;
