@@ -16,9 +16,9 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
       workspace_(workspace),
       size_hints_(wm_utils::GetWmNormalHints(window)),
       previous_attr_(), // this will be set when Client::SaveXWindowAttributes() is called
-      is_floating_(false),
-      is_fullscreen_(false),
-      has_unmap_req_from_user_(false) {
+      is_floating_(),
+      is_fullscreen_(),
+      has_unmap_req_from_user_() {
   Client::mapper_[window] = this;
   SetBorderWidth(workspace->config()->border_width());
   SetBorderColor(workspace->config()->unfocused_color());
