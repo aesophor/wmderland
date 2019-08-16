@@ -20,7 +20,7 @@ class Workspace {
   virtual ~Workspace() = default;
 
   bool Has(Window window) const;
-  void Add(Window window, bool floating=false);
+  void Add(Window window);
   void Remove(Window window);
   void Move(Window window, Workspace* new_workspace);
   void Arrange(const Client::Area& tiling_area) const;

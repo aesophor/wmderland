@@ -330,7 +330,8 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
   workspaces_[target]->UnsetFocusedClient();
-  workspaces_[target]->Add(e.window, should_float);
+  workspaces_[target]->Add(e.window);
+  workspaces_[target]->GetClient(e.window)->set_floating(should_float);
   UpdateClientList(); // update NET_CLIENT_LIST
 
   if (workspaces_[target]->is_fullscreen()) {
@@ -370,7 +371,9 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   // by the user, then we will remove them for user.
   Client* c = it->second;
   if (!c->has_unmap_req_from_user()) {
-    //KillClient(c->window());
+    KillClient(c->window());
+    XSync(dpy_, false); // make sure the event we just sent has been processed by server
+    XDestroyWindow(dpy_, c->window()); // make sure the window is really destroyed
   } else {
     c->set_has_unmap_req_from_user(false);
   }
@@ -680,11 +683,6 @@ void WindowManager::KillClient(Window window) {
     msg.xclient.format = 32;
     msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
     XSendEvent(dpy_, window, false, 0, &msg);
-    // The following code is commented out since they cause buggy behavior
-    // I will look into this when I'm available.
-    //
-    //XSync(dpy_, false); // make sure the event we just sent has been processed by server
-    //XDestroyWindow(dpy_, window); // make sure the window is really destroyed
   } else {
     XKillClient(dpy_, window);
   }

@@ -78,7 +78,14 @@ inline void Client::Map() const {
 }
 
 inline void Client::Unmap() {
-  has_unmap_req_from_user_ = true;
+  // Calling XUnmapWindow on a window more than once
+  // might results in undesired condition, since the
+  // second call will be considered "not issued by user".
+  // This is critical in WindowManager::OnUnmapNotify
+  if (has_unmap_req_from_user_) {
+    return;
+  }
+  has_unmap_req_from_user_ = true; // will be set to false in WindowManager::OnUnmapNotify
   XUnmapWindow(dpy_, window_);
 }
 
