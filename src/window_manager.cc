@@ -611,6 +611,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
   }
 
   c->Unmap();
+  workspaces_[next]->UnsetFocusedClient();
   workspaces_[current_]->Move(window, workspaces_[next]);
   ArrangeWindows();
 }

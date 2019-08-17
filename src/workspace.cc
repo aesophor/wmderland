@@ -44,7 +44,9 @@ void Workspace::Add(Window window) {
     current_node->parent()->InsertChildAfter(new_node, current_node);
   }
 
-  client_tree_.set_current_node(new_node);
+  if (!is_fullscreen_) {
+    client_tree_.set_current_node(new_node);
+  }
 }
 
 void Workspace::Remove(Window window) {
