@@ -32,16 +32,16 @@ class Client {
   Client(Display* dpy, Window window, Workspace* workspace);
   virtual ~Client();
 
-  inline void Map() const;
-  inline void Unmap();
-  inline void Raise() const;
-  inline void Move(int x, int y) const;
-  inline void Resize(int w, int h) const;
-  inline void MoveResize(int x, int y, int w, int h) const;
-  inline void MoveResize(int x, int y, const std::pair<int, int>& size) const;
-  inline void SetInputFocus() const;
-  inline void SetBorderWidth(unsigned int width) const;
-  inline void SetBorderColor(unsigned long color) const;
+  void Map() const;
+  void Unmap();
+  void Raise() const;
+  void Move(int x, int y) const;
+  void Resize(int w, int h) const;
+  void MoveResize(int x, int y, int w, int h) const;
+  void MoveResize(int x, int y, const std::pair<int, int>& size) const;
+  void SetInputFocus() const;
+  void SetBorderWidth(unsigned int width) const;
+  void SetBorderColor(unsigned long color) const;
   XWindowAttributes GetXWindowAttributes() const;
 
   Window window() const;
@@ -74,54 +74,6 @@ class Client {
 
   bool has_unmap_req_from_wm_;
 };
-
-
-inline void Client::Map() const {
-  XMapWindow(dpy_, window_);
-}
-
-inline void Client::Unmap() {
-  // If this client is already unmapped, or the WM has already sent a request
-  // to unmap it, then no need to do it again.
-  if (!is_mapped_ || has_unmap_req_from_wm_) {
-    return;
-  }
-
-  has_unmap_req_from_wm_ = true; // will be set to false in WindowManager::OnUnmapNotify
-  XUnmapWindow(dpy_, window_);
-}
-
-inline void Client::Raise() const {
-  XRaiseWindow(dpy_, window_);
-}
-
-inline void Client::Move(int x, int y) const {
-  XMoveWindow(dpy_, window_, x, y);
-}
-
-inline void Client::Resize(int w, int h) const {
-  XResizeWindow(dpy_, window_, w, h);
-}
-
-inline void Client::MoveResize(int x, int y, int w, int h) const {
-  XMoveResizeWindow(dpy_, window_, x, y, w, h);
-}
-
-inline void Client::MoveResize(int x, int y, const std::pair<int, int>& size) const {
-  XMoveResizeWindow(dpy_, window_, x, y, size.first, size.second);
-}
-
-inline void Client::SetInputFocus() const {
-  XSetInputFocus(dpy_, window_, RevertToParent, CurrentTime);
-}
-
-inline void Client::SetBorderWidth(unsigned int width) const {
-  XSetWindowBorderWidth(dpy_, window_, width);
-}
-
-inline void Client::SetBorderColor(unsigned long color) const {
-  XSetWindowBorder(dpy_, window_, color);
-}
 
 } // namespace wmderland
 

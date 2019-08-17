@@ -32,6 +32,53 @@ Client::~Client() {
 }
 
 
+void Client::Map() const {
+  XMapWindow(dpy_, window_);
+}
+
+void Client::Unmap() {
+  // If this client is already unmapped, or the WM has already sent a request
+  // to unmap it, then no need to do it again.
+  if (!is_mapped_ || has_unmap_req_from_wm_) {
+    return;
+  }
+
+  has_unmap_req_from_wm_ = true; // will be set to false in WindowManager::OnUnmapNotify
+  XUnmapWindow(dpy_, window_);
+}
+
+void Client::Raise() const {
+  XRaiseWindow(dpy_, window_);
+}
+
+void Client::Move(int x, int y) const {
+  XMoveWindow(dpy_, window_, x, y);
+}
+
+void Client::Resize(int w, int h) const {
+  XResizeWindow(dpy_, window_, w, h);
+}
+
+void Client::MoveResize(int x, int y, int w, int h) const {
+  XMoveResizeWindow(dpy_, window_, x, y, w, h);
+}
+
+void Client::MoveResize(int x, int y, const std::pair<int, int>& size) const {
+  XMoveResizeWindow(dpy_, window_, x, y, size.first, size.second);
+}
+
+void Client::SetInputFocus() const {
+  XSetInputFocus(dpy_, window_, RevertToParent, CurrentTime);
+}
+
+void Client::SetBorderWidth(unsigned int width) const {
+  XSetWindowBorderWidth(dpy_, window_, width);
+}
+
+void Client::SetBorderColor(unsigned long color) const {
+  XSetWindowBorder(dpy_, window_, color);
+}
+
 XWindowAttributes Client::GetXWindowAttributes() const {
   return wm_utils::GetXWindowAttributes(window_);
 }
