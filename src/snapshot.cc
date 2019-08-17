@@ -89,8 +89,7 @@ void Snapshot::Load() {
   }
 
 
-  // 5. Delete snapshot file.
-  //unlink(filename_.c_str());
+  // 5. Rename snapshot file so that we know we have successfully load it.
   rename(filename_.c_str(), (filename_ + ".old").c_str());
   wm->ArrangeWindows();
 }

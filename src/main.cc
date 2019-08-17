@@ -77,7 +77,6 @@ int main(int argc, char* args[]) {
     wm->snapshot().Save();
     execl(args[0], args[0], nullptr);
   } catch (...) {
-    // For debugging purpose. This should never happen!
     WM_LOG(ERROR, "Unknown exception caught!");
     return EXIT_FAILURE;
   }
