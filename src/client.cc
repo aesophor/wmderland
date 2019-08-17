@@ -18,6 +18,7 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
       workspace_(workspace),
       size_hints_(wm_utils::GetWmNormalHints(window)),
       attr_cache_(),
+      is_mapped_(),
       is_floating_(),
       is_fullscreen_(),
       has_unmap_req_from_user_() {
@@ -53,6 +54,10 @@ const XWindowAttributes& Client::attr_cache() const {
 }
 
 
+bool Client::is_mapped() const {
+  return is_mapped_;
+}
+
 bool Client::is_floating() const {
   return is_floating_;
 }
@@ -68,6 +73,10 @@ bool Client::has_unmap_req_from_user() const {
 
 void Client::set_workspace(Workspace* workspace) {
   workspace_ = workspace;
+}
+
+void Client::set_mapped(bool mapped) {
+  is_mapped_ = mapped;
 }
 
 void Client::set_floating(bool floating) {

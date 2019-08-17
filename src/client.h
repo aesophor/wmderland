@@ -49,11 +49,13 @@ class Client {
   const XSizeHints& size_hints() const;
   const XWindowAttributes& attr_cache() const;
  
+  bool is_mapped() const;
   bool is_floating() const;
   bool is_fullscreen() const;
   bool has_unmap_req_from_user() const;
 
   void set_workspace(Workspace* workspace);
+  void set_mapped(bool mapped);
   void set_floating(bool floating);
   void set_fullscreen(bool fullscreen);
   void set_has_unmap_req_from_user(bool has_unmap_req_from_user);
@@ -66,6 +68,7 @@ class Client {
   XSizeHints size_hints_;
   XWindowAttributes attr_cache_;
 
+  bool is_mapped_;
   bool is_floating_;
   bool is_fullscreen_;
 
@@ -78,13 +81,12 @@ inline void Client::Map() const {
 }
 
 inline void Client::Unmap() {
-  // Calling XUnmapWindow on a window more than once
-  // might results in undesired condition, since the
-  // second call will be considered "not issued by user".
-  // This is critical in WindowManager::OnUnmapNotify
-  if (has_unmap_req_from_user_) {
+  // If this client is already unmapped, or the user has already sent a request
+  // to unmap it, then no need to do it again.
+  if (!is_mapped_ || has_unmap_req_from_user_) {
     return;
   }
+
   has_unmap_req_from_user_ = true; // will be set to false in WindowManager::OnUnmapNotify
   XUnmapWindow(dpy_, window_);
 }

@@ -331,6 +331,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
   workspaces_[target]->UnsetFocusedClient();
   workspaces_[target]->Add(e.window);
+  workspaces_[target]->GetClient(e.window)->set_mapped(true);
   workspaces_[target]->GetClient(e.window)->set_floating(should_float);
   UpdateClientList(); // update NET_CLIENT_LIST
 
@@ -358,6 +359,14 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
       && std::find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
     notifications_.push_back(e.window);
   }
+
+  auto it = Client::mapper_.find(e.window);
+  if (it == Client::mapper_.end()) {
+    return;
+  }
+
+  Client* c = it->second;
+  c->set_mapped(true);
 }
 
 void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
@@ -375,6 +384,7 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
     XSync(dpy_, false); // make sure the event we just sent has been processed by server
     XDestroyWindow(dpy_, c->window()); // make sure the window is really destroyed
   } else {
+    c->set_mapped(false);
     c->set_has_unmap_req_from_user(false);
   }
 }
@@ -597,14 +607,10 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 
   Client* c = it->second;
   if (workspaces_[current_]->is_fullscreen()) {
-    workspaces_[current_]->set_fullscreen(false);
-    c->set_fullscreen(false);
-    c->workspace()->MapAllClients();
-    MapDocks();
+    SetFullscreen(c->window(), false);
   }
 
   c->Unmap();
-  workspaces_[next]->UnsetFocusedClient();
   workspaces_[current_]->Move(window, workspaces_[next]);
   ArrangeWindows();
 }
