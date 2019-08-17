@@ -23,7 +23,7 @@ class Workspace {
   void Add(Window window);
   void Remove(Window window);
   void Move(Window window, Workspace* new_workspace);
-  void Arrange(const Client::Area& tiling_area) const;
+  void Tile(const Client::Area& tiling_area) const;
   void SetTilingDirection(TilingDirection tiling_direction);
 
   void MapAllClients() const;
@@ -51,8 +51,8 @@ class Workspace {
   void Deserialize(std::string data);
 
  private:
-  void Tile(Tree::Node* node, int x, int y, int w, int h,
-            int border_width, int gap_width) const;
+  void DfsTileHelper(Tree::Node* node, int x, int y, int w, int h,
+                     int border_width, int gap_width) const;
   
   Display* dpy_;
   Window root_window_;

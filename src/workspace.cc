@@ -115,7 +115,7 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
 }
 
-void Workspace::Arrange(const Client::Area& tiling_area) const {
+void Workspace::Tile(const Client::Area& tiling_area) const {
   // If there are no clients in this workspace or all clients are floating, return at once.
   if (!client_tree_.current_node() || GetTilingClients().empty()) {
     return;
@@ -129,11 +129,11 @@ void Workspace::Arrange(const Client::Area& tiling_area) const {
   int w = tiling_area.w - gap_width;
   int h = tiling_area.h - gap_width;
 
-  Tile(client_tree_.root_node(), x, y, w, h, border_width, gap_width);
+  DfsTileHelper(client_tree_.root_node(), x, y, w, h, border_width, gap_width);
 }
 
-void Workspace::Tile(Tree::Node* node, int x, int y, int w, int h, 
-                     int border_width, int gap_width) const {
+void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, 
+                              int border_width, int gap_width) const {
   vector<Tree::Node*> children = node->children(); // pass by value here
 
   // We don't care about floating windows. Remove them.
@@ -159,7 +159,7 @@ void Workspace::Tile(Tree::Node* node, int x, int y, int w, int h,
       int new_height = child_height - border_width * 2 - gap_width;
       child->client()->MoveResize(new_x, new_y, new_width, new_height);
     } else {
-      Tile(child, child_x, child_y, child_width, child_height, border_width, gap_width);
+      DfsTileHelper(child, child_x, child_y, child_width, child_height, border_width, gap_width);
     }
   }
 }

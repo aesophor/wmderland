@@ -248,7 +248,7 @@ void WindowManager::ArrangeWindows() const {
 
   // Update NET_ACTIVE_WINDOW
   wm_utils::SetNetActiveWindow(focused_client->window());
-  workspaces_[current_]->Arrange(GetTilingArea());
+  workspaces_[current_]->Tile(GetTilingArea());
 
   // Make sure the focused client is receiving input focus.
   workspaces_[current_]->SetFocusedClient(focused_client->window());
@@ -295,7 +295,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
       && std::find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
     XMapWindow(dpy_, e.window);
     docks_.push_back(e.window);
-    workspaces_[current_]->Arrange(GetTilingArea());
+    workspaces_[current_]->Tile(GetTilingArea());
     return;
   }
   
@@ -396,7 +396,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   // If the window is a dock/bar or notification, remove it and tile the workspace.
   if (std::find(docks_.begin(), docks_.end(), e.window) != docks_.end()) {
     docks_.erase(std::remove(docks_.begin(), docks_.end(), e.window), docks_.end());
-    workspaces_[current_]->Arrange(GetTilingArea());
+    workspaces_[current_]->Tile(GetTilingArea());
     return;
   } else if (wm_utils::IsNotification(e.window)) {
     notifications_.erase(std::remove(notifications_.begin(), notifications_.end(), e.window), notifications_.end());
