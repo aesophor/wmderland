@@ -379,13 +379,13 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   // so if this window has just been unmapped, but it was not unmapped
   // by the user, then we will remove them for user.
   Client* c = it->second;
-  if (!c->has_unmap_req_from_user()) {
+  if (!c->has_unmap_req_from_wm()) {
     KillClient(c->window());
     XSync(dpy_, false); // make sure the event we just sent has been processed by server
     XDestroyWindow(dpy_, c->window()); // make sure the window is really destroyed
   } else {
     c->set_mapped(false);
-    c->set_has_unmap_req_from_user(false);
+    c->set_has_unmap_req_from_wm(false);
   }
 }
 

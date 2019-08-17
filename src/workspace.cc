@@ -99,7 +99,7 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   }
 
   bool is_floating = c->is_floating();
-  bool has_unmap_req_from_user = c->has_unmap_req_from_user();
+  bool has_unmap_req_from_wm = c->has_unmap_req_from_wm();
 
   // This will delete current Client* c, and erase it from Client::mapper_
   this->Remove(window);
@@ -110,7 +110,7 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   // Transfer old client's state to the new client.
   c = new_workspace->GetClient(window);
   c->set_floating(is_floating);
-  c->set_has_unmap_req_from_user(has_unmap_req_from_user);
+  c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
 }
 
 void Workspace::Arrange(const Client::Area& tiling_area) const {

@@ -21,7 +21,7 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
       is_mapped_(),
       is_floating_(),
       is_fullscreen_(),
-      has_unmap_req_from_user_() {
+      has_unmap_req_from_wm_() {
   Client::mapper_[window] = this;
   SetBorderWidth(workspace->config()->border_width());
   SetBorderColor(workspace->config()->unfocused_color());
@@ -66,8 +66,8 @@ bool Client::is_fullscreen() const {
   return is_fullscreen_;
 }
 
-bool Client::has_unmap_req_from_user() const {
-  return has_unmap_req_from_user_;
+bool Client::has_unmap_req_from_wm() const {
+  return has_unmap_req_from_wm_;
 }
 
 
@@ -87,8 +87,8 @@ void Client::set_fullscreen(bool fullscreen) {
   is_fullscreen_ = fullscreen;
 }
 
-void Client::set_has_unmap_req_from_user(bool has_unmap_req_from_user) {
-  has_unmap_req_from_user_ = has_unmap_req_from_user;
+void Client::set_has_unmap_req_from_wm(bool has_unmap_req_from_wm) {
+  has_unmap_req_from_wm_ = has_unmap_req_from_wm;
 }
 
 void Client::set_attr_cache(const XWindowAttributes& attr) {
