@@ -39,9 +39,6 @@ WindowManager* WindowManager::instance_ = nullptr;
 bool WindowManager::is_running_ = true;
 
 WindowManager* WindowManager::GetInstance() {
-  // If the instance is not yet initialized, we'll try to open a display
-  // to X server. If it fails (i.e., dpy is None), then we return nullptr
-  // to the caller. Otherwise we return an instance of WindowManager.
   if (!instance_) {
     Display* dpy;
     instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : nullptr;
@@ -63,9 +60,6 @@ WindowManager::WindowManager(Display* dpy)
       workspaces_(),
       current_(),
       btn_pressed_event_() {
-  // In WindowManager::HasAnotherWmRunning, it will use a special error handler
-  // to check if there's already another wm running. If yes, then it will set
-  // WindowManager::is_running_ to false, making WindowManager::Run return immediately.
   if (HasAnotherWmRunning()) {
     std::cerr << "Another window manager is already running." << std::endl;
     return;
@@ -79,7 +73,7 @@ WindowManager::WindowManager(Display* dpy)
   InitCursors();
   XSync(dpy_, false);
 
-  // Run the autostart_cmds and autostart_cmds_on_reload defined in user's config.
+  // Run the autostart_cmds defined in user's config.
   for (const auto& cmd : config_->autostart_cmds()) {
     sys_utils::ExecuteCmd(cmd);
   }
@@ -95,7 +89,8 @@ WindowManager::~WindowManager() {
 
 
 bool WindowManager::HasAnotherWmRunning() {
-  // Exit gracefully if another WM is already running.
+  // WindowManager::OnWmDetected is a special error handler which will set
+  // WindowManager::is_running_ to false if another WM is already running.
   XSetErrorHandler(&WindowManager::OnWmDetected);
   XSelectInput(dpy_, root_window_, SubstructureNotifyMask | SubstructureRedirectMask);
   XSync(dpy_, false);
@@ -193,10 +188,10 @@ void WindowManager::InitWorkspaces() {
 
 void WindowManager::Run() {
   XEvent event;
+
   while (is_running_) {
     // Retrieve and dispatch next X event.
     XNextEvent(dpy_, &event);
-
     switch (event.type) {
       case ConfigureRequest:
         OnConfigureRequest(event.xconfigurerequest);
@@ -229,11 +224,18 @@ void WindowManager::Run() {
         OnClientMessage(event.xclient);
         break;
       default:
+        // Unhandled X Events are ignored.
         break;
     }
   }
 }
 
+// Arranges the windows in current workspace to how they ought to be.
+// 1. Tiled windows will be re-tiled.
+// 2. Docks will be mapped, but it will be unmapped if there's a fullscreen window.
+// 3. _NET_ACTIVE_WINDOW will be updated.
+// 4. Floating windows and notifications will be raised to the top.
+// 5. Fullscreen window will be resized to match the resolution again.
 void WindowManager::ArrangeWindows() const {
   workspaces_[current_]->MapAllClients();
   MapDocks();
@@ -259,6 +261,7 @@ void WindowManager::ArrangeWindows() const {
   // Restore fullscreen application.
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
+    focused_client->SetBorderWidth(0);
     focused_client->MoveResize(0, 0, GetDisplayResolution());
     focused_client->Raise();
   }
@@ -330,7 +333,9 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
 
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
   workspaces_[target]->UnsetFocusedClient();
-  workspaces_[target]->Add(e.window, should_float);
+  workspaces_[target]->Add(e.window);
+  workspaces_[target]->GetClient(e.window)->set_mapped(true);
+  workspaces_[target]->GetClient(e.window)->set_floating(should_float);
   UpdateClientList(); // update NET_CLIENT_LIST
 
   if (workspaces_[target]->is_fullscreen()) {
@@ -357,6 +362,14 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
       && std::find(notifications_.begin(), notifications_.end(), e.window) == notifications_.end()) {
     notifications_.push_back(e.window);
   }
+
+  auto it = Client::mapper_.find(e.window);
+  if (it == Client::mapper_.end()) {
+    return;
+  }
+
+  Client* c = it->second;
+  c->set_mapped(true);
 }
 
 void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
@@ -369,10 +382,13 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   // so if this window has just been unmapped, but it was not unmapped
   // by the user, then we will remove them for user.
   Client* c = it->second;
-  if (!c->has_unmap_req_from_user()) {
-    //KillClient(c->window());
+  if (!c->has_unmap_req_from_wm()) {
+    KillClient(c->window());
+    XSync(dpy_, false); // make sure the event we just sent has been processed by server
+    XDestroyWindow(dpy_, c->window()); // make sure the window is really destroyed
   } else {
-    c->set_has_unmap_req_from_user(false);
+    c->set_mapped(false);
+    c->set_has_unmap_req_from_wm(false);
   }
 }
 
@@ -464,11 +480,10 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
         config_->Load();
         OnConfigReload();
         break;
-      case Action::Type::DEBUG_CRASH: {
+      case Action::Type::DEBUG_CRASH:
         WM_LOG(INFO, "Debug crash on demand.");
         throw std::runtime_error("Debug crash");
         break;
-      }
       default:
         break;
     }
@@ -544,10 +559,10 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
   }
 }
 
+// 1. Apply new border width and color to existing clients.
+// 2. Re-arrange windows in current workspace.
+// 3. Run all commands in config->autostart_cmds_on_reload_
 void WindowManager::OnConfigReload() {
-  // 1. Apply new border width and color to existing clients.
-  // 2. Re-arrange windows in current workspace.
-  // 3. Run all commands in config->autostart_cmds_on_reload_
   for (const auto workspace : workspaces_) {
     for (const auto client : workspace->GetClients()) {
       client->SetBorderWidth(config_->border_width());
@@ -594,10 +609,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 
   Client* c = it->second;
   if (workspaces_[current_]->is_fullscreen()) {
-    workspaces_[current_]->set_fullscreen(false);
-    c->set_fullscreen(false);
-    c->workspace()->MapAllClients();
-    MapDocks();
+    SetFullscreen(c->window(), false);
   }
 
   c->Unmap();
@@ -680,11 +692,6 @@ void WindowManager::KillClient(Window window) {
     msg.xclient.format = 32;
     msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
     XSendEvent(dpy_, window, false, 0, &msg);
-    // The following code is commented out since they cause buggy behavior
-    // I will look into this when I'm available.
-    //
-    //XSync(dpy_, false); // make sure the event we just sent has been processed by server
-    //XDestroyWindow(dpy_, window); // make sure the window is really destroyed
   } else {
     XKillClient(dpy_, window);
   }

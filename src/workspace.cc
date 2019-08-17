@@ -30,10 +30,8 @@ bool Workspace::Has(Window window) const {
   return GetClient(window) != nullptr;
 }
 
-void Workspace::Add(Window window, bool floating) {
+void Workspace::Add(Window window) {
   Client* c = new Client(dpy_, window, (Workspace*) this);
-  c->set_floating(floating);
-
   Tree::Node* new_node = new Tree::Node(c);
 
   if (!client_tree_.current_node()) {
@@ -46,7 +44,9 @@ void Workspace::Add(Window window, bool floating) {
     current_node->parent()->InsertChildAfter(new_node, current_node);
   }
 
-  client_tree_.set_current_node(new_node);
+  if (!is_fullscreen_) {
+    client_tree_.set_current_node(new_node);
+  }
 }
 
 void Workspace::Remove(Window window) {
@@ -101,8 +101,18 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   }
 
   bool is_floating = c->is_floating();
+  bool has_unmap_req_from_wm = c->has_unmap_req_from_wm();
+
+  // This will delete current Client* c, and erase it from Client::mapper_
   this->Remove(window);
-  new_workspace->Add(window, is_floating);
+
+  // This will allocate a new Client* c', and insert it into Client::mapper_
+  new_workspace->Add(window);
+
+  // Transfer old client's state to the new client.
+  c = new_workspace->GetClient(window);
+  c->set_floating(is_floating);
+  c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
 }
 
 void Workspace::Arrange(const Client::Area& tiling_area) const {
