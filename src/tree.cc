@@ -48,7 +48,7 @@ Tree::Node* Tree::GetTreeNode(Client* client) const {
   return it->second;
 }
 
-vector<Tree::Node*> Tree::GetAllLeaves() const {
+vector<Tree::Node*> Tree::GetLeaves() const {
   vector<Tree::Node*> leaves;
   stack<Tree::Node*> st;
   st.push(root_node_);

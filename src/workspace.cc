@@ -61,7 +61,7 @@ void Workspace::Remove(Window window) {
   }
 
   // Get all leaves and find the index of the node we're going to remove.
-  vector<Tree::Node*> nodes = client_tree_.GetAllLeaves();
+  vector<Tree::Node*> nodes = client_tree_.GetLeaves();
   ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
 
   // Remove this node from its parent.
@@ -185,7 +185,7 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
 
 
 void Workspace::MapAllClients() const {
-  for (const auto leaf : client_tree_.GetAllLeaves()) {
+  for (const auto leaf : client_tree_.GetLeaves()) {
     if (leaf != client_tree_.root_node()) {
       leaf->client()->Map();
     }
@@ -193,7 +193,7 @@ void Workspace::MapAllClients() const {
 }
 
 void Workspace::UnmapAllClients() const {
-  for (auto leaf : client_tree_.GetAllLeaves()) {
+  for (auto leaf : client_tree_.GetLeaves()) {
     if (leaf != client_tree_.root_node()) {
       leaf->client()->Unmap();
     }
@@ -254,7 +254,7 @@ Client* Workspace::GetClient(Window window) const {
 vector<Client*> Workspace::GetClients() const {
   vector<Client*> clients;
 
-  for (auto leaf : client_tree_.GetAllLeaves()) {
+  for (auto leaf : client_tree_.GetLeaves()) {
     if (leaf != client_tree_.root_node()) {
       clients.push_back(leaf->client());
     }

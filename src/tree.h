@@ -54,7 +54,7 @@ class Tree {
 
 
   Tree::Node* GetTreeNode(Client* client) const;
-  std::vector<Tree::Node*> GetAllLeaves() const;
+  std::vector<Tree::Node*> GetLeaves() const;
 
   Tree::Node* root_node() const;
   Tree::Node* current_node() const;
