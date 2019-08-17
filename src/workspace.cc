@@ -31,19 +31,19 @@ bool Workspace::Has(Window window) const {
 }
 
 void Workspace::Add(Window window) {
-  Client* c = new Client(dpy_, window, (Workspace*) this);
-  Tree::Node* new_node = new Tree::Node(c);
+  Client* new_client = new Client(dpy_, window, /*workspace=*/this);
+  Tree::Node* new_node = new Tree::Node(new_client);
 
+  // If there are no windows at all, then add this new node as the root's child.
+  // Otherwise, add this new node as current node's sibling.
   if (!client_tree_.current_node()) {
-    // If there are no windows at all, add the node as the root's child.
     client_tree_.root_node()->AddChild(new_node);
   } else {
-    // If the user has not specified any tiling direction on current node, 
-    // then add the new node as its brother.
     Tree::Node* current_node = client_tree_.current_node();
     current_node->parent()->InsertChildAfter(new_node, current_node);
   }
 
+  // Don't transfer current node if this workspace has a window in fullscreen!
   if (!is_fullscreen_) {
     client_tree_.set_current_node(new_node);
   }
@@ -60,7 +60,7 @@ void Workspace::Remove(Window window) {
     return;
   }
 
-  // Get all leaves and find the index of the node we're going to remove.
+  // Get leaves and find the index of the node we're going to remove.
   vector<Tree::Node*> nodes = client_tree_.GetLeaves();
   ptrdiff_t idx = find(nodes.begin(), nodes.end(), node) - nodes.begin();
 
@@ -72,7 +72,7 @@ void Workspace::Remove(Window window) {
 
   // If its parent has no children left, then remove parent from its grandparent 
   // (If this parent is not the root).
-  while (parent_node != client_tree_.root_node() && parent_node->children().empty()) {
+  while (parent_node->children().empty() && parent_node != client_tree_.root_node()) {
     Tree::Node* grandparent_node = parent_node->parent();
     grandparent_node->RemoveChild(parent_node);
     delete parent_node;
@@ -87,8 +87,9 @@ void Workspace::Remove(Window window) {
     client_tree_.set_current_node(nullptr);
     return;
   }
-  // If idx is out of bounds, decrement it by one.
-  if (idx > static_cast<long>(nodes.size()) - 1) {
+
+  // If idx is out of bound, decrement it by one.
+  if (idx >= static_cast<ptrdiff_t>(nodes.size())) {
     idx--;
   }
   client_tree_.set_current_node(nodes[idx]);
@@ -112,6 +113,7 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   // Transfer old client's state to the new client.
   c = new_workspace->GetClient(window);
   c->set_floating(is_floating);
+  c->set_fullscreen(false);
   c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
 }
 
