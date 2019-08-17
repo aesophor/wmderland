@@ -274,7 +274,9 @@ Client* Tree::Node::client() const {
 
 void Tree::Node::set_client(Client* client) {
   Tree::Node::mapper_.erase(client_);
-  Tree::Node::mapper_[client] = this;
+  if (client) {
+    Tree::Node::mapper_[client] = this;
+  }
   client_ = client;
 }
 
