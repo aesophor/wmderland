@@ -170,15 +170,18 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
     return;
   }
 
-  // If the user has specified a tiling direction on current node, 
-  // then set current node as an internal node, add the original
-  // current node as this internal node's child and add the new node
-  // as this internal node's another child.
   Tree::Node* current_node = client_tree_.current_node();
   Client* current_node_client = current_node->client();
 
+  // If the user has specified a tiling direction on current node, then
+  // 1. Let current node become an internal node.
+  //    i.  set tiling direction
+  //    ii. set client = nullptr
+  // 2. Add the original current node as this internal node's child.
+  // 3. Set the first child of this internal node as the new current node.
   current_node->set_tiling_direction(tiling_direction);
   current_node->set_client(nullptr);
+
   current_node->AddChild(new Tree::Node(current_node_client));
   client_tree_.set_current_node(current_node->children().front());
 }
