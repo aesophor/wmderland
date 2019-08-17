@@ -54,28 +54,35 @@ int main(int argc, char* args[]) {
     return EXIT_FAILURE;
   }
 
+
   try {
     // Try to perform error recovery from the snapshot if necessary and possible.
     if (wm->snapshot().FileExists()) {
       wm->snapshot().Load();
     }
+    wm->Run(); // enter main event loop
 
-    // Run the window manager.
-    wm->Run();
+  } catch (const std::bad_alloc& ex) {
+    fputs("Out of memory\n", stderr);
+    return EXIT_FAILURE;
+
   } catch (const wmderland::Snapshot::SnapshotLoadError& ex) {
     // If we cannot recover from errors using the snapshot,
     // then return with EXIT_FAILURE.
     WM_LOG(ERROR, ex.what());
+    std::cerr << ex.what() << std::endl;
     rename(wm->snapshot().filename().c_str(), (wm->snapshot().filename() + ".failed_to_load").c_str());
     return EXIT_FAILURE;
+
   } catch (const std::exception& ex) {
-    // Try to exec itself and recover from errors the snapshot.
+    // Try to exec itself and recover from errors using the snapshot.
     // If snapshot fails to load, it will throw an SnapshotLoadError.
     // See the previous catch block.
     WM_LOG(ERROR, ex.what());
     wmderland::sys_utils::NotifySend("An error occurred. Recovering...", NOTIFY_SEND_CRITICAL);
     wm->snapshot().Save();
     execl(args[0], args[0], nullptr);
+
   } catch (...) {
     WM_LOG(ERROR, "Unknown exception caught!");
     return EXIT_FAILURE;
