@@ -224,7 +224,7 @@ void Tree::Node::RemoveChild(Tree::Node* child) {
 }
 
 void Tree::Node::InsertChildAfter(Tree::Node* child, Tree::Node* ref) {
-  ptrdiff_t ref_idx = find(children_.begin(), children_.end(), ref) - children_.begin();
+  ptrdiff_t ref_idx = std::find(children_.begin(), children_.end(), ref) - children_.begin();
   children_.insert(children_.begin() + ref_idx + 1, child);
   child->set_parent(this);
 }
@@ -236,7 +236,7 @@ Tree::Node* Tree::Node::GetLeftSibling() const {
   if (this == siblings.front()) {
     return nullptr;
   } else {
-    ptrdiff_t this_node_idx = find(siblings.begin(), siblings.end(), this) - siblings.begin();
+    ptrdiff_t this_node_idx = std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
     return siblings[this_node_idx - 1];
   }
 }
@@ -247,7 +247,7 @@ Tree::Node* Tree::Node::GetRightSibling() const {
   if (this == siblings.back()) {
     return nullptr;
   } else {
-    ptrdiff_t this_node_idx = find(siblings.begin(), siblings.end(), this) - siblings.begin();
+    ptrdiff_t this_node_idx = std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
     return siblings[this_node_idx + 1];
   }
 }
