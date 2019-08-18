@@ -87,10 +87,6 @@ $ cp ../example/config ~/.config/Wmderland/.
 
 3. Append the following lines to your ~/.xinitrc
 ```
-# Fix Non-reparenting window managers / Grey window /
-# Programs not drawing properly
-export _JAVA_AWT_WM_NONREPARENTING=1
-
 # Startup Wmderland
 exec Wmderland
 ```
