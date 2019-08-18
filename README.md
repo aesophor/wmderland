@@ -8,7 +8,7 @@ Project started in <a href="https://www.facebook.com/events/256671588330840/">NT
 Wmderland is a **tiling window manager** written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
 * A lightweight version of i3wm, written from scratch
-* An easy-to-use configuration system
+* An easy-to-use configuration system ([see example](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Stable, Simple and maintainable
 
 ## Internal Data Structures
