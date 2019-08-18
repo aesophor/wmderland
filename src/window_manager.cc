@@ -72,6 +72,10 @@ WindowManager::WindowManager(Display* dpy)
     return;
   }
 
+  // Export this env variable to fix java applications' rendering problem.
+  const char* java_non_reparenting_fix = "_JAVA_AWT_WM_NONREPARENTING=1";
+  putenv(const_cast<char*>(java_non_reparenting_fix));
+
   // Initialization.
   wm_utils::Init(dpy_, prop_.get(), root_window_);
   config_->Load();
