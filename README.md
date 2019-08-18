@@ -5,14 +5,12 @@ Project started in <a href="https://www.facebook.com/events/256671588330840/">NT
 </div>
 
 ## Overview
-Wmderland is an X11 Tiling Window Manager that represents the windows as the leaves of a tree.
+Wmderland is a **tiling window manager** written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
-It aims to simplify the core functionalities of [i3wm](https://github.com/i3/i3), which features a more approachable config system, and bundle in the essential features required for a modern but minimal Tiling Window Manager.
-
-Written in C++ using [Xlib](https://en.wikipedia.org/wiki/Xlib)
-
-## Why Another WM
-I started this project because I want experience with OOP in C++ and Xlib. I know there's already [lots of WM out there](https://wiki.archlinux.org/index.php/Window_manager), but I'm writing this for my personal use and study.
+Features:
+* A lightweight version of i3wm, written from scratch
+* An easy-to-use configuration system
+* Simple and maintainable
 
 ## Internal Data Structures
 Please note that **"Clients"** are the windows that are managed by our WM.
@@ -74,20 +72,18 @@ The following illustration shows how Wmderland stores its clients, where R is th
 * Xlib headers
 * **Optional** - [glog](https://github.com/google/glog) (Google's C++ logging library)
 
-CMake will determine if your machine have glog installed. If compiled and linked with glog, you can
-find the log files under /tmp/Wmderland.*
-
 ## Installation
 1. Run build.sh and install
 ```
-$ chmod u+x build.sh && ./build.sh
-$ sudo make install
+$ git clone https://github.com/aesophor/Wmderland.git
+$ cd Wmderland && ./build.sh
+$ cd build && sudo make install
 ```
 
 2. Copy the config file (**IMPORTANT**)
 ```
 $ mkdir -p ~/.config/Wmderland
-$ cp example/config ~/.config/Wmderland/.
+$ cp ../example/config ~/.config/Wmderland/.
 ```
 
 3. Append the following lines to your ~/.xinitrc
@@ -113,10 +109,10 @@ $ startx
 * Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cpp`
 * Remembers the positions/sizes of floating windows (~/.local/share/Wmderland/cookie)
-* Will try to recover from error if the wm crashes.
+* Error recovery mechanism
 
 ## Error Recovery
-If Wmderland crashes, it will try to perform error recovery from a **snapshot file**.
+If Wmderland crashes due to an exception, it will try to perform error recovery from a **snapshot file**.
 
 When a C++ exception is caugh, **except Snapshot::SnapshotLoadError**, it will:
 1. serialize all window trees (or client trees) into snapshot file.
