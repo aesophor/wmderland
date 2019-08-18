@@ -45,6 +45,7 @@ assign Wine,steam.exe 8
 assign Steam 8
 assign PCSX2 8
 assign PPSSPPQt 8
+assign Minecraft Launcher 8
 assign antimicro 9
 assign VirtualBox Manager 9
 assign Transmission 9
@@ -67,7 +68,6 @@ floating Wine,steam.exe true
 floating Wine,tesv.exe true
 floating VirtualBox Machine true
 floating Vigilante true
-floating net-minecraft-launcher-Main true
 floating xfreerdp true
 
 
@@ -120,6 +120,24 @@ bindsym $Mod+f toggle_fullscreen
 bindsym $Mod+Shift+q kill
 bindsym $Mod+Shift+Escape exit
 bindsym $Mod+Shift+r reload
+
+bindsym XF86MonBrightnessUp exec light -A 10
+bindsym XF86MonBrightnessDown exec light -U 10
+bindsym XF86KbdBrightnessUp exec kbdlight up 10
+bindsym XF86KbdBrightnessDown exec kbdlight down 10
+bindsym XF86LaunchA exec rofi -show window
+bindsym XF86LaunchB exec rofi -show drun
+bindsym XF86AudioPrev exec mpc prev
+bindsym XF86AudioNext exec mpc next
+bindsym XF86AudioPlay exec mpc toggle
+bindsym XF86AudioMute exec amixer -q -D pulse set Master toggle
+bindsym XF86AudioRaiseVolume exec amixer -q -D pulse set Master 5%+ unmute
+bindsym XF86AudioLowerVolume exec amixer -q -D pulse set Master 5%- unmute
+bindsym XF86PowerOff exec qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout -1 -1 -1
+
+bindsym Control+Shift+3 exec scrotutl -f
+bindsym Control+Shift+4 exec scrotutl -s
+bindsym Control+Shift+space+4 exec
 
 bindsym $Mod+d exec rofi -show drun
 bindsym $Mod+Return goto_workspace 1; exec urxvt
