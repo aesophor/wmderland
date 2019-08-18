@@ -274,6 +274,7 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
         for (auto& action_str : string_utils::Split(action_series_str, ';')) {
           string_utils::Strip(action_str);
           config.keybind_rules_[{modifier, keycode}].push_back(Action(action_str));
+          config.keybind_rules_[{modifier | LockMask, keycode}].push_back(Action(action_str));
         }
         break;
       }
