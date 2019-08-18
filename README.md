@@ -102,7 +102,7 @@ $ startx
 * Static workspaces
 * Smart floating (dialog windows will be floating by default)
 * Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
-* Supports a subset of EWMH, see `src/properties.cpp`
+* Supports a subset of EWMH, see `src/properties.cc`
 * Remembers the positions/sizes of floating windows (~/.local/share/Wmderland/cookie)
 * Error recovery mechanism
 
