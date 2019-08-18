@@ -10,8 +10,8 @@ extern "C" {
 #include <algorithm>
 #include <cstring>
 #include <string>
-#include <memory>
-#include <fstream>
+#include <vector>
+#include <unordered_map>
 
 #include "client.h"
 #include "config.h"
@@ -32,6 +32,7 @@ extern "C" {
 using std::pair;
 using std::string;
 using std::vector;
+using std::unordered_map;
 using std::exception;
 
 namespace wmderland {
@@ -73,9 +74,10 @@ WindowManager::WindowManager(Display* dpy)
 
   // Initialization.
   wm_utils::Init(dpy_, prop_.get(), root_window_);
+  config_->Load();
   InitWorkspaces();
   InitProperties();
-  InitXEvents();
+  InitXGrabs();
   InitCursors();
   XSync(dpy_, false);
 
@@ -104,20 +106,15 @@ bool WindowManager::HasAnotherWmRunning() {
   return !is_running_;
 }
 
-void WindowManager::InitXEvents() {
+void WindowManager::InitXGrabs() {
   // Define the key combinations which will send us X events based on the key combinations 
   // defined in user's config.
-  for (const auto& r : config_->keybind_rules()) {
-    vector<string> modifier_and_key = string_utils::Split(r.first, '+');
-    bool shifted = string_utils::Contains(r.first, "Shift");
+  for (const auto& rule : config_->keybind_rules()) {
+    unsigned int modifier = rule.first.first;
+    KeyCode keycode = rule.first.second;
 
-    string modifier = modifier_and_key[0];
-    string key = modifier_and_key[(shifted) ? 2 : 1];
-
-    int keycode = wm_utils::StrToKeycode(key);
-    int mod_mask = wm_utils::StrToKeymask(modifier, shifted);
-    XGrabKey(dpy_, keycode, mod_mask, root_window_, True, GrabModeAsync, GrabModeAsync);
-    XGrabKey(dpy_, keycode, mod_mask | LockMask, root_window_, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy_, keycode, modifier, root_window_, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy_, keycode, modifier | LockMask, root_window_, True, GrabModeAsync, GrabModeAsync);
   }
 
   // Define which mouse clicks will send us X events.
@@ -436,12 +433,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
   Client* focused_client = workspaces_[current_]->GetFocusedClient();
 
-  const vector<Action>& actions = config_->GetKeybindActions(
-      wm_utils::KeymaskToStr(e.state), // modifier str, e.g., "Mod4+Shift"
-      wm_utils::KeysymToStr(e.keycode) // key str, e.g., "q"
-  );
-
-  for (const auto& action : actions) {
+  for (const auto& action : config_->GetKeybindActions(e.state, e.keycode)) {
     switch (action.type()) {
       case Action::Type::NAVIGATE_LEFT:
       case Action::Type::NAVIGATE_RIGHT:

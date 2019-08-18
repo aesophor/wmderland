@@ -15,6 +15,7 @@ using std::string;
 using std::vector;
 using std::ifstream;
 using std::stringstream;
+using std::map;
 using std::unordered_map;
 
 namespace wmderland {
@@ -22,9 +23,7 @@ namespace wmderland {
 const vector<Action> Config::kEmptyActions_;
 
 Config::Config(Display* dpy, Properties* prop, const string& filename)
-    : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {
-  Load();
-}
+    : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {}
 
 
 void Config::Load() {
@@ -73,21 +72,12 @@ bool Config::ShouldProhibit(Window w) const {
   return false;
 }
 
-const vector<Action>& Config::GetKeybindActions(const string& modifier, const string& key) const {
-  auto it = keybind_rules_.find(modifier + '+' + key);
+const vector<Action>& Config::GetKeybindActions(unsigned int modifier, KeyCode keycode) const {
+  auto it = keybind_rules_.find({modifier, keycode});
   if (it != keybind_rules_.end()) {
     return it->second;
   }
   return Config::kEmptyActions_;
-}
-
-void Config::SetKeybindActions(const string& modifier_and_key, const string& action_series_str) {
-  keybind_rules_[modifier_and_key].clear();
-
-  for (auto& action_str : string_utils::Split(action_series_str, ';')) {
-    string_utils::Strip(action_str);
-    keybind_rules_[modifier_and_key].push_back(Action(action_str));
-  }
 }
 
 
@@ -116,7 +106,7 @@ unsigned long Config::unfocused_color() const {
 }
 
 
-const unordered_map<string, vector<Action>>& Config::keybind_rules() const {
+const map<pair<unsigned int, KeyCode>, vector<Action>>& Config::keybind_rules() const {
   return keybind_rules_;
 }
 
@@ -196,6 +186,17 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   config.autostart_cmds_.clear();
   config.autostart_cmds_on_reload_.clear();
 
+
+  unordered_map<string, unsigned int> assignable_modifiers = {
+    {"Mod1", Mod1Mask},
+    {"Mod2", Mod2Mask},
+    {"Mod3", Mod3Mask},
+    {"Mod4", Mod4Mask},
+    {"Mod5", Mod5Mask},
+    {"Shift", ShiftMask},
+    {"Control", ControlMask}
+  };
+
   // Parse user's config file.
   string line;
   while (std::getline(ifs, line)) {
@@ -256,9 +257,24 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
         break;
       }
       case Config::Keyword::BINDSYM: {
-        string modifier_and_key = tokens[1];
+        vector<string> keys = string_utils::Split(tokens[1], '+');
+        unsigned int modifier = None;
+        KeyCode keycode = None;
+
+        for (const auto& key : keys) {
+          auto it = assignable_modifiers.find(key);
+          if (it != assignable_modifiers.end()) { // key is a modifier
+            modifier |= it->second;
+          } else { // key is a normal key, convert it to keysym
+            keycode = XKeysymToKeycode(config.dpy_, XStringToKeysym(key.c_str()));
+          }
+        }
+
         string action_series_str = string_utils::Split(line, ' ', 2)[2];
-        config.SetKeybindActions(modifier_and_key, action_series_str);
+        for (auto& action_str : string_utils::Split(action_series_str, ';')) {
+          string_utils::Strip(action_str);
+          config.keybind_rules_[{modifier, keycode}].push_back(Action(action_str));
+        }
         break;
       }
       case Config::Keyword::EXEC: {

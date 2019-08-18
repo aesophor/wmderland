@@ -37,7 +37,7 @@ class WindowManager {
   WindowManager(Display* dpy);
 
   bool HasAnotherWmRunning();
-  void InitXEvents();
+  void InitXGrabs();
   void InitCursors();
   void InitProperties();
   void InitWorkspaces();

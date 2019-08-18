@@ -5,7 +5,6 @@
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 }
 #include <string>
@@ -36,11 +35,6 @@ bool IsDialog(Window window);
 bool IsSplash(Window window);
 bool IsUtility(Window window);
 bool IsNotification(Window window);
-
-std::string KeysymToStr(unsigned int keycode);
-unsigned int StrToKeycode(const std::string& key_name);
-std::string KeymaskToStr(int modifier);
-int StrToKeymask(const std::string& modifier_str, bool shift);
 
 } // namespace wm_utils
 

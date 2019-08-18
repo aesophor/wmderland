@@ -27,8 +27,8 @@ class Action {
     UNDEFINED
   };
 
-  Action(const std::string& s);
-  Action(Action::Type type);
+  explicit Action(const std::string& s);
+  explicit Action(Action::Type type);
   Action(Action::Type type, const std::string& argument);
   virtual ~Action() = default;
 

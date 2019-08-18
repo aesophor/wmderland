@@ -2,9 +2,13 @@
 #ifndef WMDERLAND_CONFIG_H_
 #define WMDERLAND_CONFIG_H_
 
+extern "C" {
+#include <X11/Xlib.h>
+}
 #include <vector>
 #include <string>
 #include <fstream>
+#include <map>
 #include <unordered_map>
 
 #include "action.h"
@@ -57,8 +61,7 @@ class Config {
   bool ShouldFloat(Window w) const;
   bool ShouldFullscreen(Window w) const;
   bool ShouldProhibit(Window w) const;
-  const std::vector<Action>& GetKeybindActions(const std::string& modifier, const std::string& key) const;
-  void SetKeybindActions(const std::string& modifier_and_key, const std::string& actions);
+  const std::vector<Action>& GetKeybindActions(unsigned int modifier, KeyCode keycode) const;
 
   unsigned int gap_width() const;
   unsigned int border_width() const;
@@ -66,7 +69,7 @@ class Config {
   unsigned int min_window_height() const;
   unsigned long focused_color() const;
   unsigned long unfocused_color() const;
-  const std::unordered_map<std::string, std::vector<Action>>& keybind_rules() const;
+  const std::map<std::pair<unsigned int, KeyCode>, std::vector<Action>>& keybind_rules() const;
   const std::vector<std::string>& autostart_cmds() const;
   const std::vector<std::string>& autostart_cmds_on_reload() const;
   
@@ -105,7 +108,7 @@ class Config {
   std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
   std::unordered_map<std::string, bool> fullscreen_rules_; // start certain apps in fullscreen mode.
   std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
-  std::unordered_map<std::string, std::vector<Action>> keybind_rules_; // keybind actions.
+  std::map<std::pair<unsigned int, KeyCode>, std::vector<Action>> keybind_rules_; // keybind actions.
   std::vector<std::string> autostart_cmds_; // run certain commands when wm starts.
   std::vector<std::string> autostart_cmds_on_reload_; // run certain commands when wm starts and on config reload.
 
