@@ -63,7 +63,7 @@ int main(int argc, char* args[]) {
     wm->Run(); // enter main event loop
 
   } catch (const std::bad_alloc& ex) {
-    fputs("Out of memory\n", stderr);
+    static_cast<void>(fputs("Out of memory\n", stderr));
     return EXIT_FAILURE;
 
   } catch (const wmderland::Snapshot::SnapshotLoadError& ex) {
