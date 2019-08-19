@@ -14,6 +14,7 @@ extern "C" {
 #include <fstream>
 
 #include "client.h"
+#include "config.h"
 #include "util.h"
 
 #define MOUSE_LEFT_BTN 1
@@ -41,7 +42,12 @@ bool WindowManager::is_running_ = true;
 WindowManager* WindowManager::GetInstance() {
   if (!instance_) {
     Display* dpy;
-    instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : nullptr;
+    try {
+      instance_ = (dpy = XOpenDisplay(None)) ? new WindowManager(dpy) : nullptr;
+    } catch (const std::bad_alloc& ex) {
+      fputs("Out of memory\n", stderr);
+      instance_ = nullptr;
+    }
   }
   return instance_;
 }
