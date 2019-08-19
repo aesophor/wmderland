@@ -75,7 +75,7 @@ int main(int argc, char* args[]) {
     return EXIT_FAILURE;
 
   } catch (const std::exception& ex) {
-    // Try to exec itself and recover from errors the snapshot.
+    // Try to exec itself and recover from errors using the snapshot.
     // If snapshot fails to load, it will throw an SnapshotLoadError.
     // See the previous catch block.
     WM_LOG(ERROR, ex.what());
