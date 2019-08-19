@@ -71,7 +71,19 @@ int main(int argc, char* args[]) {
     // then return with EXIT_FAILURE.
     WM_LOG(ERROR, ex.what());
     std::cerr << ex.what() << std::endl;
-    rename(wm->snapshot().filename().c_str(), (wm->snapshot().filename() + ".failed_to_load").c_str());
+
+    const char* old_snapshot_name = wm->snapshot().filename().c_str();
+    const char* new_snapshot_name = (wm->snapshot().filename() + ".failed_to_load").c_str();
+
+    if (rename(old_snapshot_name, new_snapshot_name) == -1) {
+      const char* err_msg = "Failed to rename corrupted snapshot";
+      WM_LOG(ERROR, err_msg << ": " << strerror(errno));
+      perror(err_msg);
+    } else if (remove(old_snapshot_name)) { // returns non-zero on failure
+      const char* err_msg = "Failed to remove corrupted snapshot";
+      WM_LOG(ERROR, err_msg << ": " << strerror(errno));
+      perror(err_msg);
+    }
     return EXIT_FAILURE;
 
   } catch (const std::exception& ex) {

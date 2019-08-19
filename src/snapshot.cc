@@ -90,7 +90,13 @@ void Snapshot::Load() {
 
 
   // 5. Rename snapshot file so that we know we have successfully load it.
-  rename(filename_.c_str(), (filename_ + ".old").c_str());
+  // If the file cannot be renamed and cannot be remove, then throw
+  // SnapshotLoadError and the WM will return EXIT_FAILURE.
+  if (rename(filename_.c_str(), (filename_ + ".old").c_str()) == -1 &&
+      remove(filename_.c_str())) { // remove() returns non-zero on failure
+    throw SnapshotLoadError();
+  }
+
   wm->ArrangeWindows();
 }
 
