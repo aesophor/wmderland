@@ -25,9 +25,6 @@ const char* version() {
     "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
 }
 
-const char* wm_start_failed_msg = "Failed to open display to X server.";
-const char* wm_execl_failed_msg = "execl() failed";
-
 } // namespace 
 
 
@@ -51,8 +48,9 @@ int main(int argc, char* args[]) {
   std::unique_ptr<wmderland::WindowManager> wm(wmderland::WindowManager::GetInstance());
 
   if (!wm) {
-    WM_LOG(INFO, ::wm_start_failed_msg);
-    std::cerr << ::wm_start_failed_msg << std::endl;
+    const char* err_msg = "Failed to open display to X server.";
+    WM_LOG(INFO, err_msg);
+    std::cerr << err_msg << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -85,8 +83,9 @@ int main(int argc, char* args[]) {
     wm->snapshot().Save();
     
     if (execl(args[0], args[0], nullptr) == -1) {
-      WM_LOG(ERROR, ::wm_execl_failed_msg << ": " << strerror(errno));
-      perror(::wm_execl_failed_msg);
+      const char* err_msg = "execl() failed";
+      WM_LOG(ERROR, err_msg << ": " << strerror(errno));
+      perror(err_msg);
       return EXIT_FAILURE;
     }
 
