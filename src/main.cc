@@ -1,5 +1,6 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 extern "C" {
+#include <errno.h>
 #include <unistd.h>
 }
 #include <iostream>
@@ -25,6 +26,7 @@ const char* version() {
 }
 
 const char* wm_start_failed_msg = "Failed to open display to X server.";
+const char* wm_execl_failed_msg = "execl() failed";
 
 } // namespace 
 
@@ -81,7 +83,12 @@ int main(int argc, char* args[]) {
     WM_LOG(ERROR, ex.what());
     wmderland::sys_utils::NotifySend("An error occurred. Recovering...", NOTIFY_SEND_CRITICAL);
     wm->snapshot().Save();
-    execl(args[0], args[0], nullptr);
+    
+    if (execl(args[0], args[0], nullptr) == -1) {
+      WM_LOG(ERROR, ::wm_execl_failed_msg << ": " << strerror(errno));
+      perror(::wm_execl_failed_msg);
+      return EXIT_FAILURE;
+    }
 
   } catch (...) {
     WM_LOG(ERROR, "Unknown exception caught!");
