@@ -76,13 +76,9 @@ int main(int argc, char* args[]) {
     const char* new_snapshot_name = (wm->snapshot().filename() + ".failed_to_load").c_str();
 
     if (rename(old_snapshot_name, new_snapshot_name) == -1) {
-      const char* err_msg = "Failed to rename corrupted snapshot";
-      WM_LOG(ERROR, err_msg << ": " << strerror(errno));
-      perror(err_msg);
+      WM_LOG_WITH_ERRNO("Failed to rename corrupted snapshot", errno);
     } else if (remove(old_snapshot_name)) { // returns non-zero on failure
-      const char* err_msg = "Failed to remove corrupted snapshot";
-      WM_LOG(ERROR, err_msg << ": " << strerror(errno));
-      perror(err_msg);
+      WM_LOG_WITH_ERRNO("Failed to rename corrupted snapshot", errno);
     }
     return EXIT_FAILURE;
 
@@ -95,9 +91,7 @@ int main(int argc, char* args[]) {
     wm->snapshot().Save();
     
     if (execl(args[0], args[0], nullptr) == -1) {
-      const char* err_msg = "execl() failed";
-      WM_LOG(ERROR, err_msg << ": " << strerror(errno));
-      perror(err_msg);
+      WM_LOG_WITH_ERRNO("execl() failed", errno);
       return EXIT_FAILURE;
     }
 

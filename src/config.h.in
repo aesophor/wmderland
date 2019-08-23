@@ -3,6 +3,7 @@
 #define WMDERLAND_CONFIG_H_
 
 extern "C" {
+#include <errno.h>
 #include <X11/Xlib.h>
 }
 #include <vector>
@@ -26,6 +27,13 @@ extern "C" {
 #define WM_INIT_LOGGING(executable_name)
 #define WM_LOG(severity, msg)
 #endif
+
+#define WM_LOG_WITH_ERRNO(reason, errno) \
+  do { \
+    const char* err_msg = reason; \
+    WM_LOG(ERROR, err_msg << ": " << strerror(errno)); \
+    perror(err_msg); \
+  } while (0)
 
 #define WIN_MGR_NAME "@PROJECT_NAME@"
 #define VERSION "@PROJECT_VERSION@"
