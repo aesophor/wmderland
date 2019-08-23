@@ -594,7 +594,7 @@ void WindowManager::HandleAction(const Action& action) {
 }
 
 void WindowManager::GotoWorkspace(int next) {
-  if (current_ == next) {
+  if (current_ == next || next < 0 || next >= (int) workspaces_.size()) {
     return;
   }
 
@@ -610,7 +610,8 @@ void WindowManager::GotoWorkspace(int next) {
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {    
   auto it = Client::mapper_.find(window);
-  if (current_ == next || it == Client::mapper_.end()) {
+  if (current_ == next || it == Client::mapper_.end() ||
+      next < 0 || next >= (int) workspaces_.size()) {
     return;
   }
 

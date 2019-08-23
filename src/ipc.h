@@ -15,6 +15,7 @@ struct IpcEvent {
   virtual ~IpcEvent() = default;
 
   const Action::Type actionType;
+  bool has_argument;
   long argument;
 };
 

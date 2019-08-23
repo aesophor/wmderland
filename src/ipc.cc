@@ -9,11 +9,16 @@ extern "C" {
 #include "client.h"
 #include "window_manager.h"
 
+#define CMD_ID 0
+#define HAS_ARGUMENT 1
+#define ARGUMENT 2
+
 namespace wmderland {
 
 IpcEvent::IpcEvent(const XClientMessageEvent& e)
-    : actionType(static_cast<Action::Type>(e.data.l[0])),
-      argument(e.data.l[0]) {}
+    : actionType(static_cast<Action::Type>(e.data.l[CMD_ID])),
+      has_argument(static_cast<bool>(e.data.l[HAS_ARGUMENT])),
+      argument(e.data.l[ARGUMENT]) {}
 
 
 void IpcEventManager::Handle(const XClientMessageEvent& e) const {
@@ -25,7 +30,7 @@ void IpcEventManager::Handle(const XClientMessageEvent& e) const {
   IpcEvent ipc_event(e);
   Action action(ipc_event.actionType);
 
-  if (ipc_event.argument) {
+  if (ipc_event.has_argument) {
     action = Action(ipc_event.actionType, std::to_string(ipc_event.argument));
   }
 

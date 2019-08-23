@@ -6,6 +6,9 @@
 #include <X11/Xatom.h>
 
 #define WMDERLAND_CLIENT_EVENT "WMDERLAND_CLIENT_EVENT"
+#define CMD_ID 0
+#define HAS_ARGUMENT 1
+#define ARGUMENT 2
 
 typedef enum arg_type {
   ARG_TYPE_DEC, // Decimal
@@ -79,15 +82,18 @@ int main(int argc, char *args[]) {
   msg.xclient.message_type = XInternAtom(dpy, WMDERLAND_CLIENT_EVENT, False);
   msg.xclient.window = root_window;
   msg.xclient.format = 32;
-  msg.xclient.data.l[0] = cmd_id;
+  msg.xclient.data.l[CMD_ID] = cmd_id;
+  msg.xclient.data.l[HAS_ARGUMENT] = True;
+
   switch (cmd->arg_type) {
     case ARG_TYPE_DEC:
-      msg.xclient.data.l[1] = strtoul(args[2], NULL, 10);
+      msg.xclient.data.l[ARGUMENT] = strtoul(args[2], NULL, 10);
       break;
     case ARG_TYPE_HEX:
-      msg.xclient.data.l[1] = strtoul(args[2], NULL, 16);
+      msg.xclient.data.l[ARGUMENT] = strtoul(args[2], NULL, 16);
       break;
     default:
+      msg.xclient.data.l[HAS_ARGUMENT] = False;
       break;
   }
   XSendEvent(dpy, root_window, False, SubstructureRedirectMask, &msg);
