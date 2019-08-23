@@ -14,6 +14,7 @@ extern "C" {
 #include "action.h"
 #include "config.h"
 #include "cookie.h"
+#include "ipc.h"
 #include "properties.h"
 #include "workspace.h"
 #include "snapshot.h"
@@ -57,6 +58,8 @@ class WindowManager {
   static int OnXError(Display* dpy, XErrorEvent* e);
   static int OnWmDetected(Display* dpy, XErrorEvent* e);
 
+  void HandleAction(const Action& action);
+
   // Workspace manipulation
   void GotoWorkspace(int next);
   void MoveWindowToWorkspace(Window window, int next); 
@@ -88,6 +91,7 @@ class WindowManager {
   std::unique_ptr<Properties> prop_; // X and EWMH atoms
   std::unique_ptr<Config> config_; // user config
   Cookie cookie_; // remembers pos/size of each window
+  IpcEventManager ipc_evmgr_; // client event manager
   Snapshot snapshot_; // error recovery
   
   // The floating windows vector contain windows that should not be tiled but
@@ -103,6 +107,7 @@ class WindowManager {
   // Window move, resize event cache.
   XButtonEvent btn_pressed_event_;
 
+  friend class IpcEventManager;
   friend class Snapshot;
 };
 

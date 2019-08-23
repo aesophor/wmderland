@@ -61,6 +61,7 @@ WindowManager::WindowManager(Display* dpy)
       prop_(new Properties(dpy_)),
       config_(new Config(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(dpy_, prop_.get(), COOKIE_FILE),
+      ipc_evmgr_(),
       snapshot_(SNAPSHOT_FILE),
       docks_(),
       notifications_(),
@@ -435,60 +436,8 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
-  Client* focused_client = workspaces_[current_]->GetFocusedClient();
-
   for (const auto& action : config_->GetKeybindActions(e.state, e.keycode)) {
-    switch (action.type()) {
-      case Action::Type::NAVIGATE_LEFT:
-      case Action::Type::NAVIGATE_RIGHT:
-      case Action::Type::NAVIGATE_UP:
-      case Action::Type::NAVIGATE_DOWN:
-        workspaces_[current_]->Navigate(action.type());
-        break;
-      case Action::Type::TILE_H:
-        workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
-        break;
-      case Action::Type::TILE_V:
-        workspaces_[current_]->SetTilingDirection(TilingDirection::VERTICAL);
-        break;
-      case Action::Type::TOGGLE_FLOATING:
-        if (!focused_client) continue;
-        SetFloating(focused_client->window(), !focused_client->is_floating(),
-                    /*use_default_size=*/true);
-        break;
-      case Action::Type::TOGGLE_FULLSCREEN:
-        if (!focused_client) continue;
-        SetFullscreen(focused_client->window(), !focused_client->is_fullscreen());
-        break;
-      case Action::Type::GOTO_WORKSPACE:
-        GotoWorkspace(std::stoi(action.argument()) - 1);
-        break;
-      case Action::Type::MOVE_APP_TO_WORKSPACE:
-        if (!focused_client) continue;
-        MoveWindowToWorkspace(focused_client->window(), std::stoi(action.argument()) - 1);
-        break;
-      case Action::Type::KILL:
-        if (!focused_client) continue;
-        KillClient(focused_client->window());
-        break;
-      case Action::Type::EXIT:
-        is_running_ = false;
-        break;
-      case Action::Type::EXEC:
-        sys_utils::ExecuteCmd(action.argument());
-        break;
-      case Action::Type::RELOAD:
-        sys_utils::NotifySend("Reloading config...");
-        config_->Load();
-        OnConfigReload();
-        break;
-      case Action::Type::DEBUG_CRASH:
-        WM_LOG(INFO, "Debug crash on demand.");
-        throw std::runtime_error("Debug crash");
-        break;
-      default:
-        break;
-    }
+    HandleAction(action);
   }
 }
 
@@ -557,7 +506,7 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
       GotoWorkspace(e.data.l[0]);
     }
   } else if (e.message_type == prop_->wmderland_client_event) {
-
+    ipc_evmgr_.Handle(e);
   }
 }
 
@@ -587,6 +536,62 @@ int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
   return 0; // the return value is ignored.
 }
 
+
+void WindowManager::HandleAction(const Action& action) {
+  Client* focused_client = workspaces_[current_]->GetFocusedClient();
+
+  switch (action.type()) {
+    case Action::Type::NAVIGATE_LEFT:
+    case Action::Type::NAVIGATE_RIGHT:
+    case Action::Type::NAVIGATE_UP:
+    case Action::Type::NAVIGATE_DOWN:
+      workspaces_[current_]->Navigate(action.type());
+      break;
+    case Action::Type::TILE_H:
+      workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
+      break;
+    case Action::Type::TILE_V:
+      workspaces_[current_]->SetTilingDirection(TilingDirection::VERTICAL);
+      break;
+    case Action::Type::TOGGLE_FLOATING:
+      if (!focused_client) return;
+      SetFloating(focused_client->window(), !focused_client->is_floating(),
+                  /*use_default_size=*/true);
+      break;
+    case Action::Type::TOGGLE_FULLSCREEN:
+      if (!focused_client) return;
+      SetFullscreen(focused_client->window(), !focused_client->is_fullscreen());
+      break;
+    case Action::Type::GOTO_WORKSPACE:
+      GotoWorkspace(std::stoi(action.argument()) - 1);
+      break;
+    case Action::Type::MOVE_WINDOW_TO_WORKSPACE:
+      if (!focused_client) return;
+      MoveWindowToWorkspace(focused_client->window(), std::stoi(action.argument()) - 1);
+      break;
+    case Action::Type::KILL:
+      if (!focused_client) return;
+      KillClient(focused_client->window());
+      break;
+    case Action::Type::EXIT:
+      is_running_ = false;
+      break;
+    case Action::Type::RELOAD:
+      sys_utils::NotifySend("Reloading config...");
+      config_->Load();
+      OnConfigReload();
+      break;
+    case Action::Type::DEBUG_CRASH:
+      WM_LOG(INFO, "Debug crash on demand.");
+      throw std::runtime_error("Debug crash");
+      break;
+    case Action::Type::EXEC:
+      sys_utils::ExecuteCmd(action.argument());
+      break;
+    default:
+      break;
+  }
+}
 
 void WindowManager::GotoWorkspace(int next) {
   if (current_ == next) {

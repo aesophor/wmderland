@@ -24,10 +24,11 @@ Action::Action(const string& s) {
   }
 }
 
-Action::Action(Action::Type type) : type_(type) {}
+Action::Action(Action::Type type)
+    : type_(type), argument_() {}
 
-Action::Action(Action::Type type, const string& arguments) 
-    : type_(type), argument_(arguments) {}
+Action::Action(Action::Type type, const string& argument) 
+    : type_(type), argument_(argument) {}
 
 
 Action::Type Action::type() const {
@@ -48,9 +49,9 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::NAVIGATE_DOWN;
   } else if (s == "navigate_up") {
     return Action::Type::NAVIGATE_UP;
-  } else if (s == "tile_horizontally") {
+  } else if (s == "tile_h") {
     return Action::Type::TILE_H;
-  } else if (s == "tile_vertically") {
+  } else if (s == "tile_v") {
     return Action::Type::TILE_V;
   } else if (s == "toggle_floating") {
     return Action::Type::TOGGLE_FLOATING;
@@ -58,18 +59,18 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::TOGGLE_FULLSCREEN;
   } else if (s == "goto_workspace") {
     return Action::Type::GOTO_WORKSPACE;
-  } else if (s == "move_app_to_workspace") {
-    return Action::Type::MOVE_APP_TO_WORKSPACE;
+  } else if (s == "move_window_to_workspace") {
+    return Action::Type::MOVE_WINDOW_TO_WORKSPACE;
   } else if (s == "kill") {
     return Action::Type::KILL;
   } else if (s == "exit") {
     return Action::Type::EXIT;
-  } else if (s == "exec") {
-    return Action::Type::EXEC;
   } else if (s == "reload") {
     return Action::Type::RELOAD;
   } else if (s == "debug_crash") {
     return Action::Type::DEBUG_CRASH;
+  } else if (s == "exec") {
+    return Action::Type::EXEC;
   } else {
     return Action::Type::UNDEFINED;
   }
