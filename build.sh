@@ -1,46 +1,73 @@
 #!/usr/bin/env bash
 
-should_build=true
+should_install=false
 build_type=MINSIZEREL
 
 function show_usage() {
   echo "Wmderland, A tiling window manager using space partitioning tree"
   echo "Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>"
   echo ""
-  echo "<usage>: $0 [option]"
-  echo "-b, --build   - Build project."
-  echo "-p, --prepare - Prepare dev environment only, don't build."
+  echo "usage: $0 [option]"
+  echo "-i, --install - Build and install project (sudo make install)"
+  echo "-h, --help    - Show this help message"
 }
 
-if [ "$1" == "-p" ] || [ "$1" == "--prepare" ]; then
-  should_build=false
-elif [ "$1" == "-b" ] || [ "$1" == "--build" ] || [ -z "$1" ]; then
-  should_build=true
-elif [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ "$1" == "-v" ] || [ "$1" == "--version" ] ; then
-  show_usage
-  exit 0
-else
-  show_usage
-  exit 1
-fi
+function show_horizontal_line() {
+  printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+}
 
-# Build Wmderland
-mkdir -p build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=${build_type}
-ln -sf ../build/config.h ../src/config.h
-echo 'src/config.h symlink has been setup'
-
-if [ $should_build == true ]; then
+# Build main project
+function build_wmderland() {
+  echo "-- Building Wmderland (WM)"
+  mkdir -p build && cd build
+  cmake .. -DCMAKE_BUILD_TYPE=${build_type}
+  ln -sf ../build/config.h ../src/config.h
   make
-fi
+  if [ $should_install == true ]; then
+    echo ""
+    echo "-- Installing Wmderland (WM), invoked with sudo make install"
+    sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
+  fi
+  cd ..
+}
 
-# Build Wmderlandc
-cd ../ipc
-mkdir -p build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=${build_type}
-
-if [ $should_build == true ]; then
+# Build client
+function build_client() {
+  show_horizontal_line
+  echo "-- Building Wmderlandc (client)"
+  cd ipc
+  mkdir -p build && cd build
+  cmake .. -DCMAKE_BUILD_TYPE=${build_type}
   make
-fi
+  if [ $should_install == true ]; then
+    echo ""
+    echo "-- Installing Wmderlandc (client), invoked with sudo make install"
+    sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
+  fi
+  cd ../..
+}
+
+function build() {
+  build_wmderland
+  build_client
+}
+
+# $1 - args array
+# $2 - the target argument to match
+function has_argument() {
+  args=("$@")
+  target=${args[${#args[@]}-1]} # extract target argument
+  unset 'args[${#args[@]}-1]' # remove last element
+
+  for arg in "${args[@]}"; do
+    if [ "$arg" == "$target" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+
+(has_argument $@ '-h' || has_argument $@ '--help') && show_usage && exit 0
+(has_argument $@ '-i' || has_argument $@ '--install') && should_install=true
+build
