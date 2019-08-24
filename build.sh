@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 should_build=true
+build_type=MINSIZEREL
 
 function show_usage() {
   echo "Wmderland, A tiling window manager using space partitioning tree"
@@ -23,12 +24,24 @@ else
   exit 1
 fi
 
+# Build Wmderland
 mkdir -p build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=MINSIZEREL
+cmake .. -DCMAKE_BUILD_TYPE=${build_type}
 ln -sf ../build/config.h ../src/config.h
 echo 'src/config.h symlink has been setup'
 
 if [ $should_build == true ]; then
   make
+fi
+
+# Build Wmderlandc
+cd ../ipc
+mkdir -p build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=${build_type}
+
+if [ $should_build == true ]; then
+  make
+  cp Wmderlandc ../../build/.
 fi
