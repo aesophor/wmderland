@@ -27,6 +27,7 @@ function build_wmderland() {
     echo ""
     echo "-- Installing Wmderland (WM), invoked with sudo make install"
     sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
+    sudo cp ../example/Wmderland.desktop /usr/share/xsessions/.
   fi
   cd ..
 }
