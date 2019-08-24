@@ -93,6 +93,7 @@ WindowManager::WindowManager(Display* dpy)
 }
 
 WindowManager::~WindowManager() {
+  WM_LOG(INFO, "releasing resources");
   XCloseDisplay(dpy_);
 
   for (const auto workspace : workspaces_) {
