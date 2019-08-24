@@ -51,13 +51,20 @@ void Snapshot::Load() {
   for (int i = 0; i < client_count; i++) {
     Window window = None;
     int workspace_id = 0;
+    bool is_mapped = false;
     bool is_floating = false;
     bool is_fullscreen = false;
-    fin >> window >> workspace_id >> is_floating >> is_fullscreen;
+    bool has_unmap_req_from_wm = false;
+
+    fin >> window >> workspace_id
+      >> is_mapped >> is_floating >> is_fullscreen
+      >> has_unmap_req_from_wm;
 
     Client* client = new Client(wm->dpy_, window, wm->workspaces_[workspace_id]);
+    client->set_mapped(is_mapped);
     client->set_floating(is_floating);
     client->set_fullscreen(is_fullscreen);
+    client->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
     Client::mapper_[window] = client;
   }
   
@@ -70,8 +77,14 @@ void Snapshot::Load() {
     workspace->Deserialize(data);
   }
 
+  
+  // 4. Current workspace deserialization.
+  int current_workspace = 0;
+  fin >> current_workspace;
+  wm->GotoWorkspace(current_workspace);
 
-  // 4. Docks/Notifications deserialization.
+
+  // 5. Docks/Notifications deserialization.
   string line;
 
   std::getline(fin, line);
@@ -117,8 +130,10 @@ void Snapshot::Save() {
 
     fout << window << Snapshot::kDelimiter_
       << client->workspace()->id() << Snapshot::kDelimiter_
+      << client->is_mapped() << Snapshot::kDelimiter_
       << client->is_floating() << Snapshot::kDelimiter_
-      << client->is_fullscreen() << endl;
+      << client->is_fullscreen() << Snapshot::kDelimiter_
+      << client->has_unmap_req_from_wm() << endl;
   }
 
 
@@ -128,7 +143,11 @@ void Snapshot::Save() {
   }
 
 
-  // 4. Docks/notifications serialization.
+  // 4. Curernt Workspace serialization.
+  fout << wm->current_ << endl;
+
+
+  // 5. Docks/notifications serialization.
   if (wm->docks_.empty()) {
     fout << Snapshot::kNone_;
   } else {
