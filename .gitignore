@@ -1,5 +1,3 @@
 build/
+ipc/build/
 src/config.h
-logs/
-test/
-scripts/
