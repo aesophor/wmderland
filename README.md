@@ -75,25 +75,19 @@ The following illustration shows how Wmderland stores its clients, where R is th
 1. Run build.sh and install
 ```
 $ git clone https://github.com/aesophor/Wmderland.git
-$ cd Wmderland && ./build.sh
-$ cd build && sudo make install
+$ cd Wmderland
+$ ./build.sh -i
 ```
 
 2. Copy the config file (**IMPORTANT**)
 ```
 $ mkdir -p ~/.config/Wmderland
-$ cp ../example/config ~/.config/Wmderland/.
+$ cp example/config ~/.config/Wmderland/.
 ```
 
-3. Append the following lines to your ~/.xinitrc
+3. If not using a Display Manager, add this to your ~/.xinitrc and execute `startx`
 ```
-# Startup Wmderland
 exec Wmderland
-```
-
-4. Initialize an X session
-```
-$ startx
 ```
 
 ## Main Features
