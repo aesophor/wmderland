@@ -89,7 +89,8 @@ int main(int argc, char* args[]) {
     WM_LOG(ERROR, ex.what());
     wmderland::sys_utils::NotifySend("An error occurred. Recovering...", NOTIFY_SEND_CRITICAL);
     wm->snapshot().Save();
-    
+    wm.reset();
+
     if (execl(args[0], args[0], nullptr) == -1) {
       WM_LOG_WITH_ERRNO("execl() failed", errno);
       return EXIT_FAILURE;
