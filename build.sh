@@ -43,5 +43,4 @@ cmake .. -DCMAKE_BUILD_TYPE=${build_type}
 
 if [ $should_build == true ]; then
   make
-  cp Wmderlandc ../../build/.
 fi
