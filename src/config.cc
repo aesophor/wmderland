@@ -142,9 +142,8 @@ Config::Keyword Config::StrToConfigKeyword(const std::string& s) {
 string Config::ExtractWindowIdentifier(const std::string& s) {
   // Split the string with the first and the last whitespace,
   // and return the substring in the middle.
-  string identifier = string_utils::Split(s, ' ', 1)[1];
-  identifier = identifier.substr(0, identifier.find_last_of(' '));
-  return identifier;
+  string identifier = s.substr(s.find(' ') + 1);
+  return identifier.substr(0, identifier.rfind(' '));
 }
 
 vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
