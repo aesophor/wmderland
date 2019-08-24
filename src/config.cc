@@ -149,16 +149,16 @@ string Config::ExtractWindowIdentifier(const std::string& s) {
 
 vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
   pair<string, string> hint = wm_utils::GetXClassHint(w);
-  string& res_class = hint.first;
-  string& res_name = hint.second;
+  const string& res_class = hint.first;
+  const string& res_name = hint.second;
   string net_wm_name = wm_utils::GetNetWmName(w);
 
-  vector<string> keys;
-  keys.push_back(res_class + ',' + res_name + ',' + net_wm_name);
-  keys.push_back(res_class + ',' + res_name);
-  keys.push_back(res_class + ',' + net_wm_name);
-  keys.push_back(res_class);
-  return keys;
+  return {
+    res_class + ',' + res_name + ',' + net_wm_name,
+    res_class + ',' + res_name,
+    res_class + ',' + net_wm_name,
+    res_class
+  };
 }
 
 const string& Config::ReplaceSymbols(string& s) {
