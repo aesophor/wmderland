@@ -37,6 +37,13 @@ Wmderland, while derives from i3, is built with a different philosophy in mind. 
 * Error recovery mechanism
 * Has a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc) which can interact/control Wmderland
 
+## Todo
+* Ability to resize tiling windows based on percentage ([#16](https://github.com/aesophor/Wmderland/issues/16), [#18](https://github.com/aesophor/Wmderland/issues/18))
+* Web browser windows should go fullscreen as video goes fullscreen
+* Window title bars
+* Rounded corners
+* Two borders
+
 ## Build Requirements
 * g++ (requires C++11)
 * CMake
@@ -62,18 +69,9 @@ $ cp example/config ~/.config/Wmderland/.
 exec Wmderland
 ```
 
-## Todo
-* Ability to resize tiling windows based on percentage ([#16](https://github.com/aesophor/Wmderland/issues/16), [#18](https://github.com/aesophor/Wmderland/issues/18))
-* Web browser windows should go fullscreen as video goes fullscreen
-* Window title bars
-* Rounded corners
-* Two borders
-
-## Other Screenshots
-Floating windows
+## Special Thanks
 ![](https://github.com/aesophor/Wmderland/raw/master/.meta/floating.png)
 
-## Special Thanks
 * [Markus Elfring](https://github.com/elfring) for giving me lots of helpful advice
 * Airblader's [i3wm](https://github.com/i3/i3)
 * suckless.org's [dwm](https://dwm.suckless.org/)
