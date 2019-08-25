@@ -23,10 +23,10 @@ A versitile window manager which is shipped with i3bar, has a nice tiling alrogi
 * ~44k lines of C code, which is a bit hard to trace and maintain
 
 #### Wmderland
-Wmderland, while derives from i3, is built with a different philosophy in mind. The plan for Wmderland is to become a modern but minimal tiling window manager
+Wmderland, while derives from i3, is built with a different philosophy in mind. The plan for Wmderland is to become a modern but minimal tiling window manager which:
 * follows Unix philosophy - Do one thing and do it well
-* easy-to-use config
-* similar tiling behaviors with i3
+* has an easy-to-use config
+* tiling behaviors are similar to that of i3
 * written in C++ OOP and Xlib. Only ~3k lines of C++11 code, hopefully it will be a lot easier to maintain.
 
 <br>
