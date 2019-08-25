@@ -1,6 +1,12 @@
 <div align="center">
   
 <h3>Wmderland
+  <a href="http://hits.dwyl.io/aesophor/Wmderland">
+    <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
+  </a>
+  <a href="https://github.com/aesophor/Wmderland/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
+   </a>
   <a href="https://travis-ci.org/aesophor/Wmderland">
     <img src="https://travis-ci.org/aesophor/Wmderland.svg?branch=master">
   </a>
