@@ -13,6 +13,8 @@ Wmderland is a modern & minimal **tiling window manager** written in C/C++ with 
 
 Please see its [wiki page](https://github.com/aesophor/Wmderland/wiki) for more info.
 
+<br>
+
 ## Philosophy / Why Use This?
 #### i3wm
 A versitile window manager which is shipped with i3bar, has a nice tiling alrogithm, several window layout modes (default, stacking, tabbed) and it is very stable. However, I think certain areas can be further improved:
@@ -27,6 +29,8 @@ Wmderland, while derives from i3, is built with a different philosophy in mind. 
 * similar tiling behaviors with i3
 * written in C++ OOP and Xlib. Only ~3k lines of C++11 code, hopefully it will be a lot easier to maintain.
 
+<br>
+
 ## Main Features
 * Tree-based horizontal and vertical tiling (like i3)
 * Gaps and borders (like i3-gaps)
@@ -37,6 +41,8 @@ Wmderland, while derives from i3, is built with a different philosophy in mind. 
 * Error recovery mechanism
 * Has a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc) which can interact/control Wmderland
 
+<br>
+
 ## Todo
 * Ability to resize tiling windows based on percentage ([#16](https://github.com/aesophor/Wmderland/issues/16), [#18](https://github.com/aesophor/Wmderland/issues/18))
 * Web browser windows should go fullscreen as video goes fullscreen
@@ -44,14 +50,17 @@ Wmderland, while derives from i3, is built with a different philosophy in mind. 
 * Rounded corners
 * Two borders
 
-## Build Requirements
+<br>
+
+## Build Requirements / Installation
+#### Build Requirements
 * g++ (requires C++11)
 * CMake
 * Xlib headers
 * **Optional** - [glog](https://github.com/google/glog) (Google's C++ logging library)
 
-## Installation
-1. Run build.sh and install
+#### Installation
+1. Build and install project
 ```
 $ git clone https://github.com/aesophor/Wmderland.git
 $ cd Wmderland
@@ -69,6 +78,8 @@ $ cp example/config ~/.config/Wmderland/.
 exec Wmderland
 ```
 
+<br>
+
 ## Special Thanks
 ![](https://github.com/aesophor/Wmderland/raw/master/.meta/floating.png)
 
@@ -80,6 +91,8 @@ exec Wmderland
 * mil's [simple_wm](https://github.com/mil/simple-wm)
 * JLErvin's [berry](https://github.com/JLErvin/berry)
 * Mr messyhair's [eveningwm](https://gitlab.com/mrmessyhair/eveningwm/blob/master/eveningwm.c)
+
+<br>
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
