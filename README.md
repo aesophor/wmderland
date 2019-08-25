@@ -11,59 +11,7 @@ Wmderland is a **tiling window manager** written in C/C++ with [Xlib](https://en
 * An easy-to-use configuration system ([see example](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Stable, simple and maintainable
 
-## Internal Data Structures
-Please note that **"Clients"** are the windows that are managed by our WM.
-
-In Wmderland, clients are represented as the leaves of a tree, while the internal nodes tell the split direction of its children. The root node always exists with the client tree (it WON'T and MUSTN'T be deleted). The clients are arranged (tiled) recursively.
-
-The following illustration shows how Wmderland stores its clients, where R is the root node, V means its children must be tiled vertically, H means its children must be tiled horizontally.
-
-```
-             R                         R                          R
-                                      /                          / \
-                        --->         1             --->         1   2
-                                     ^                              ^
-
-+-----------------------+  +-----------------------+  +-----------------------+
-|                       |  |                       |  |           |           |
-|                       |  |                       |  |           |           |
-|                       |  |                       |  |           |           |
-|           R           |  |           1           |  |     1     |     2     |
-|                       |  |           ^           |  |           |     ^     |
-|                       |  |                       |  |           |           |
-|                       |  |                       |  |           |           |
-+-----------------------+  +-----------------------+  +-----------------------+
-
-          Empty                      Spawn 1                   Spawn 2 
-
-```
-
-```
-            R                          R                           R
-           /|\                        /|\                         /|\
-          1 2 3         --->         1 2 V         --->          1 2 V
-              ^                         / \                         / \
-                                       3   4                       3   H
-                                           ^                          / \
-                                                                     4   5
-                                                                         ^
-
-+-----------------------+  +-----------------------+  +-----------------------+
-|       |       |       |  |       |       |       |  |       |       |       |
-|       |       |       |  |       |       |   3   |  |       |       |   3   |
-|       |       |       |  |       |       |       |  |       |       |       |
-|   1   |   2   |   3   |  |   1   |   2   |-------|  |   1   |   2   |-------|
-|       |       |   ^   |  |       |       |       |  |       |       |   |   |
-|       |       |       |  |       |       |   4   |  |       |       | 4 | 5 |
-|       |       |       |  |       |       |   ^   |  |       |       |   | ^ |
-+-----------------------+  +-----------------------+  +-----------------------+
-
-         Spawn 3               $Mod+V and Spawn 4        $Mod+G and Spawn 5
-         
-```
-
-* For Tree API, see [tree.cc](https://github.com/aesophor/Wmderland/blob/master/src/tree.cc)
-* For Window management algorithms, see [workspace.cc](https://github.com/aesophor/Wmderland/blob/master/src/workspace.cc)
+For how it works, please see its wiki page.
 
 ## Build Requirements
 * g++ (requires C++11)
