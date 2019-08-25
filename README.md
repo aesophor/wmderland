@@ -5,13 +5,37 @@ Project started in <a href="https://www.facebook.com/events/256671588330840/">NT
 </div>
 
 ## Overview
-Wmderland is a **tiling window manager** written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
+Wmderland is a modern & minimal **tiling window manager** written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
-* A lightweight version of i3wm, written from scratch
-* An easy-to-use configuration system ([see example](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* A lightweight i3, written from scratch
+* An easy-to-use config system ([example](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Stable, simple and maintainable
 
-For how it works, please see its [wiki page](https://github.com/aesophor/Wmderland/wiki).
+Please see its [wiki page](https://github.com/aesophor/Wmderland/wiki) for more info.
+
+## Philosophy / Why Use This?
+#### i3wm
+A versitile window manager which is shipped with i3bar, has a nice tiling alrogithm, several window layout modes (default, stacking, tabbed) and it is very stable. However, I think certain areas can be further improved:
+* config system is too complicated
+* there are many features that I've rarely used
+* ~44k lines of C code, which is a bit hard to trace and maintain
+
+#### Wmderland
+Wmderland, while derives from i3, is built with a different philosophy in mind. The plan for Wmderland is to become a modern but minimal tiling window manager
+* follows Unix philosophy - Do one thing and do it well
+* easy-to-use config
+* similar tiling behaviors with i3
+* written in C++ OOP and Xlib. Only ~3k lines of C++11 code, hopefully it will be a lot easier to maintain.
+
+## Main Features
+* Tree-based horizontal and vertical tiling (like i3)
+* Gaps and borders (like i3-gaps)
+* Statically allocated workspaces (i3 has dynamically allocated workspaces)
+* Smart floating (dialog windows will be floating by default, their pos/size will be cached)
+* Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
+* Supports a subset of EWMH, see `src/properties.cc`
+* Error recovery mechanism
+* Has a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc) which can interact/control Wmderland
 
 ## Build Requirements
 * g++ (requires C++11)
@@ -38,37 +62,10 @@ $ cp example/config ~/.config/Wmderland/.
 exec Wmderland
 ```
 
-## Main Features
-* Tree-based horizontal and vertical tiling (like in i3wm)
-* Gaps and borders
-* Static workspaces
-* Smart floating (dialog windows will be floating by default)
-* Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
-* Supports a subset of EWMH, see `src/properties.cc`
-* Remembers the positions/sizes of floating windows (~/.local/share/Wmderland/cookie)
-* Error recovery mechanism
-
-## Error Recovery
-If Wmderland crashes due to an exception, it will try to perform error recovery from a **snapshot file**.
-
-When a C++ exception is caugh, **except Snapshot::SnapshotLoadError**, it will:
-1. serialize all window trees (or client trees) into snapshot file.
-2. write all docks/notifications window id(s) into snapshot file.
-3. execl(args[0], args[0])
-4. try to deserialize everything from the snapshot.
-
-Also, if it fails to load the snapshot, or the same error occurs consecutively over 3 times,
-wmderland will still shutdown. The user will have to manually restart it.
-
-## Compatibility with WINE
-Most WINE applications should work fine, except the following bugs:
-* ~~WINE applications will hang on close~~ **fixed in commit [`a816f31`](https://github.com/aesophor/Wmderland/commit/a816f312d4f6b06865d36bbb565be95475d71719#comments)**
-* WINE Steam floating menu windows are slightly laggy when closed
-* WINE Steam startup logo window is not correctly resized
-
-## Todo List
-* Add support for [sxhkd](https://github.com/baskerville/sxhkd)
+## Todo
+* Ability to resize tiling windows based on percentage ([#16](https://github.com/aesophor/Wmderland/issues/16), [#18](https://github.com/aesophor/Wmderland/issues/18))
 * Web browser windows should go fullscreen as video goes fullscreen
+* Window title bars
 * Rounded corners
 * Two borders
 
