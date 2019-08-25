@@ -1,6 +1,8 @@
 <div align="center">
   
 <h3>Wmderland</h3>
+<p>Modern, Minimal X11 Tiling Window Manager</p>
+
 <a href="http://hits.dwyl.io/aesophor/Wmderland">
   <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
 </a>
@@ -10,19 +12,18 @@
 <a href="https://travis-ci.org/aesophor/Wmderland">
   <img src="https://travis-ci.org/aesophor/Wmderland.svg?branch=master">
 </a>
-  
-Project started in <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a><br><br>
+
 <img src="https://github.com/aesophor/Wmderland/raw/master/.meta/tiling.png">
 </div>
 
 ## Overview
-Wmderland is a modern & minimal **tiling window manager** written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
+Wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
 * A lightweight i3, written from scratch
 * An easy-to-use config system ([example](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Stable, simple and maintainable
 
-Please see its [wiki page](https://github.com/aesophor/Wmderland/wiki) for more info.
+**Documentation available at its [wiki page](https://github.com/aesophor/Wmderland/wiki).**
 
 <br>
 
@@ -42,7 +43,7 @@ Wmderland, while derives from i3, is built with a different philosophy in mind. 
 
 <br>
 
-## Main Features
+## What's Included?
 * Tree-based horizontal and vertical tiling (like i3)
 * Gaps and borders (like i3-gaps)
 * Statically allocated workspaces (i3 has dynamically allocated workspaces)
