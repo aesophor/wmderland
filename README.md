@@ -11,7 +11,7 @@ Wmderland is a **tiling window manager** written in C/C++ with [Xlib](https://en
 * An easy-to-use configuration system ([see example](https://github.com/aesophor/Wmderland/blob/master/example/config))
 * Stable, simple and maintainable
 
-For how it works, please see its wiki page.
+For how it works, please see its [wiki page](https://github.com/aesophor/Wmderland/wiki).
 
 ## Build Requirements
 * g++ (requires C++11)
