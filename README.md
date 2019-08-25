@@ -1,5 +1,11 @@
 <div align="center">
-<h3>Wmderland</h3>
+  
+<h3>Wmderland
+  <a href="https://travis-ci.org/aesophor/Wmderland">
+    <img src="https://travis-ci.org/aesophor/Wmderland.svg?branch=master">
+  </a>
+</h3>
+  
 Project started in <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a>
 <img src="https://github.com/aesophor/Wmderland/raw/master/.meta/tiling.png">
 </div>
