@@ -6,7 +6,7 @@
   </a>
 </h3>
   
-Project started in <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a>
+Project started in <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a><br><br>
 <img src="https://github.com/aesophor/Wmderland/raw/master/.meta/tiling.png">
 </div>
 
