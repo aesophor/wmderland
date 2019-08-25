@@ -1,16 +1,15 @@
 <div align="center">
   
-<h3>Wmderland
-  <a href="http://hits.dwyl.io/aesophor/Wmderland">
-    <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
-  </a>
-  <a href="https://github.com/aesophor/Wmderland/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
-   </a>
-  <a href="https://travis-ci.org/aesophor/Wmderland">
-    <img src="https://travis-ci.org/aesophor/Wmderland.svg?branch=master">
-  </a>
-</h3>
+<h3>Wmderland</h3>
+<a href="http://hits.dwyl.io/aesophor/Wmderland">
+  <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
+</a>
+<a href="https://github.com/aesophor/Wmderland/blob/master/LICENSE">
+  <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
+ </a>
+<a href="https://travis-ci.org/aesophor/Wmderland">
+  <img src="https://travis-ci.org/aesophor/Wmderland.svg?branch=master">
+</a>
   
 Project started in <a href="https://www.facebook.com/events/256671588330840/">NTUOSC Hackathon 2018</a><br><br>
 <img src="https://github.com/aesophor/Wmderland/raw/master/.meta/tiling.png">
