@@ -36,6 +36,10 @@ void Tree::DfsCleanUpHelper(Tree::Node* node) const {
   for (const auto child : node->children()) {
     DfsCleanUpHelper(child);
   }
+
+  if (node->client()) {
+    delete node->client();
+  }
   delete node;
 }
 
