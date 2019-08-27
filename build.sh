@@ -21,7 +21,6 @@ function build_wmderland() {
   echo "-- Building Wmderland (WM)"
   mkdir -p build && cd build
   cmake .. -DCMAKE_BUILD_TYPE=${build_type}
-  ln -sf ../build/config.h ../src/config.h
   make
   if [ $should_install == true ]; then
     echo ""
