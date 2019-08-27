@@ -24,7 +24,6 @@ find_package(X11 REQUIRED)
 find_package(glog)
 
 # CMake will generate config.h from config.h.in
-# and store it under src/
 include_directories("src" "build")
 configure_file("src/config.h.in" "config.h")
 
