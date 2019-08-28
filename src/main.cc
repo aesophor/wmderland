@@ -1,9 +1,9 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 extern "C" {
-#include <errno.h>
 #include <unistd.h>
 }
 #include <iostream>
+#include <cerrno>
 #include <cstring>
 #include <memory>
 

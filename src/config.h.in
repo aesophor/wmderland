@@ -3,9 +3,9 @@
 #define WMDERLAND_CONFIG_H_
 
 extern "C" {
-#include <errno.h>
 #include <X11/Xlib.h>
 }
+#include <cerrno>
 #include <vector>
 #include <string>
 #include <fstream>
