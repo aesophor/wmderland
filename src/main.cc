@@ -3,7 +3,6 @@ extern "C" {
 #include <unistd.h>
 }
 #include <iostream>
-#include <cerrno>
 #include <cstring>
 #include <memory>
 
