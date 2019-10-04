@@ -21,7 +21,7 @@ Wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib
 
 * A lightweight i3, written from scratch
 * An easy-to-use config system ([example](https://github.com/aesophor/Wmderland/blob/master/example/config))
-* Stable, simple and maintainable
+* Stable, simple, and maintainable
 
 **Documentation available at its [wiki page](https://github.com/aesophor/Wmderland/wiki).**
 
@@ -29,13 +29,13 @@ Wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib
 
 ## Philosophy / Why Use This?
 #### i3wm
-A versitile window manager which is shipped with i3bar, has a nice tiling alrogithm, several window layout modes (default, stacking, tabbed) and it is very stable. However, I think certain areas can be further improved:
+A versatile window manager which is shipped with i3bar, has a nice tiling algorithm, several window layout modes (default, stacking, tabbed) and it is very stable. However, I think certain areas can be further improved:
 * config system is too complicated
 * there are many features that I've rarely used
 * ~44k lines of C code, which is a bit hard to trace and maintain
 
 #### Wmderland
-Wmderland, while derives from i3, is built with a different philosophy in mind. The plan for Wmderland is to become a modern but minimal tiling window manager which:
+Wmderland, while derived from i3, is built with a different philosophy in mind. The plan for Wmderland is to become a modern but minimal tiling window manager which:
 * follows Unix philosophy - Do one thing and do it well
 * has an easy-to-use config
 * tiling behaviors are similar to that of i3
