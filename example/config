@@ -99,6 +99,9 @@ bindsym $Mod+7 goto_workspace 7
 bindsym $Mod+8 goto_workspace 8
 bindsym $Mod+9 goto_workspace 9
 
+bindsym $Mod+Shift+j workspace -1
+bindsym $Mod+Shift+k workspace +1
+
 bindsym $Mod+Shift+1 move_window_to_workspace 1
 bindsym $Mod+Shift+2 move_window_to_workspace 2
 bindsym $Mod+Shift+3 move_window_to_workspace 3

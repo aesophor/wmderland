@@ -32,6 +32,7 @@ static Command cmd_table[] = {
   {"toggle_floating",          0, ARG_TYPE_NONE},
   {"toggle_fullscreen",        0, ARG_TYPE_NONE},
   {"goto_workspace",           1, ARG_TYPE_DEC },
+  {"workspace",                1, ARG_TYPE_DEC },
   {"move_window_to_workspace", 1, ARG_TYPE_DEC },
   {"kill",                     0, ARG_TYPE_NONE},
   {"exit",                     0, ARG_TYPE_NONE},

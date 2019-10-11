@@ -59,6 +59,8 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::TOGGLE_FULLSCREEN;
   } else if (s == "goto_workspace") {
     return Action::Type::GOTO_WORKSPACE;
+  } else if (s == "workspace") {
+    return Action::Type::WORKSPACE;
   } else if (s == "move_window_to_workspace") {
     return Action::Type::MOVE_WINDOW_TO_WORKSPACE;
   } else if (s == "kill") {

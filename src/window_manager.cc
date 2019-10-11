@@ -568,6 +568,9 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::GOTO_WORKSPACE:
       GotoWorkspace(std::stoi(action.argument()) - 1);
       break;
+    case Action::Type::WORKSPACE:
+      GotoWorkspace(current_ + std::stoi(action.argument()));
+      break;
     case Action::Type::MOVE_WINDOW_TO_WORKSPACE:
       if (!focused_client) return;
       MoveWindowToWorkspace(focused_client->window(), std::stoi(action.argument()) - 1);

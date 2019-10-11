@@ -23,6 +23,7 @@ $ Wmderlandc tile_v
 $ Wmderlandc toggle_floating
 $ Wmderlandc toggle_fullscreen
 $ Wmderlandc goto_workspace <number>
+$ Wmderlandc workspace <number>
 $ Wmderlandc move_window_to_workspace <number>
 $ Wmderlandc kill # kill current window
 $ Wmderlandc exit # exit WM
