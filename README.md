@@ -51,7 +51,7 @@ Wmderland, while derived from i3, is built with a different philosophy in mind. 
 * Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cc`
 * Error recovery mechanism
-* Has a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc) which can interact/control Wmderland
+* Has a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc-client) which can interact/control Wmderland
 
 <br>
 
