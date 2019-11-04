@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 should_install=false
-build_type=DEBUG
+build_type=MINSIZEREL
 
 function show_usage() {
   echo "Wmderland, A tiling window manager using space partitioning tree"
