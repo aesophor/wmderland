@@ -35,7 +35,7 @@ function build_wmderland() {
 function build_client() {
   show_horizontal_line
   echo "-- Building Wmderlandc (client)"
-  cd ipc
+  cd ipc-client
   mkdir -p build && cd build
   cmake .. -DCMAKE_BUILD_TYPE=${build_type}
   make
