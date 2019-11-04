@@ -11,6 +11,7 @@
 using std::stack;
 using std::vector;
 using std::string;
+using std::unique_ptr;
 
 namespace wmderland {
 
@@ -31,21 +32,21 @@ bool Workspace::Has(Window window) const {
 }
 
 void Workspace::Add(Window window) {
-  Client* new_client = new Client(dpy_, window, /*workspace=*/this);
-  Tree::Node* new_node = new Tree::Node(new_client);
+  unique_ptr<Client> new_client(new Client(dpy_, window, /*workspace=*/this));
+  unique_ptr<Tree::Node> new_node(new Tree::Node(std::move(new_client)));
+  Tree::Node* new_node_raw = new_node.get();
 
   // If there are no windows at all, then add this new node as the root's child.
   // Otherwise, add this new node as current node's sibling.
   if (!client_tree_.current_node()) {
-    client_tree_.root_node()->AddChild(new_node);
+    client_tree_.root_node()->AddChild(std::move(new_node));
   } else {
     Tree::Node* current_node = client_tree_.current_node();
-    current_node->parent()->InsertChildAfter(new_node, current_node);
+    current_node->parent()->InsertChildAfter(std::move(new_node), current_node);
   }
 
-  // Don't transfer current node if this workspace has a window in fullscreen!
   if (!is_fullscreen_) {
-    client_tree_.set_current_node(new_node);
+    client_tree_.set_current_node(new_node_raw);
   }
 }
 
@@ -67,7 +68,6 @@ void Workspace::Remove(Window window) {
   // Remove this node from its parent.
   Tree::Node* parent_node = node->parent();
   parent_node->RemoveChild(node);
-  delete c;
 
   // If its parent has no children left, then remove parent from its grandparent 
   // (If this parent is not the root).
@@ -134,7 +134,7 @@ void Workspace::Tile(const Client::Area& tiling_area) const {
 
 void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, 
                               int border_width, int gap_width) const {
-  vector<Tree::Node*> children = node->children(); // pass by value here
+  vector<Tree::Node*> children = node->children();
 
   // We don't care about floating windows. Remove them.
   children.erase(std::remove_if(children.begin(), children.end(), [](Tree::Node* n) {
@@ -171,18 +171,16 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
   }
 
   Tree::Node* current_node = client_tree_.current_node();
-  Client* current_node_client = current_node->client();
+
+  unique_ptr<Client> client(current_node->release_client());
+  unique_ptr<Tree::Node> new_node(new Tree::Node(std::move(client)));
 
   // If the user has specified a tiling direction on current node, then
   // 1. Let current node become an internal node.
-  //    i.  set tiling direction
-  //    ii. set client = nullptr
   // 2. Add the original current node as this internal node's child.
   // 3. Set the first child of this internal node as the new current node.
   current_node->set_tiling_direction(tiling_direction);
-  current_node->set_client(nullptr);
-
-  current_node->AddChild(new Tree::Node(current_node_client));
+  current_node->AddChild(std::move(new_node));
   client_tree_.set_current_node(current_node->children().front());
 }
 

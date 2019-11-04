@@ -113,18 +113,19 @@ void Tree::Deserialize(string data) {
     }
 
     // Deserialize
-    Tree::Node* new_node = new Tree::Node(nullptr);
+    unique_ptr<Tree::Node> new_node(new Tree::Node(nullptr));
     if (val.front() == Snapshot::kLeafPrefix_) {
       val.erase(0, 1);
-      new_node->set_client(Client::mapper_[static_cast<Window>(std::stoul(val))]);
+      unique_ptr<Client> client(Client::mapper_[static_cast<Window>(std::stoul(val))]);
+      new_node->set_client(std::move(client));
     } else { // val.front() == Snapshot::kInternalPrefix_
       val.erase(0, 1);
       new_node->set_tiling_direction(static_cast<TilingDirection>(std::stoi(val)));
     }
 
-    current_node_->AddChild(new_node);
-    current_node_ = new_node;
-    st.push(new_node);
+    current_node_->AddChild(std::move(new_node));
+    current_node_->children().back();
+    st.push(new_node.get());
   }
 
 
@@ -190,37 +191,35 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
 
 
 
-Tree::Node::Node(Client* client)
-    : client_(client),
+Tree::Node::Node(unique_ptr<Client> client)
+    : client_(std::move(client)),
       tiling_direction_(TilingDirection::UNSPECIFIED) {
-  if (client) {
-    Tree::Node::mapper_[client] = this;
+  if (client_) {
+    Tree::Node::mapper_[client_.get()] = this;
   }
 }
 
 Tree::Node::~Node() {
-  Tree::Node::mapper_.erase(client_);
+  Tree::Node::mapper_.erase(client_.get());
 }
 
 
-void Tree::Node::AddChild(Tree::Node* child) {
-  unique_ptr<Tree::Node> c(child);
-  children_.push_back(std::move(c));
+void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
   child->set_parent(this);
+  children_.push_back(std::move(child));
 }
 
 void Tree::Node::RemoveChild(Tree::Node* child) {
+  child->set_parent(nullptr);
   children_.erase(std::remove_if(children_.begin(), children_.end(), [&](unique_ptr<Tree::Node>& node) {
       return node.get() == child; }), children_.end());
-  child->set_parent(nullptr);
 }
 
-void Tree::Node::InsertChildAfter(Tree::Node* child, Tree::Node* ref) {
-  unique_ptr<Tree::Node> c(child);
+void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref) {
+  child->set_parent(this);
   ptrdiff_t ref_idx = std::find_if(children_.begin(), children_.end(), [&](unique_ptr<Tree::Node>& node) {
       return node.get() == ref; }) - children_.begin();
-  children_.insert(children_.begin() + ref_idx + 1, std::move(c));
-  child->set_parent(this);
+  children_.insert(children_.begin() + ref_idx + 1, std::move(child));
 }
 
 
@@ -248,9 +247,9 @@ Tree::Node* Tree::Node::GetRightSibling() const {
 
 
 vector<Tree::Node*> Tree::Node::children() const {
-  vector<Tree::Node*> children;
-  for (auto& node : children_) {
-    children.push_back(node.get());
+  vector<Tree::Node*> children(children_.size());
+  for (size_t i = 0; i < children.size(); i++) {
+    children[i] = children_[i].get();
   }
   return children;
 }
@@ -267,17 +266,20 @@ void Tree::Node::set_parent(Tree::Node* parent) {
 
 // Get the client associated with this node.
 Client* Tree::Node::client() const {
-  return client_;
+  return client_.get();
 }
 
-void Tree::Node::set_client(Client* client) {
-  Tree::Node::mapper_.erase(client_);
+void Tree::Node::set_client(unique_ptr<Client> client) {
+  Tree::Node::mapper_.erase(client_.get());
   if (client) {
-    Tree::Node::mapper_[client] = this;
+    Tree::Node::mapper_[client.get()] = this;
   }
-  client_ = client;
+  client_ = std::move(client);
 }
 
+Client* Tree::Node::release_client() {
+  return client_.release();
+}
 
 TilingDirection Tree::Node::tiling_direction() const {
   return tiling_direction_;

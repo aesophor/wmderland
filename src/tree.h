@@ -23,12 +23,12 @@ class Tree {
 
   class Node {
    public:
-    Node(Client* client);
+    Node(std::unique_ptr<Client> client);
     virtual ~Node();
   
-    void AddChild(Tree::Node* child);
+    void AddChild(std::unique_ptr<Tree::Node> child);
     void RemoveChild(Tree::Node* child);
-    void InsertChildAfter(Tree::Node* child, Tree::Node* ref);
+    void InsertChildAfter(std::unique_ptr<Tree::Node> child, Tree::Node* ref);
 
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
@@ -40,7 +40,8 @@ class Tree {
     bool leaf() const;
 
     void set_parent(Tree::Node* parent);
-    void set_client(Client* client);
+    void set_client(std::unique_ptr<Client> client);
+    Client* release_client();
     void set_tiling_direction(TilingDirection tiling_direction);
 
     static std::unordered_map<Client*, Tree::Node*> mapper_;
@@ -49,7 +50,7 @@ class Tree {
     std::vector<std::unique_ptr<Tree::Node>> children_;
     Tree::Node* parent_;
 
-    Client* client_;
+    std::unique_ptr<Client> client_;
     TilingDirection tiling_direction_;
   };
 
