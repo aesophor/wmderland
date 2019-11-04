@@ -169,6 +169,8 @@ const string& Config::ReplaceSymbols(string& s) {
 
 
 ifstream& operator>> (ifstream& ifs, Config& config) {
+  WM_LOG(INFO, "Loading user configuration: " << config.filename_);
+
   // Load the built-in WM variables with their default values.
   config.gap_width_ = DEFAULT_GAP_WIDTH;
   config.border_width_ = DEFAULT_BORDER_WIDTH;
