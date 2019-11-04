@@ -67,7 +67,6 @@ void Workspace::Remove(Window window) {
   // Remove this node from its parent.
   Tree::Node* parent_node = node->parent();
   parent_node->RemoveChild(node);
-  delete node;
   delete c;
 
   // If its parent has no children left, then remove parent from its grandparent 
@@ -75,7 +74,6 @@ void Workspace::Remove(Window window) {
   while (parent_node->children().empty() && parent_node != client_tree_.root_node()) {
     Tree::Node* grandparent_node = parent_node->parent();
     grandparent_node->RemoveChild(parent_node);
-    delete parent_node;
     parent_node = grandparent_node;
   }
 

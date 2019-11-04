@@ -14,6 +14,7 @@ using std::stack;
 using std::queue;
 using std::vector;
 using std::unordered_map;
+using std::unique_ptr;
 
 namespace wmderland {
 
@@ -28,21 +29,6 @@ Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_() {
   root_node_->set_tiling_direction(TilingDirection::HORIZONTAL);
 }
 
-Tree::~Tree() {
-  DfsCleanUpHelper(root_node_);
-}
-
-void Tree::DfsCleanUpHelper(Tree::Node* node) const {
-  for (const auto child : node->children()) {
-    DfsCleanUpHelper(child);
-  }
-
-  if (node->client()) {
-    delete node->client();
-  }
-  delete node;
-}
-
 
 Tree::Node* Tree::GetTreeNode(Client* client) const {
   auto it = Tree::Node::mapper_.find(client);
@@ -55,7 +41,7 @@ Tree::Node* Tree::GetTreeNode(Client* client) const {
 vector<Tree::Node*> Tree::GetLeaves() const {
   vector<Tree::Node*> leaves;
   stack<Tree::Node*> st;
-  st.push(root_node_);
+  st.push(root_node_.get());
 
   while (!st.empty()) {
     Tree::Node* node = st.top();
@@ -76,7 +62,7 @@ vector<Tree::Node*> Tree::GetLeaves() const {
 
 
 Tree::Node* Tree::root_node() const {
-  return root_node_;
+  return root_node_.get();
 }
 
 Tree::Node* Tree::current_node() const {
@@ -106,13 +92,13 @@ void Tree::Deserialize(string data) {
   string root_val = val_queue.front();
   val_queue.pop();
   root_val.erase(0, 1);
-  root_node_ = new Tree::Node(nullptr);
+  //root_node_ = new Tree::Node(nullptr);
   root_node_->set_tiling_direction(static_cast<TilingDirection>(std::stoi(root_val)));
  
 
   // Push the root node onto the stack and perform iterative DFS.
   stack<Tree::Node*> st;
-  st.push(root_node_);
+  st.push(root_node_.get());
   current_node_ = st.top();
 
   while (!val_queue.empty()) {
@@ -167,7 +153,7 @@ string Tree::Serialize() const {
   if (root_node_->leaf()) {
     return data + Snapshot::kInternalPrefix_ + std::to_string(static_cast<int>(root_node_->tiling_direction()));
   } else {
-    DfsSerializeHelper(root_node_, data);
+    DfsSerializeHelper(root_node_.get(), data);
     // There will be extra ',' + "b,"
     return data.erase(data.rfind("," + Snapshot::kBacktrack_+ ","));
   }
@@ -218,24 +204,28 @@ Tree::Node::~Node() {
 
 
 void Tree::Node::AddChild(Tree::Node* child) {
-  children_.push_back(child);
+  unique_ptr<Tree::Node> c(child);
+  children_.push_back(std::move(c));
   child->set_parent(this);
 }
 
 void Tree::Node::RemoveChild(Tree::Node* child) {
-  children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
+  children_.erase(std::remove_if(children_.begin(), children_.end(), [&](unique_ptr<Tree::Node>& node) {
+      return node.get() == child; }), children_.end());
   child->set_parent(nullptr);
 }
 
 void Tree::Node::InsertChildAfter(Tree::Node* child, Tree::Node* ref) {
-  ptrdiff_t ref_idx = std::find(children_.begin(), children_.end(), ref) - children_.begin();
-  children_.insert(children_.begin() + ref_idx + 1, child);
+  unique_ptr<Tree::Node> c(child);
+  ptrdiff_t ref_idx = std::find_if(children_.begin(), children_.end(), [&](unique_ptr<Tree::Node>& node) {
+      return node.get() == ref; }) - children_.begin();
+  children_.insert(children_.begin() + ref_idx + 1, std::move(c));
   child->set_parent(this);
 }
 
 
 Tree::Node* Tree::Node::GetLeftSibling() const {
-  const vector<Tree::Node*>& siblings = parent_->children();
+  vector<Tree::Node*> siblings = parent_->children();
 
   if (this == siblings.front()) {
     return nullptr;
@@ -246,7 +236,7 @@ Tree::Node* Tree::Node::GetLeftSibling() const {
 }
 
 Tree::Node* Tree::Node::GetRightSibling() const {
-  const vector<Tree::Node*>& siblings = parent_->children();
+  vector<Tree::Node*> siblings = parent_->children();
 
   if (this == siblings.back()) {
     return nullptr;
@@ -257,8 +247,12 @@ Tree::Node* Tree::Node::GetRightSibling() const {
 }
 
 
-const vector<Tree::Node*>& Tree::Node::children() const {
-  return children_;
+vector<Tree::Node*> Tree::Node::children() const {
+  vector<Tree::Node*> children;
+  for (auto& node : children_) {
+    children.push_back(node.get());
+  }
+  return children;
 }
 
 

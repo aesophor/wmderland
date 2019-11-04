@@ -2,6 +2,7 @@
 #ifndef WMDERLAND_TREE_H_
 #define WMDERLAND_TREE_H_
 
+#include <memory>
 #include <vector>
 #include <unordered_map>
 
@@ -18,7 +19,7 @@ enum class TilingDirection {
 class Tree {
  public:
   Tree();
-  virtual ~Tree();
+  virtual ~Tree() = default;
 
   class Node {
    public:
@@ -32,7 +33,7 @@ class Tree {
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
 
-    const std::vector<Tree::Node*>& children() const;
+    std::vector<Tree::Node*> children() const;
     Tree::Node* parent() const;
     Client* client() const;
     TilingDirection tiling_direction() const;
@@ -45,7 +46,7 @@ class Tree {
     static std::unordered_map<Client*, Tree::Node*> mapper_;
 
    private:
-    std::vector<Tree::Node*> children_;
+    std::vector<std::unique_ptr<Tree::Node>> children_;
     Tree::Node* parent_;
 
     Client* client_;
@@ -67,7 +68,7 @@ class Tree {
   void DfsCleanUpHelper(Tree::Node* node) const;
   void DfsSerializeHelper(Tree::Node* node, std::string& data) const;
 
-  Tree::Node* root_node_;
+  std::unique_ptr<Tree::Node> root_node_;
   Tree::Node* current_node_;
 };
 
