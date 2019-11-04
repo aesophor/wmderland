@@ -101,7 +101,7 @@ class WindowManager {
 
   // Workspaces contain clients, where a client is a window that can be tiled
   // by the window manager.
-  std::array<Workspace*, WORKSPACE_COUNT> workspaces_;
+  std::array<std::unique_ptr<Workspace>, WORKSPACE_COUNT> workspaces_;
   int current_; // current workspace
 
   // Window move, resize event cache.

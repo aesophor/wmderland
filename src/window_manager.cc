@@ -33,6 +33,7 @@ using std::pair;
 using std::string;
 using std::vector;
 using std::unordered_map;
+using std::unique_ptr;
 using std::exception;
 
 namespace wmderland {
@@ -95,10 +96,6 @@ WindowManager::WindowManager(Display* dpy)
 WindowManager::~WindowManager() {
   WM_LOG(INFO, "releasing resources");
   XCloseDisplay(dpy_);
-
-  for (const auto workspace : workspaces_) {
-    delete workspace;
-  }
 }
 
 
@@ -181,7 +178,7 @@ void WindowManager::InitWorkspaces() {
 
   for (size_t i = 0; i < workspaces_.size(); i++) {
     // Initialize workspace objects.
-    workspaces_[i] = new Workspace(dpy_, root_window_, config_.get(), i);
+    workspaces_[i] = unique_ptr<Workspace>(new Workspace(dpy_, root_window_, config_.get(), i));
 
     // Copy workspace name const char* to names[i], which is needed later.
     // See the XSetTextProperty below. 
@@ -517,7 +514,7 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
 // 2. Re-arrange windows in current workspace.
 // 3. Run all commands in config->autostart_cmds_on_reload_
 void WindowManager::OnConfigReload() {
-  for (const auto workspace : workspaces_) {
+  for (const auto& workspace : workspaces_) {
     for (const auto client : workspace->GetClients()) {
       client->SetBorderWidth(config_->border_width());
       client->SetBorderColor(config_->unfocused_color());
@@ -628,7 +625,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 
   c->Unmap();
   workspaces_[next]->UnsetFocusedClient();
-  workspaces_[current_]->Move(window, workspaces_[next]);
+  workspaces_[current_]->Move(window, workspaces_[next].get());
   ArrangeWindows();
 }
 
@@ -824,7 +821,7 @@ Client::Area WindowManager::GetFloatingWindowArea(Window window, bool use_defaul
 void WindowManager::UpdateClientList() {
   XDeleteProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST]);
 
-  for (const auto workspace : workspaces_) {
+  for (const auto& workspace : workspaces_) {
     for (const auto client : workspace->GetClients()) {
       Window window = client->window();
       XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_CLIENT_LIST], XA_WINDOW,

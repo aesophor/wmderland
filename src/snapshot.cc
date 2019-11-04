@@ -60,7 +60,7 @@ void Snapshot::Load() {
       >> is_mapped >> is_floating >> is_fullscreen
       >> has_unmap_req_from_wm;
 
-    Client* client = new Client(wm->dpy_, window, wm->workspaces_[workspace_id]);
+    Client* client = new Client(wm->dpy_, window, wm->workspaces_[workspace_id].get());
     client->set_mapped(is_mapped);
     client->set_floating(is_floating);
     client->set_fullscreen(is_fullscreen);
@@ -71,7 +71,7 @@ void Snapshot::Load() {
 
   // 3. Client Tree deserialization will call Client::mapper_[window],
   // so we have to restore all clients before doing this. See step 1.
-  for (const auto workspace : wm->workspaces_) {
+  for (const auto& workspace : wm->workspaces_) {
     string data;
     fin >> data;
     workspace->Deserialize(data);
@@ -138,7 +138,7 @@ void Snapshot::Save() {
 
 
   // 3. Client Tree serialization.
-  for (const auto workspace : wm->workspaces_) {
+  for (const auto& workspace : wm->workspaces_) {
     fout << workspace->Serialize() << endl;
   }
 
