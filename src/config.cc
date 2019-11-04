@@ -177,6 +177,7 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   config.focused_color_ = DEFAULT_FOCUSED_COLOR;
   config.unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
 
+  config.symtab_.clear();
   config.spawn_rules_.clear();
   config.float_rules_.clear();
   config.fullscreen_rules_.clear();
