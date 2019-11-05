@@ -77,7 +77,7 @@ int main(int argc, char* args[]) {
     if (rename(old_snapshot_name, new_snapshot_name) == -1) {
       WM_LOG_WITH_ERRNO("Failed to rename corrupted snapshot", errno);
     } else if (remove(old_snapshot_name)) { // returns non-zero on failure
-      WM_LOG_WITH_ERRNO("Failed to rename corrupted snapshot", errno);
+      WM_LOG_WITH_ERRNO("Failed to remove corrupted snapshot", errno);
     }
     return EXIT_FAILURE;
 
