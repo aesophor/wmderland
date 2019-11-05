@@ -92,7 +92,6 @@ void Tree::Deserialize(string data) {
   string root_val = val_queue.front();
   val_queue.pop();
   root_val.erase(0, 1);
-  //root_node_ = new Tree::Node(nullptr);
   root_node_->set_tiling_direction(static_cast<TilingDirection>(std::stoi(root_val)));
  
 
