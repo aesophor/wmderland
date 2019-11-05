@@ -60,6 +60,8 @@ void Snapshot::Load() {
       >> is_mapped >> is_floating >> is_fullscreen
       >> has_unmap_req_from_wm;
 
+    // The ownership of these client objects will be claimed during
+    // client tree deserialization!!! See Tree::Deserialize() in tree.cc
     Client* client = new Client(wm->dpy_, window, wm->workspaces_[workspace_id].get());
     client->set_mapped(is_mapped);
     client->set_floating(is_floating);

@@ -20,7 +20,7 @@ namespace wmderland {
 
 unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
-Tree::Tree() : root_node_(new Tree::Node(nullptr)), current_node_() {
+Tree::Tree() : root_node_(std::make_unique<Tree::Node>(nullptr)), current_node_() {
   // NOTE: In Wmderland, the root node will always exist in a client tree
   // at any given time.
   
@@ -113,7 +113,7 @@ void Tree::Deserialize(string data) {
     }
 
     // Deserialize
-    unique_ptr<Tree::Node> new_node(new Tree::Node(nullptr));
+    unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(nullptr);
     if (val.front() == Snapshot::kLeafPrefix_) {
       val.erase(0, 1);
       unique_ptr<Client> client(Client::mapper_[static_cast<Window>(std::stoul(val))]);

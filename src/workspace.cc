@@ -32,8 +32,9 @@ bool Workspace::Has(Window window) const {
 }
 
 void Workspace::Add(Window window) {
-  unique_ptr<Client> new_client(new Client(dpy_, window, /*workspace=*/this));
-  unique_ptr<Tree::Node> new_node(new Tree::Node(std::move(new_client)));
+  unique_ptr<Client> client = std::make_unique<Client>(dpy_, window, this);
+  unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(std::move(client));
+
   Tree::Node* new_node_raw = new_node.get();
 
   // If there are no windows at all, then add this new node as the root's child.
@@ -173,7 +174,7 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
   Tree::Node* current_node = client_tree_.current_node();
 
   unique_ptr<Client> client(current_node->release_client());
-  unique_ptr<Tree::Node> new_node(new Tree::Node(std::move(client)));
+  unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(std::move(client));
 
   // If the user has specified a tiling direction on current node, then
   // 1. Let current node become an internal node.
