@@ -20,7 +20,7 @@ set border_width = 3
 set min_window_width = 100
 set min_window_height = 100
 set focused_color = ff4c5d70
-set unfocused_color = ff32455c
+set unfocused_color = ff394859
 set $Mod = Mod4
 
 
@@ -29,7 +29,6 @@ set $Mod = Mod4
 ; -----------------------------------------------------------------------
 assign URxvt 1
 assign jetbrains-idea 2
-assign Firefox 3
 assign Google-chrome 3
 assign dolphin 4
 assign ark 4
@@ -38,7 +37,6 @@ assign Wps 5
 assign Wpp 5
 assign Spotify 6
 assign vlc 6
-assign Allegro 7
 assign Gimp-2.10 7
 assign tiled 7
 assign Wine,steam.exe 8
@@ -69,6 +67,7 @@ floating Wine,tesv.exe true
 floating VirtualBox Machine true
 floating Vigilante true
 floating xfreerdp true
+floating com.hacklympics.main.Main true
 
 
 ; [Fullscreen Rules]
@@ -150,7 +149,7 @@ bindsym $Mod+Return goto_workspace 1; exec urxvt
 ; Applications to execute when WM starts up (DON'T append '&' at the end)
 ; -----------------------------------------------------------------------
 exec pulseaudio --start --log-target=syslog
-exec mpd
+exec ~/.config/mpd/launch.sh
 exec dunst
 exec dispad
 exec displayctl
