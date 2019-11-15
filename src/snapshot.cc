@@ -67,7 +67,6 @@ void Snapshot::Load() {
     client->set_floating(is_floating);
     client->set_fullscreen(is_fullscreen);
     client->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
-    Client::mapper_[window] = client;
   }
   
 
