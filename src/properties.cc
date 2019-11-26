@@ -7,7 +7,7 @@ Properties::Properties(Display* dpy) : utf8string(XInternAtom(dpy, "UTF8_STRING"
   wmderland_client_event = XInternAtom(dpy, "WMDERLAND_CLIENT_EVENT", false);
 
   wm[atom::WM_PROTOCOLS] = XInternAtom(dpy, "WM_PROTOCOLS", false);
-  wm[atom::WM_DELETE] = XInternAtom(dpy, "WM_DELETE_WINDOW", false);
+  wm[atom::WM_DELETE_WINDOW] = XInternAtom(dpy, "WM_DELETE_WINDOW", false);
   wm[atom::WM_STATE] = XInternAtom(dpy, "WM_STATE", false);
   wm[atom::WM_TAKE_FOCUS] = XInternAtom(dpy, "WM_TAKE_FOCUS", false);
 

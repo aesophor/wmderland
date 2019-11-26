@@ -694,14 +694,14 @@ void WindowManager::KillClient(Window window) {
   // this method, then we'll perform the brutal XKillClient().
   if (XGetWMProtocols(dpy_, window, &supported_protocols, &num_supported_protocols) 
       && (std::find(supported_protocols, supported_protocols + num_supported_protocols, 
-          prop_->wm[atom::WM_DELETE]) != supported_protocols + num_supported_protocols)) {
+          prop_->wm[atom::WM_DELETE_WINDOW]) != supported_protocols + num_supported_protocols)) {
     XEvent msg;
     memset(&msg, 0, sizeof(msg));
     msg.xclient.type = ClientMessage;
     msg.xclient.message_type = prop_->wm[atom::WM_PROTOCOLS];
     msg.xclient.window = window;
     msg.xclient.format = 32;
-    msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE];
+    msg.xclient.data.l[0] = prop_->wm[atom::WM_DELETE_WINDOW];
     XSendEvent(dpy_, window, false, 0, &msg);
   } else {
     XKillClient(dpy_, window);

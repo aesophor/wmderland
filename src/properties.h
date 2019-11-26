@@ -14,7 +14,7 @@ namespace atom {
 // Default atoms, defined by X
 enum {
   WM_PROTOCOLS,
-  WM_DELETE,
+  WM_DELETE_WINDOW,
   WM_STATE,
   WM_TAKE_FOCUS,
   WM_ATOM_SIZE
