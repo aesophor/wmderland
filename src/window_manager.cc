@@ -66,6 +66,7 @@ WindowManager::WindowManager(Display* dpy)
       snapshot_(SNAPSHOT_FILE),
       docks_(),
       notifications_(),
+      hidden_windows_(),
       workspaces_(),
       current_(),
       btn_pressed_event_() {
@@ -284,6 +285,12 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
   changes.sibling = e.above;
   changes.stack_mode = e.detail;
   XConfigureWindow(dpy_, e.window, e.value_mask, &changes);
+
+  if (hidden_windows_.find(e.window) != hidden_windows_.end()) {
+    hidden_windows_.erase(e.window);
+    Manage(e.window);
+  }
+
   ArrangeWindows();
 }
 
@@ -305,60 +312,10 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     return;
   }
   
-  // If this window is wine steam dialog, just map it directly and don't manage it.
-  pair<string, string> hint = wm_utils::GetXClassHint(e.window);
-  if (wm_utils::IsDialog(e.window)) {
-    if (hint.first == "Wine" && hint.second == "steam.exe") {
-      XMapWindow(dpy_, e.window);
-      return;
-    }
-  }
-
   // Pass all checks above -> we should manage this window.
   // Spawn this window in the specified workspace if such rule exists,
   // otherwise spawn it in current workspace.
-  int target = config_->GetSpawnWorkspaceId(e.window);
-
-  if (target == UNSPECIFIED_WORKSPACE) {
-    target = current_;
-  }
-
-
-  // If this window is already in this workspace, don't add it to this workspace again.
-  if (workspaces_[target]->Has(e.window)) {
-    return;
-  }
-
-  bool should_float = config_->ShouldFloat(e.window)
-    || wm_utils::IsDialog(e.window)
-    || wm_utils::IsSplash(e.window)
-    || wm_utils::IsUtility(e.window);
-
-  bool should_fullscreen = config_->ShouldFullscreen(e.window)
-    || wm_utils::HasNetWmStateFullscreen(e.window);
-
-  Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
-  workspaces_[target]->UnsetFocusedClient();
-  workspaces_[target]->Add(e.window);
-  workspaces_[target]->GetClient(e.window)->set_mapped(true);
-  workspaces_[target]->GetClient(e.window)->set_floating(should_float);
-  UpdateClientList(); // update NET_CLIENT_LIST
-
-  if (workspaces_[target]->is_fullscreen()) {
-    workspaces_[target]->SetFocusedClient(prev_focused_client->window());
-  }
-
-  if (should_float) {
-    SetFloating(e.window, true, /*use_default_size=*/false);
-  }
-
-  if (should_fullscreen) {
-    SetFullscreen(e.window, true);
-  }
-
-  if (target == current_ && !workspaces_[current_]->is_fullscreen()) {
-    ArrangeWindows();
-  }
+  Manage(e.window);
 }
 
 void WindowManager::OnMapNotify(const XMapEvent& e) {
@@ -388,15 +345,14 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   // so if this window has just been unmapped, but it was not unmapped
   // by the user, then we will remove them for user.
   Client* c = it->second;
-  pair<string, string> hint = wm_utils::GetXClassHint(c->window());
+  c->set_mapped(false);
 
-  if (!c->has_unmap_req_from_wm() && hint.first.find("Gimp") == hint.first.npos) {
-    KillClient(c->window());
-    XSync(dpy_, false); // make sure the event we just sent has been processed by server
-    XDestroyWindow(dpy_, c->window()); // make sure the window is really destroyed
-  } else {
-    c->set_mapped(false);
+  if (c->has_unmap_req_from_wm()) {
     c->set_has_unmap_req_from_wm(false);
+  } else {
+    hidden_windows_.insert(e.window);
+    Unmanage(c->window());
+    ArrangeWindows();
   }
 }
 
@@ -415,24 +371,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   // TODO: Wine steam floating menu still laggy upon removal
   wm_utils::SetWindowWmState(e.window, WM_STATE_WITHDRAWN);
 
-  // If we aren't managing this window, there's no need to proceed further.
-  auto it = Client::mapper_.find(e.window);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
-
-  Client* c = it->second;
-
-  // If the client being destroyed is in fullscreen mode, make sure to unset the workspace's
-  // fullscreen state.
-  if (c->is_fullscreen()) {
-    c->workspace()->set_fullscreen(false);
-  }
-
-  // Remove the corresponding client from the client tree.
-  c->workspace()->Remove(e.window);
-  UpdateClientList();
-  ArrangeWindows();
+  Unmanage(e.window);
 }
 
 void WindowManager::OnKeyPress(const XKeyEvent& e) {
@@ -536,6 +475,72 @@ int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
   return 0; // the return value is ignored.
 }
 
+
+void WindowManager::Manage(Window window) {
+  int target = config_->GetSpawnWorkspaceId(window);
+
+  if (target == UNSPECIFIED_WORKSPACE) {
+    target = current_;
+  }
+
+  // If this window is already in this workspace, don't add it to this workspace again.
+  if (workspaces_[target]->Has(window)) {
+    return;
+  }
+
+  Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
+  workspaces_[target]->UnsetFocusedClient();
+  workspaces_[target]->Add(window);
+  UpdateClientList(); // update NET_CLIENT_LIST
+
+  bool should_float = config_->ShouldFloat(window)
+    || wm_utils::IsDialog(window)
+    || wm_utils::IsSplash(window)
+    || wm_utils::IsUtility(window);
+
+  bool should_fullscreen = config_->ShouldFullscreen(window)
+    || wm_utils::HasNetWmStateFullscreen(window);
+
+  workspaces_[target]->GetClient(window)->set_mapped(true);
+  workspaces_[target]->GetClient(window)->set_floating(should_float);
+  
+  if (workspaces_[target]->is_fullscreen()) {
+    workspaces_[target]->SetFocusedClient(prev_focused_client->window());
+  }
+
+  if (should_float) {
+    SetFloating(window, true, /*use_default_size=*/false);
+  }
+
+  if (should_fullscreen) {
+    SetFullscreen(window, true);
+  }
+
+  if (target == current_ && !workspaces_[current_]->is_fullscreen()) {
+    ArrangeWindows();
+  }
+}
+
+void WindowManager::Unmanage(Window window) {
+  // If we aren't managing this window, there's no need to proceed further.
+  auto it = Client::mapper_.find(window);
+  if (it == Client::mapper_.end()) {
+    return;
+  }
+
+  Client* c = it->second;
+
+  // If the client being destroyed is in fullscreen mode, make sure to unset the workspace's
+  // fullscreen state.
+  if (c->is_fullscreen()) {
+    c->workspace()->set_fullscreen(false);
+  }
+
+  // Remove the corresponding client from the client tree.
+  c->workspace()->Remove(window);
+  UpdateClientList();
+  ArrangeWindows();
+}
 
 void WindowManager::HandleAction(const Action& action) {
   Client* focused_client = workspaces_[current_]->GetFocusedClient();

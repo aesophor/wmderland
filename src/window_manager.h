@@ -10,6 +10,7 @@ extern "C" {
 #include <array>
 #include <vector>
 #include <memory>
+#include <unordered_set>
 
 #include "action.h"
 #include "config.h"
@@ -58,6 +59,8 @@ class WindowManager {
   static int OnXError(Display* dpy, XErrorEvent* e);
   static int OnWmDetected(Display* dpy, XErrorEvent* e);
 
+  void Manage(Window window);
+  void Unmanage(Window window);
   void HandleAction(const Action& action);
 
   // Workspace manipulation
@@ -99,6 +102,13 @@ class WindowManager {
   std::vector<Window> docks_;
   std::vector<Window> notifications_;
 
+  // Some programs (e.g., WPS office, Steam) might unmap its window(s)
+  // but keep them in the background instead of destroying them. It is
+  // up to the programs (i.e., owner of the windows) when to reuse them,
+  // so we should not simply destroy these windows! We should store them
+  // somewhere instead.
+  std::unordered_set<Window> hidden_windows_;
+ 
   // Workspaces contain clients, where a client is a window that can be tiled
   // by the window manager.
   std::array<std::unique_ptr<Workspace>, WORKSPACE_COUNT> workspaces_;
