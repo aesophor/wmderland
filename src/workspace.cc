@@ -187,23 +187,19 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
 
 
 void Workspace::MapAllClients() const {
-  for (const auto leaf : client_tree_.GetLeaves()) {
-    if (leaf != client_tree_.root_node()) {
-      leaf->client()->Map();
-    }
+  for (const auto c : GetClients()) {
+    c->Map();
   }
 }
 
 void Workspace::UnmapAllClients() const {
-  for (auto leaf : client_tree_.GetLeaves()) {
-    if (leaf != client_tree_.root_node()) {
-      leaf->client()->Unmap();
-    }
+  for (const auto c : GetClients()) {
+    c->Unmap();
   }
 }
 
 void Workspace::RaiseAllFloatingClients() const {
-  for (auto c : GetFloatingClients()) {
+  for (const auto c : GetFloatingClients()) {
     c->Raise();
   }
 }
