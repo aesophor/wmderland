@@ -8,13 +8,13 @@
 #include "util.h"
 
 using std::endl;
-using std::pair;
-using std::vector;
-using std::string;
-using std::ofstream;
 using std::ifstream;
+using std::ofstream;
+using std::pair;
+using std::string;
 using std::stringstream;
 using std::unordered_map;
+using std::vector;
 
 namespace wmderland {
 
@@ -26,7 +26,6 @@ Cookie::Cookie(Display* dpy, Properties* prop, string filename)
   ifstream fin(filename_);
   fin >> *this;
 }
-
 
 Client::Area Cookie::Get(Window window) const {
   auto it = client_area_map_.find(GetCookieKey(window));
@@ -50,20 +49,17 @@ string Cookie::GetCookieKey(Window window) const {
   return hint.first + ',' + hint.second + ',' + net_wm_name;
 }
 
-
-ofstream& operator<< (ofstream& ofs, const Cookie& cookie) {
+ofstream& operator<<(ofstream& ofs, const Cookie& cookie) {
   for (auto& area : cookie.client_area_map_) {
     // Write x, y, width, height, res_class,res_name,net_wm_name to cookie.
-    ofs << area.second.x << Cookie::kDelimiter_
-      << area.second.y << Cookie::kDelimiter_
-      << area.second.w << Cookie::kDelimiter_
-      << area.second.h << Cookie::kDelimiter_
-      << area.first << endl;
+    ofs << area.second.x << Cookie::kDelimiter_ << area.second.y << Cookie::kDelimiter_
+        << area.second.w << Cookie::kDelimiter_ << area.second.h << Cookie::kDelimiter_
+        << area.first << endl;
   }
   return ofs;
 }
 
-ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
+ifstream& operator>>(ifstream& ifs, Cookie& cookie) {
   string line;
   while (std::getline(ifs, line)) {
     string_utils::Strip(line);
@@ -85,4 +81,4 @@ ifstream& operator>> (ifstream& ifs, Cookie& cookie) {
   return ifs;
 }
 
-} // namespace wmderland
+}  // namespace wmderland

@@ -23,6 +23,6 @@ void Handle(int) {
   exit(EXIT_FAILURE);
 }
 
-} // namespace segv
+}  // namespace segv
 
-} // namespace wmderland
+}  // namespace wmderland

@@ -6,22 +6,22 @@ extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 }
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace wmderland {
 
 class Workspace;
 
-// A Client is any window that we have decided to manage. It is a wrapper class 
+// A Client is any window that we have decided to manage. It is a wrapper class
 // of Window which provides some useful information and methods.
 class Client {
  public:
   struct Area {
     Area();
     Area(int x, int y, int w, int h);
-    bool operator== (const Client::Area& other);
-    bool operator!= (const Client::Area& other);
+    bool operator==(const Client::Area& other);
+    bool operator!=(const Client::Area& other);
 
     int x, y, w, h;
   };
@@ -48,7 +48,7 @@ class Client {
   Workspace* workspace() const;
   const XSizeHints& size_hints() const;
   const XWindowAttributes& attr_cache() const;
- 
+
   bool is_mapped() const;
   bool is_floating() const;
   bool is_fullscreen() const;
@@ -75,6 +75,6 @@ class Client {
   bool has_unmap_req_from_wm_;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_CLIENT_H_
+#endif  // WMDERLAND_CLIENT_H_

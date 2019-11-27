@@ -25,9 +25,11 @@ Properties::Properties(Display* dpy) : utf8string(XInternAtom(dpy, "UTF8_STRING"
   net[atom::NET_WM_WINDOW_TYPE_DOCK] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", false);
   net[atom::NET_WM_WINDOW_TYPE_DIALOG] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", false);
   net[atom::NET_WM_WINDOW_TYPE_SPLASH] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_SPLASH", false);
-  net[atom::NET_WM_WINDOW_TYPE_UTILITY] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_UTILITY", false);
-  net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", false);
+  net[atom::NET_WM_WINDOW_TYPE_UTILITY] =
+      XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_UTILITY", false);
+  net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION] =
+      XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", false);
   net[atom::NET_CLIENT_LIST] = XInternAtom(dpy, "_NET_CLIENT_LIST", false);
 };
 
-} // namespace wmderland
+}  // namespace wmderland

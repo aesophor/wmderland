@@ -2,19 +2,19 @@
 #include "tree.h"
 
 #include <algorithm>
-#include <stack>
 #include <queue>
+#include <stack>
 
 #include "client.h"
 #include "snapshot.h"
 #include "util.h"
 
-using std::string;
-using std::stack;
 using std::queue;
-using std::vector;
-using std::unordered_map;
+using std::stack;
+using std::string;
 using std::unique_ptr;
+using std::unordered_map;
+using std::vector;
 
 namespace wmderland {
 
@@ -23,12 +23,11 @@ unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 Tree::Tree() : root_node_(std::make_unique<Tree::Node>(nullptr)), current_node_() {
   // NOTE: In Wmderland, the root node will always exist in a client tree
   // at any given time.
-  
+
   // Initialize a Tree::Node with no client associated with it,
   // and set its tiling direction to HORIZONTAL by default.
   root_node_->set_tiling_direction(TilingDirection::HORIZONTAL);
 }
-
 
 Tree::Node* Tree::GetTreeNode(Client* client) const {
   auto it = Tree::Node::mapper_.find(client);
@@ -46,7 +45,7 @@ vector<Tree::Node*> Tree::GetLeaves() const {
   while (!st.empty()) {
     Tree::Node* node = st.top();
     st.pop();
-    
+
     // If this node is a leaf, add it to the leaf vector.
     if (node->children().empty()) {
       leaves.push_back(node);
@@ -60,7 +59,6 @@ vector<Tree::Node*> Tree::GetLeaves() const {
   return leaves;
 }
 
-
 Tree::Node* Tree::root_node() const {
   return root_node_.get();
 }
@@ -72,7 +70,6 @@ Tree::Node* Tree::current_node() const {
 void Tree::set_current_node(Tree::Node* node) {
   current_node_ = node;
 }
-
 
 void Tree::Deserialize(string data) {
   // Extract current window id at the beginning (before '|'),
@@ -93,7 +90,6 @@ void Tree::Deserialize(string data) {
   val_queue.pop();
   root_val.erase(0, 1);
   root_node_->set_tiling_direction(static_cast<TilingDirection>(std::stoi(root_val)));
- 
 
   // Push the root node onto the stack and perform iterative DFS.
   stack<Tree::Node*> st;
@@ -117,7 +113,7 @@ void Tree::Deserialize(string data) {
       val.erase(0, 1);
       unique_ptr<Client> client(Client::mapper_[static_cast<Window>(std::stoul(val))]);
       new_node->set_client(std::move(client));
-    } else { // val.front() == Snapshot::kInternalPrefix_
+    } else {  // val.front() == Snapshot::kInternalPrefix_
       val.erase(0, 1);
       new_node->set_tiling_direction(static_cast<TilingDirection>(std::stoi(val)));
     }
@@ -126,7 +122,6 @@ void Tree::Deserialize(string data) {
     current_node_->children().back();
     st.push(new_node.get());
   }
-
 
   // Restore current_node_.
   if (current_window == Snapshot::kNone_) {
@@ -151,11 +146,12 @@ string Tree::Serialize() const {
 
   // Serialize the entire tree.
   if (root_node_->leaf()) {
-    return data + Snapshot::kInternalPrefix_ + std::to_string(static_cast<int>(root_node_->tiling_direction()));
+    return data + Snapshot::kInternalPrefix_ +
+        std::to_string(static_cast<int>(root_node_->tiling_direction()));
   } else {
     DfsSerializeHelper(root_node_.get(), data);
     // There will be extra ',' + "b,"
-    return data.erase(data.rfind("," + Snapshot::kBacktrack_+ ","));
+    return data.erase(data.rfind("," + Snapshot::kBacktrack_ + ","));
   }
 }
 
@@ -168,14 +164,16 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
   // 1. If node is a leaf: w<Window>
   // 2. If node is internal: i<TilingDirection>
   //
-  // Exception: when there are no windows at all, the root node will become a leaf,
-  // but we don't want this to happen! (It will segfault)
+  // Exception: when there are no windows at all, the root node will become a
+  // leaf, but we don't want this to happen! (It will segfault)
   //
-  // Solution: when the root node is a leaf, we don't have to serialize anything.
+  // Solution: when the root node is a leaf, we don't have to serialize
+  // anything.
   if (node->leaf()) {
     data += Snapshot::kLeafPrefix_ + std::to_string(node->client()->window());
   } else {
-    data += Snapshot::kInternalPrefix_ + std::to_string(static_cast<int>(node->tiling_direction()));
+    data += Snapshot::kInternalPrefix_ +
+        std::to_string(static_cast<int>(node->tiling_direction()));
   }
   data += ',';
 
@@ -188,11 +186,8 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
   data += Snapshot::kBacktrack_ + ',';
 }
 
-
-
 Tree::Node::Node(unique_ptr<Client> client)
-    : client_(std::move(client)),
-      tiling_direction_(TilingDirection::UNSPECIFIED) {
+    : client_(std::move(client)), tiling_direction_(TilingDirection::UNSPECIFIED) {
   if (client_) {
     Tree::Node::mapper_[client_.get()] = this;
   }
@@ -202,7 +197,6 @@ Tree::Node::~Node() {
   Tree::Node::mapper_.erase(client_.get());
 }
 
-
 void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
   child->set_parent(this);
   children_.push_back(std::move(child));
@@ -210,17 +204,20 @@ void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
 
 void Tree::Node::RemoveChild(Tree::Node* child) {
   child->set_parent(nullptr);
-  children_.erase(std::remove_if(children_.begin(), children_.end(), [&](unique_ptr<Tree::Node>& node) {
-      return node.get() == child; }), children_.end());
+  children_.erase(
+      std::remove_if(children_.begin(), children_.end(),
+                     [&](unique_ptr<Tree::Node>& node) { return node.get() == child; }),
+      children_.end());
 }
 
 void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref) {
   child->set_parent(this);
-  ptrdiff_t ref_idx = std::find_if(children_.begin(), children_.end(), [&](unique_ptr<Tree::Node>& node) {
-      return node.get() == ref; }) - children_.begin();
+  ptrdiff_t ref_idx =
+      std::find_if(children_.begin(), children_.end(),
+                   [&](unique_ptr<Tree::Node>& node) { return node.get() == ref; }) -
+      children_.begin();
   children_.insert(children_.begin() + ref_idx + 1, std::move(child));
 }
-
 
 Tree::Node* Tree::Node::GetLeftSibling() const {
   vector<Tree::Node*> siblings = parent_->children();
@@ -228,7 +225,8 @@ Tree::Node* Tree::Node::GetLeftSibling() const {
   if (this == siblings.front()) {
     return nullptr;
   } else {
-    ptrdiff_t this_node_idx = std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
+    ptrdiff_t this_node_idx =
+        std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
     return siblings[this_node_idx - 1];
   }
 }
@@ -239,11 +237,11 @@ Tree::Node* Tree::Node::GetRightSibling() const {
   if (this == siblings.back()) {
     return nullptr;
   } else {
-    ptrdiff_t this_node_idx = std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
+    ptrdiff_t this_node_idx =
+        std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
     return siblings[this_node_idx + 1];
   }
 }
-
 
 vector<Tree::Node*> Tree::Node::children() const {
   vector<Tree::Node*> children(children_.size());
@@ -253,7 +251,6 @@ vector<Tree::Node*> Tree::Node::children() const {
   return children;
 }
 
-
 Tree::Node* Tree::Node::parent() const {
   return parent_;
 }
@@ -261,7 +258,6 @@ Tree::Node* Tree::Node::parent() const {
 void Tree::Node::set_parent(Tree::Node* parent) {
   parent_ = parent;
 }
-
 
 // Get the client associated with this node.
 Client* Tree::Node::client() const {
@@ -292,4 +288,4 @@ bool Tree::Node::leaf() const {
   return children_.empty();
 }
 
-} // namespace wmderland
+}  // namespace wmderland

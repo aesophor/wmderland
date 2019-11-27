@@ -10,13 +10,13 @@
 #include "action.h"
 #include "util.h"
 
+using std::ifstream;
+using std::map;
 using std::pair;
 using std::string;
-using std::vector;
-using std::ifstream;
 using std::stringstream;
-using std::map;
 using std::unordered_map;
+using std::vector;
 
 namespace wmderland {
 
@@ -24,7 +24,6 @@ const vector<Action> Config::kEmptyActions_;
 
 Config::Config(Display* dpy, Properties* prop, const string& filename)
     : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {}
-
 
 void Config::Load() {
   // Convert it to full path first (in case it starts with ~)
@@ -36,7 +35,7 @@ int Config::GetSpawnWorkspaceId(Window w) const {
   for (const auto& key : GeneratePossibleConfigKeys(w)) {
     auto it = spawn_rules_.find(key);
     if (it != spawn_rules_.end()) {
-      return it->second - 1; // workspace id starts from 0.
+      return it->second - 1;  // workspace id starts from 0.
     }
   }
   return UNSPECIFIED_WORKSPACE;
@@ -53,7 +52,7 @@ bool Config::ShouldFloat(Window w) const {
 }
 
 bool Config::ShouldFullscreen(Window w) const {
-  for (const auto& key: GeneratePossibleConfigKeys(w)) {
+  for (const auto& key : GeneratePossibleConfigKeys(w)) {
     auto it = fullscreen_rules_.find(key);
     if (it != fullscreen_rules_.end()) {
       return it->second;
@@ -80,7 +79,6 @@ const vector<Action>& Config::GetKeybindActions(unsigned int modifier, KeyCode k
   return Config::kEmptyActions_;
 }
 
-
 unsigned int Config::gap_width() const {
   return gap_width_;
 }
@@ -105,7 +103,6 @@ unsigned long Config::unfocused_color() const {
   return unfocused_color_;
 }
 
-
 const map<pair<unsigned int, KeyCode>, vector<Action>>& Config::keybind_rules() const {
   return keybind_rules_;
 }
@@ -117,7 +114,6 @@ const vector<string>& Config::autostart_cmds() const {
 const vector<string>& Config::autostart_cmds_on_reload() const {
   return autostart_cmds_on_reload_;
 }
-
 
 Config::Keyword Config::StrToConfigKeyword(const std::string& s) {
   if (s == "set") {
@@ -153,10 +149,10 @@ vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
   string net_wm_name = wm_utils::GetNetWmName(w);
 
   return {
-    res_class + ',' + res_name + ',' + net_wm_name,
-    res_class + ',' + res_name,
-    res_class + ',' + net_wm_name,
-    res_class
+      res_class + ',' + res_name + ',' + net_wm_name,
+      res_class + ',' + res_name,
+      res_class + ',' + net_wm_name,
+      res_class,
   };
 }
 
@@ -167,8 +163,7 @@ const string& Config::ReplaceSymbols(string& s) {
   return s;
 }
 
-
-ifstream& operator>> (ifstream& ifs, Config& config) {
+ifstream& operator>>(ifstream& ifs, Config& config) {
   WM_LOG(INFO, "Loading user configuration: " << config.filename_);
 
   // Load the built-in WM variables with their default values.
@@ -188,21 +183,20 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   config.autostart_cmds_.clear();
   config.autostart_cmds_on_reload_.clear();
 
-
   unordered_map<string, unsigned int> assignable_modifiers = {
-    {"Mod1", Mod1Mask},
-    {"Mod2", Mod2Mask},
-    {"Mod3", Mod3Mask},
-    {"Mod4", Mod4Mask},
-    {"Mod5", Mod5Mask},
-    {"Shift", ShiftMask},
-    {"Control", ControlMask}
+      {"Mod1", Mod1Mask},        // Alt
+      {"Mod2", Mod2Mask},        // NumLock
+      {"Mod3", Mod3Mask},        // ScrollLock
+      {"Mod4", Mod4Mask},        // Command/Windows
+      {"Mod5", Mod5Mask},        // ?
+      {"Shift", ShiftMask},      // Shift
+      {"Control", ControlMask},  // Ctrl
   };
 
   // Parse user's config file.
   string line;
   while (std::getline(ifs, line)) {
-    string_utils::Strip(line); // Strip extra whitespace, just in case.
+    string_utils::Strip(line);  // Strip extra whitespace, just in case.
 
     if (line.empty() || line.front() == Config::kCommentSymbol) {
       continue;
@@ -245,17 +239,20 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
       }
       case Config::Keyword::FLOATING: {
         string window_identifier = config.ExtractWindowIdentifier(line);
-        stringstream(tokens.back()) >> std::boolalpha >> config.float_rules_[window_identifier];
+        stringstream(tokens.back()) >> std::boolalpha >>
+            config.float_rules_[window_identifier];
         break;
       }
       case Config::Keyword::FULLSCREEN: {
         string window_identifier = config.ExtractWindowIdentifier(line);
-        stringstream(tokens.back()) >> std::boolalpha >> config.fullscreen_rules_[window_identifier];
+        stringstream(tokens.back()) >> std::boolalpha >>
+            config.fullscreen_rules_[window_identifier];
         break;
       }
       case Config::Keyword::PROHIBIT: {
         string window_identifier = config.ExtractWindowIdentifier(line);
-        stringstream(tokens.back()) >> std::boolalpha >> config.prohibit_rules_[window_identifier];
+        stringstream(tokens.back()) >> std::boolalpha >>
+            config.prohibit_rules_[window_identifier];
         break;
       }
       case Config::Keyword::BINDSYM: {
@@ -265,9 +262,9 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
 
         for (const auto& key : keys) {
           auto it = assignable_modifiers.find(key);
-          if (it != assignable_modifiers.end()) { // key is a modifier
+          if (it != assignable_modifiers.end()) {  // key is a modifier
             modifier |= it->second;
-          } else { // key is a normal key, convert it to keysym
+          } else {  // key is a normal key, convert it to keysym
             keycode = XKeysymToKeycode(config.dpy_, XStringToKeysym(key.c_str()));
           }
         }
@@ -299,4 +296,4 @@ ifstream& operator>> (ifstream& ifs, Config& config) {
   return ifs;
 }
 
-} // namespace wmderland
+}  // namespace wmderland

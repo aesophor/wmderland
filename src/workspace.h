@@ -5,8 +5,8 @@
 extern "C" {
 #include <X11/Xlib.h>
 }
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "client.h"
 #include "config.h"
@@ -51,9 +51,9 @@ class Workspace {
   void Deserialize(std::string data);
 
  private:
-  void DfsTileHelper(Tree::Node* node, int x, int y, int w, int h,
-                     int border_width, int gap_width) const;
-  
+  void DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int border_width,
+                     int gap_width) const;
+
   Display* dpy_;
   Window root_window_;
   Config* config_;
@@ -64,6 +64,6 @@ class Workspace {
   bool is_fullscreen_;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_WORKSPACE_H_
+#endif  // WMDERLAND_WORKSPACE_H_

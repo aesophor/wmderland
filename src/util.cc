@@ -11,11 +11,10 @@ using std::string;
 using std::vector;
 
 namespace {
-  Display* dpy;
-  wmderland::Properties* prop;
-  Window root_window;
-} // namespace
-
+Display* dpy;
+wmderland::Properties* prop;
+Window root_window;
+}  // namespace
 
 namespace wmderland {
 
@@ -26,7 +25,7 @@ void Init(Display* dpy, Properties* prop, Window root_window) {
   ::prop = prop;
   ::root_window = root_window;
 }
- 
+
 // Get the XWindowAttributes of a window.
 XWindowAttributes GetXWindowAttributes(Window window) {
   XWindowAttributes ret;
@@ -58,7 +57,7 @@ pair<string, string> GetXClassHint(Window window) {
       XFree(hint.res_name);
     }
     return std::make_pair(res_class, res_name);
-  } 
+  }
 
   return std::make_pair("", "");
 }
@@ -81,25 +80,26 @@ string GetWmName(Window window) {
   unsigned long remain, len;
   unsigned char* list;
 
-  if (XGetWindowProperty(dpy, window, prop, 0, 1024, False, 
-        AnyPropertyType, &type, &form, &len, &remain, &list) == Success) {
+  if (XGetWindowProperty(dpy, window, prop, 0, 1024, False, AnyPropertyType, &type, &form,
+                         &len, &remain, &list) == Success) {
     return string(reinterpret_cast<char*>(list));
   }
   return "";
 }
 
-// Set WM_STATE according to the following page to fix WINE application close hang issue:
+// Set WM_STATE according to the following page to fix WINE application close
+// hang issue:
 // http://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html#WM_STATE_Property
 void SetWindowWmState(Window window, unsigned long state) {
   unsigned long wm_state[] = {state, None};
-  XChangeProperty(dpy, window,  prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE],
-      32, PropModeReplace, reinterpret_cast<unsigned char*>(wm_state), 2);
+  XChangeProperty(dpy, window, prop->wm[atom::WM_STATE], prop->wm[atom::WM_STATE], 32,
+                  PropModeReplace, reinterpret_cast<unsigned char*>(wm_state), 2);
 }
 
 // Set root window's _NET_ACTIVE_WINDOW property
 void SetNetActiveWindow(Window window) {
-  XChangeProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW,
-      32, PropModeReplace, reinterpret_cast<unsigned char*>(&window), 1);
+  XChangeProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW], XA_WINDOW, 32,
+                  PropModeReplace, reinterpret_cast<unsigned char*>(&window), 1);
 }
 
 // Clear root window's _NET_ACTIVE_WINDOW property
@@ -107,16 +107,18 @@ void ClearNetActiveWindow() {
   XDeleteProperty(dpy, root_window, prop->net[atom::NET_ACTIVE_WINDOW]);
 }
 
-// Get the atoms contained in the property of window w. The number of atoms retrieved
-// will be stored in *atom_len. XFree() should be called manually on the returned Atom ptr.
+// Get the atoms contained in the property of window w. The number of atoms
+// retrieved will be stored in *atom_len. XFree() should be called manually on
+// the returned Atom ptr.
 Atom* GetWindowProperty(Window window, Atom property, unsigned long* atom_len) {
   Atom da;
-  unsigned char *prop_ret = nullptr;
+  unsigned char* prop_ret = nullptr;
   int di;
   unsigned long remain;
 
-  if (XGetWindowProperty(dpy, window, property, 0, sizeof(Atom), False,
-        XA_ATOM, &da, &di, atom_len, &remain, &prop_ret) == Success && prop_ret) {
+  if (XGetWindowProperty(dpy, window, property, 0, sizeof(Atom), False, XA_ATOM, &da, &di,
+                         atom_len, &remain, &prop_ret) == Success &&
+      prop_ret) {
     return reinterpret_cast<Atom*>(prop_ret);
   }
   return nullptr;
@@ -127,7 +129,7 @@ bool WindowPropertyHasAtom(Window window, Atom property, Atom target_atom) {
   unsigned long atom_len = 0;
   Atom* atoms = GetWindowProperty(window, property, &atom_len);
 
-  for (int i = 0; atoms && i < (int) atom_len; i++) {
+  for (int i = 0; atoms && i < (int)atom_len; i++) {
     if (atoms[i] && atoms[i] == target_atom) {
       XFree(atoms);
       return true;
@@ -137,9 +139,9 @@ bool WindowPropertyHasAtom(Window window, Atom property, Atom target_atom) {
   return false;
 }
 
-
 bool HasNetWmStateFullscreen(Window window) {
-  return WindowPropertyHasAtom(window, prop->net[atom::NET_WM_STATE], prop->net[atom::NET_WM_STATE_FULLSCREEN]);
+  return WindowPropertyHasAtom(window, prop->net[atom::NET_WM_STATE],
+                               prop->net[atom::NET_WM_STATE_FULLSCREEN]);
 }
 
 bool IsWindowOfType(Window window, Atom type_atom) {
@@ -166,9 +168,7 @@ bool IsNotification(Window window) {
   return IsWindowOfType(window, prop->net[atom::NET_WM_WINDOW_TYPE_NOTIFICATION]);
 }
 
-} // namespace wm_utils
-
-
+}  // namespace wm_utils
 
 namespace string_utils {
 
@@ -219,7 +219,7 @@ bool Contains(const string& s, const string& keyword) {
 void Replace(string& s, const string& keyword, const string& newword) {
   string::size_type pos = s.find(keyword);
 
-  while(pos != std::string::npos) {
+  while (pos != std::string::npos) {
     s.replace(pos, keyword.size(), newword);
     pos = s.find(keyword, pos + newword.size());
   }
@@ -231,9 +231,7 @@ void Strip(string& s) {
   s.erase(s.find_last_not_of(whitespace_chars) + 1);
 }
 
-} // namespace string_utils
-
-
+}  // namespace string_utils
 
 namespace sys_utils {
 
@@ -268,6 +266,6 @@ void NotifySend(const string& msg, const string& level) {
   ExecuteCmd("notify-send -u " + level + " 'Wmderland' '" + msg + "'");
 }
 
-} // namespace sys_utils
+}  // namespace sys_utils
 
-} // namespace wmderland
+}  // namespace wmderland

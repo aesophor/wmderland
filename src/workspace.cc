@@ -5,13 +5,13 @@
 #include <stack>
 
 #include "client.h"
-#include "window_manager.h"
 #include "util.h"
+#include "window_manager.h"
 
 using std::stack;
-using std::vector;
 using std::string;
 using std::unique_ptr;
+using std::vector;
 
 namespace wmderland {
 
@@ -25,7 +25,6 @@ Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
       id_(id),
       name_(std::to_string(id)),
       is_fullscreen_() {}
-
 
 bool Workspace::Has(Window window) const {
   return GetClient(window) != nullptr;
@@ -70,7 +69,7 @@ void Workspace::Remove(Window window) {
   Tree::Node* parent_node = node->parent();
   parent_node->RemoveChild(node);
 
-  // If its parent has no children left, then remove parent from its grandparent 
+  // If its parent has no children left, then remove parent from its grandparent
   // (If this parent is not the root).
   while (parent_node->children().empty() && parent_node != client_tree_.root_node()) {
     Tree::Node* grandparent_node = parent_node->parent();
@@ -78,8 +77,8 @@ void Workspace::Remove(Window window) {
     parent_node = grandparent_node;
   }
 
-  // Decide which node shall be set as the new current Tree::Node. If there are no
-  // windows left, set current to nullptr.
+  // Decide which node shall be set as the new current Tree::Node. If there are
+  // no windows left, set current to nullptr.
   nodes.erase(std::remove(nodes.begin(), nodes.end(), node), nodes.end());
 
   if (nodes.empty()) {
@@ -117,7 +116,8 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
 }
 
 void Workspace::Tile(const Client::Area& tiling_area) const {
-  // If there are no clients in this workspace or all clients are floating, return at once.
+  // If there are no clients in this workspace or all clients are floating,
+  // return at once.
   if (!client_tree_.current_node() || GetTilingClients().empty()) {
     return;
   }
@@ -133,15 +133,18 @@ void Workspace::Tile(const Client::Area& tiling_area) const {
   DfsTileHelper(client_tree_.root_node(), x, y, w, h, border_width, gap_width);
 }
 
-void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, 
-                              int border_width, int gap_width) const {
+void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int border_width,
+                              int gap_width) const {
   vector<Tree::Node*> children = node->children();
 
   // We don't care about floating windows. Remove them.
-  children.erase(std::remove_if(children.begin(), children.end(), [](Tree::Node* n) {
-      return n->client() && n->client()->is_floating(); }), children.end());
+  children.erase(
+      std::remove_if(children.begin(), children.end(),
+                     [](Tree::Node* n) { return n->client() && n->client()->is_floating(); }),
+      children.end());
 
-  // Calculate each child's x, y, width and height based on node's tiling direction.
+  // Calculate each child's x, y, width and height based on node's tiling
+  // direction.
   TilingDirection dir = node->tiling_direction();
   int child_x = x;
   int child_y = y;
@@ -160,7 +163,8 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h,
       int new_height = child_height - border_width * 2 - gap_width;
       child->client()->MoveResize(new_x, new_y, new_width, new_height);
     } else {
-      DfsTileHelper(child, child_x, child_y, child_width, child_height, border_width, gap_width);
+      DfsTileHelper(child, child_x, child_y, child_width, child_height, border_width,
+                    gap_width);
     }
   }
 }
@@ -184,7 +188,6 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
   current_node->AddChild(std::move(new_node));
   client_tree_.set_current_node(current_node->children().front());
 }
-
 
 void Workspace::MapAllClients() const {
   for (const auto c : GetClients()) {
@@ -228,7 +231,6 @@ void Workspace::UnsetFocusedClient() const {
   }
 }
 
-
 Client* Workspace::GetFocusedClient() const {
   if (!client_tree_.current_node()) {
     return nullptr;
@@ -262,18 +264,19 @@ vector<Client*> Workspace::GetClients() const {
 
 vector<Client*> Workspace::GetFloatingClients() const {
   vector<Client*> clients = GetClients();
-  clients.erase(std::remove_if(clients.begin(), clients.end(), [](Client* c) {
-      return !c->is_floating(); }), clients.end());
+  clients.erase(std::remove_if(clients.begin(), clients.end(),
+                               [](Client* c) { return !c->is_floating(); }),
+                clients.end());
   return clients;
 }
 
 vector<Client*> Workspace::GetTilingClients() const {
   vector<Client*> clients = GetClients();
-  clients.erase(std::remove_if(clients.begin(), clients.end(), [](Client* c) {
-      return c->is_floating(); }), clients.end());
+  clients.erase(std::remove_if(clients.begin(), clients.end(),
+                               [](Client* c) { return c->is_floating(); }),
+                clients.end());
   return clients;
 }
-
 
 void Workspace::Navigate(Action::Type focus_action_type) {
   // Do not let user navigate between windows if
@@ -307,7 +310,6 @@ void Workspace::Navigate(Action::Type focus_action_type) {
       return;
   }
 
- 
   for (Tree::Node* node = client_tree_.current_node(); node; node = node->parent()) {
     Tree::Node* sibling = (find_leftward) ? node->GetLeftSibling() : node->GetRightSibling();
 
@@ -327,7 +329,6 @@ void Workspace::Navigate(Action::Type focus_action_type) {
   }
 }
 
-
 Config* Workspace::config() const {
   return config_;
 }
@@ -344,7 +345,6 @@ bool Workspace::is_fullscreen() const {
   return is_fullscreen_;
 }
 
-
 void Workspace::set_name(const string& name) {
   name_ = name;
 }
@@ -352,7 +352,6 @@ void Workspace::set_name(const string& name) {
 void Workspace::set_fullscreen(bool fullscreen) {
   is_fullscreen_ = fullscreen;
 }
-
 
 string Workspace::Serialize() const {
   return client_tree_.Serialize();
@@ -362,4 +361,4 @@ void Workspace::Deserialize(string data) {
   client_tree_.Deserialize(data);
 }
 
-} // namespace wmderland
+}  // namespace wmderland

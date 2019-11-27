@@ -5,8 +5,8 @@ extern "C" {
 #include <X11/Xlib.h>
 }
 
-#include "config.h"
 #include "client.h"
+#include "config.h"
 #include "window_manager.h"
 
 #define CMD_ID 0
@@ -19,7 +19,6 @@ IpcEvent::IpcEvent(const XClientMessageEvent& e)
     : actionType(static_cast<Action::Type>(e.data.l[CMD_ID])),
       has_argument(static_cast<bool>(e.data.l[HAS_ARGUMENT])),
       argument(e.data.l[ARGUMENT]) {}
-
 
 void IpcEventManager::Handle(const XClientMessageEvent& e) const {
   WindowManager* wm = WindowManager::GetInstance();
@@ -37,4 +36,4 @@ void IpcEventManager::Handle(const XClientMessageEvent& e) const {
   wm->HandleAction(action);
 }
 
-} // namespace wmderland
+}  // namespace wmderland

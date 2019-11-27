@@ -3,8 +3,8 @@
 #define WMDERLAND_TREE_H_
 
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace wmderland {
 
@@ -13,7 +13,7 @@ class Client;
 enum class TilingDirection {
   UNSPECIFIED,
   HORIZONTAL,
-  VERTICAL
+  VERTICAL,
 };
 
 class Tree {
@@ -25,7 +25,7 @@ class Tree {
    public:
     Node(std::unique_ptr<Client> client);
     virtual ~Node();
-  
+
     void AddChild(std::unique_ptr<Tree::Node> child);
     void RemoveChild(Tree::Node* child);
     void InsertChildAfter(std::unique_ptr<Tree::Node> child, Tree::Node* ref);
@@ -54,7 +54,6 @@ class Tree {
     TilingDirection tiling_direction_;
   };
 
-
   Tree::Node* GetTreeNode(Client* client) const;
   std::vector<Tree::Node*> GetLeaves() const;
 
@@ -73,6 +72,6 @@ class Tree {
   Tree::Node* current_node_;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_TREE_H_
+#endif  // WMDERLAND_TREE_H_

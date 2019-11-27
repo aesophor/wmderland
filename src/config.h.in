@@ -6,11 +6,11 @@ extern "C" {
 #include <X11/Xlib.h>
 }
 #include <cerrno>
-#include <vector>
-#include <string>
 #include <fstream>
 #include <map>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "action.h"
 #include "util.h"
@@ -22,17 +22,21 @@ extern "C" {
 #if GLOG_FOUND
 #include <glog/logging.h>
 #define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
-#define WM_LOG(severity, msg) LOG(severity) << msg; google::FlushLogFiles(google::severity)
+#define WM_LOG(severity, msg)                \
+  do {                                       \
+    LOG(severity) << msg;                    \
+    google::FlushLogFiles(google::severity); \
+  } while (0)
 #else
 #define WM_INIT_LOGGING(executable_name)
 #define WM_LOG(severity, msg)
 #endif
 
-#define WM_LOG_WITH_ERRNO(reason, errno) \
-  do { \
-    const char* err_msg = reason; \
+#define WM_LOG_WITH_ERRNO(reason, errno)               \
+  do {                                                 \
+    const char* err_msg = reason;                      \
     WM_LOG(ERROR, err_msg << ": " << strerror(errno)); \
-    perror(err_msg); \
+    perror(err_msg);                                   \
   } while (0)
 
 #define WIN_MGR_NAME "@PROJECT_NAME@"
@@ -80,10 +84,10 @@ class Config {
   const std::map<std::pair<unsigned int, KeyCode>, std::vector<Action>>& keybind_rules() const;
   const std::vector<std::string>& autostart_cmds() const;
   const std::vector<std::string>& autostart_cmds_on_reload() const;
-  
-  friend std::ifstream& operator>> (std::ifstream& ifs, Config& config);
 
- private: 
+  friend std::ifstream& operator>>(std::ifstream& ifs, Config& config);
+
+ private:
   enum class Keyword {
     SET,
     ASSIGN,
@@ -92,7 +96,7 @@ class Config {
     PROHIBIT,
     BINDSYM,
     EXEC,
-    UNDEFINED
+    UNDEFINED,
   };
 
   static Config::Keyword StrToConfigKeyword(const std::string& s);
@@ -109,16 +113,23 @@ class Config {
   unsigned int min_window_height_;
   unsigned long focused_color_;
   unsigned long unfocused_color_;
-  std::unordered_map<std::string, std::string> symtab_; // for storing user-declared identifiers.
 
-  // Rules
-  std::unordered_map<std::string, int> spawn_rules_; // spawn certain apps in certain workspaces.
-  std::unordered_map<std::string, bool> float_rules_; // start certain apps in floating mode.
-  std::unordered_map<std::string, bool> fullscreen_rules_; // start certain apps in fullscreen mode.
-  std::unordered_map<std::string, bool> prohibit_rules_; // apps that should be prohibit from starting.
-  std::map<std::pair<unsigned int, KeyCode>, std::vector<Action>> keybind_rules_; // keybind actions.
-  std::vector<std::string> autostart_cmds_; // run certain commands when wm starts.
-  std::vector<std::string> autostart_cmds_on_reload_; // run certain commands when wm starts and on config reload.
+  // symtab: for storing user-declared identifiers.
+  // spawn_rules_: spawn certain apps in certain workspaces.
+  // float_rules_: start certain apps in floating mode.
+  // fullscreen_rules_: start certain apps in fullscreen mode.
+  // prohibit_rules_: apps that should be prohibit from starting.
+  // keybind_rules_: keybind actions.
+  // autostart_cmds_: run certain commands when wm starts.
+  // autostart_cmds_on_reload_: run certain commands when wm starts and on config reload.
+  std::unordered_map<std::string, std::string> symtab_;
+  std::unordered_map<std::string, int> spawn_rules_;
+  std::unordered_map<std::string, bool> float_rules_;
+  std::unordered_map<std::string, bool> fullscreen_rules_;
+  std::unordered_map<std::string, bool> prohibit_rules_;
+  std::map<std::pair<unsigned int, KeyCode>, std::vector<Action>> keybind_rules_;
+  std::vector<std::string> autostart_cmds_;
+  std::vector<std::string> autostart_cmds_on_reload_;
 
   Display* dpy_;
   Properties* prop_;
@@ -126,6 +137,6 @@ class Config {
   static const char kCommentSymbol = ';';
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_CONFIG_H_
+#endif  // WMDERLAND_CONFIG_H_

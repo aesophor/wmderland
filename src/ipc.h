@@ -19,15 +19,14 @@ struct IpcEvent {
   long argument;
 };
 
-
 class IpcEventManager {
  public:
   IpcEventManager() = default;
   virtual ~IpcEventManager() = default;
-  
+
   void Handle(const XClientMessageEvent& e) const;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_IPC_H_
+#endif  // WMDERLAND_IPC_H_

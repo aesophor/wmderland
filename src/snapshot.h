@@ -6,8 +6,8 @@ extern "C" {
 #include <X11/Xlib.h>
 }
 #include <array>
-#include <string>
 #include <exception>
+#include <string>
 
 #include "config.h"
 #include "workspace.h"
@@ -37,7 +37,7 @@ class Snapshot {
   static const std::string kBacktrack_;
   static const char kLeafPrefix_;
   static const char kInternalPrefix_;
- 
+
  private:
   static const char kDelimiter_;
 
@@ -45,6 +45,6 @@ class Snapshot {
   int failed_count_;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_SNAPSHOT_H_
+#endif  // WMDERLAND_SNAPSHOT_H_

@@ -5,8 +5,8 @@
 extern "C" {
 #include <X11/Xutil.h>
 }
-#include <string>
 #include <fstream>
+#include <string>
 #include <unordered_map>
 
 #include "client.h"
@@ -24,8 +24,8 @@ class Cookie {
   Client::Area Get(Window window) const;
   void Put(Window window, const Client::Area& area);
 
-  friend std::ofstream& operator<< (std::ofstream& os, const Cookie& cookie);
-  friend std::ifstream& operator>> (std::ifstream& is, Cookie& cookie);
+  friend std::ofstream& operator<<(std::ofstream& os, const Cookie& cookie);
+  friend std::ifstream& operator>>(std::ifstream& is, Cookie& cookie);
 
  private:
   static const char kDelimiter_;
@@ -37,6 +37,6 @@ class Cookie {
   std::unordered_map<std::string, Client::Area> client_area_map_;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_COOKIE_H_
+#endif  // WMDERLAND_COOKIE_H_

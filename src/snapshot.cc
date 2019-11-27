@@ -1,20 +1,20 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #include "snapshot.h"
 
-extern "C"{
+extern "C" {
 #include <unistd.h>
 }
 #include <fstream>
 
 #include "client.h"
-#include "window_manager.h"
 #include "util.h"
+#include "window_manager.h"
 
-using std::endl;
 using std::array;
-using std::string;
+using std::endl;
 using std::ifstream;
 using std::ofstream;
+using std::string;
 
 namespace wmderland {
 
@@ -26,7 +26,6 @@ const char Snapshot::kDelimiter_ = ' ';
 
 Snapshot::Snapshot(const string& filename)
     : filename_(sys_utils::ToAbsPath(filename)), failed_count_() {}
-
 
 bool Snapshot::FileExists() const {
   return access(filename_.c_str(), F_OK) != -1;
@@ -56,9 +55,8 @@ void Snapshot::Load() {
     bool is_fullscreen = false;
     bool has_unmap_req_from_wm = false;
 
-    fin >> window >> workspace_id
-      >> is_mapped >> is_floating >> is_fullscreen
-      >> has_unmap_req_from_wm;
+    fin >> window >> workspace_id >> is_mapped >> is_floating >> is_fullscreen >>
+        has_unmap_req_from_wm;
 
     // The ownership of these client objects will be claimed during
     // client tree deserialization!!! See Tree::Deserialize() in tree.cc
@@ -68,7 +66,6 @@ void Snapshot::Load() {
     client->set_fullscreen(is_fullscreen);
     client->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
   }
-  
 
   // 3. Client Tree deserialization will call Client::mapper_[window],
   // so we have to restore all clients before doing this. See step 1.
@@ -78,12 +75,10 @@ void Snapshot::Load() {
     workspace->Deserialize(data);
   }
 
-  
   // 4. Current workspace deserialization.
   int current_workspace = 0;
   fin >> current_workspace;
   wm->GotoWorkspace(current_workspace);
-
 
   // 5. Docks/Notifications deserialization.
   string line;
@@ -94,7 +89,7 @@ void Snapshot::Load() {
       wm->docks_.push_back(static_cast<Window>(std::stoul(token)));
     }
   }
- 
+
   std::getline(fin, line);
   if (line != Snapshot::kNone_) {
     for (const auto& token : string_utils::Split(line, ',')) {
@@ -102,12 +97,11 @@ void Snapshot::Load() {
     }
   }
 
-
   // 5. Rename snapshot file so that we know we have successfully load it.
   // If the file cannot be renamed and cannot be remove, then throw
   // SnapshotLoadError and the WM will return EXIT_FAILURE.
   if (rename(filename_.c_str(), (filename_ + ".old").c_str()) == -1 &&
-      remove(filename_.c_str())) { // remove() returns non-zero on failure
+      remove(filename_.c_str())) {  // remove() returns non-zero on failure
     throw SnapshotLoadError();
   }
 
@@ -121,7 +115,6 @@ void Snapshot::Save() {
   // 1. Write failed count.
   fout << ++failed_count_ << endl;
 
-
   // 2. Client::mapper_ serialization.
   fout << Client::mapper_.size() << endl;
 
@@ -129,24 +122,19 @@ void Snapshot::Save() {
     Window window = win_client_pair.first;
     Client* client = win_client_pair.second;
 
-    fout << window << Snapshot::kDelimiter_
-      << client->workspace()->id() << Snapshot::kDelimiter_
-      << client->is_mapped() << Snapshot::kDelimiter_
-      << client->is_floating() << Snapshot::kDelimiter_
-      << client->is_fullscreen() << Snapshot::kDelimiter_
-      << client->has_unmap_req_from_wm() << endl;
+    fout << window << Snapshot::kDelimiter_ << client->workspace()->id()
+         << Snapshot::kDelimiter_ << client->is_mapped() << Snapshot::kDelimiter_
+         << client->is_floating() << Snapshot::kDelimiter_ << client->is_fullscreen()
+         << Snapshot::kDelimiter_ << client->has_unmap_req_from_wm() << endl;
   }
-
 
   // 3. Client Tree serialization.
   for (const auto& workspace : wm->workspaces_) {
     fout << workspace->Serialize() << endl;
   }
 
-
   // 4. Curernt Workspace serialization.
   fout << wm->current_ << endl;
-
 
   // 5. Docks/notifications serialization.
   if (wm->docks_.empty()) {
@@ -170,9 +158,8 @@ void Snapshot::Save() {
   fout << endl;
 }
 
-
 const string& Snapshot::filename() const {
   return filename_;
 }
 
-} // namespace wmderland
+}  // namespace wmderland

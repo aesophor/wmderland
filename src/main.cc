@@ -2,8 +2,8 @@
 extern "C" {
 #include <unistd.h>
 }
-#include <iostream>
 #include <cstring>
+#include <iostream>
 #include <memory>
 
 #if GLOG_FOUND
@@ -12,20 +12,21 @@ extern "C" {
 #include "config.h"
 #include "snapshot.h"
 #include "stacktrace.h"
-#include "window_manager.h"
 #include "util.h"
+#include "window_manager.h"
 
 namespace {
 
 const char* version() {
-  return WIN_MGR_NAME " " VERSION "\n"
-    "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
-    "This is free software, see the source for copying conditions. There is No\n"
-    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
+  return WIN_MGR_NAME
+      " " VERSION
+      "\n"
+      "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
+      "This is free software, see the source for copying conditions. There is no\n"
+      "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
 }
 
-} // namespace 
-
+}  // namespace
 
 int main(int argc, char* args[]) {
   if (argc > 1 && (!std::strcmp(args[1], "-v") || !std::strcmp(args[1], "--version"))) {
@@ -41,7 +42,7 @@ int main(int argc, char* args[]) {
   // Logging-related macros are defined in config.h.in
   WM_INIT_LOGGING(args[0]);
 
-  // WindowManager is a singleton class. If XOpenDisplay() fails during 
+  // WindowManager is a singleton class. If XOpenDisplay() fails during
   // WindowManager::GetInstance(), it will return None (in Xlib, 'None'
   // is the universal null resource ID or atom.)
   std::unique_ptr<wmderland::WindowManager> wm(wmderland::WindowManager::GetInstance());
@@ -53,13 +54,13 @@ int main(int argc, char* args[]) {
     return EXIT_FAILURE;
   }
 
-
   try {
-    // Try to perform error recovery from the snapshot if necessary and possible.
+    // Try to perform error recovery from the snapshot if necessary and
+    // possible.
     if (wm->snapshot().FileExists()) {
       wm->snapshot().Load();
     }
-    wm->Run(); // enter main event loop
+    wm->Run();  // enter main event loop
 
   } catch (const std::bad_alloc& ex) {
     static_cast<void>(fputs("Out of memory\n", stderr));
@@ -76,7 +77,7 @@ int main(int argc, char* args[]) {
 
     if (rename(old_snapshot_name, new_snapshot_name) == -1) {
       WM_LOG_WITH_ERRNO("Failed to rename corrupted snapshot", errno);
-    } else if (remove(old_snapshot_name)) { // returns non-zero on failure
+    } else if (remove(old_snapshot_name)) {  // returns non-zero on failure
       WM_LOG_WITH_ERRNO("Failed to remove corrupted snapshot", errno);
     }
     return EXIT_FAILURE;

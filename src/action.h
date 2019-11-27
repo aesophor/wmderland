@@ -25,7 +25,7 @@ class Action {
     RELOAD,
     DEBUG_CRASH,
     EXEC,
-    UNDEFINED
+    UNDEFINED,
   };
 
   explicit Action(const std::string& s);
@@ -43,6 +43,6 @@ class Action {
   std::string argument_;
 };
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_ACTION_H_
+#endif  // WMDERLAND_ACTION_H_

@@ -3,11 +3,11 @@
 #define WMDERLAND_STACKTRACE_H_
 
 extern "C" {
-#include <execinfo.h> // backtrace*
-#include <signal.h> // signal
-#include <stdlib.h> // exit
-#include <unistd.h> // close
-#include <fcntl.h> // open
+#include <execinfo.h>  // backtrace*
+#include <fcntl.h>     // open
+#include <signal.h>    // signal
+#include <stdlib.h>    // exit
+#include <unistd.h>    // close
 }
 
 namespace wmderland {
@@ -17,8 +17,8 @@ namespace segv {
 void InstallHandler(void (*Handler)(int));
 void Handle(int);
 
-} // namespace segv
+}  // namespace segv
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_STACKTRACE_H_
+#endif  // WMDERLAND_STACKTRACE_H_

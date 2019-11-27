@@ -24,12 +24,9 @@ Action::Action(const string& s) {
   }
 }
 
-Action::Action(Action::Type type)
-    : type_(type), argument_() {}
+Action::Action(Action::Type type) : type_(type), argument_() {}
 
-Action::Action(Action::Type type, const string& argument) 
-    : type_(type), argument_(argument) {}
-
+Action::Action(Action::Type type, const string& argument) : type_(type), argument_(argument) {}
 
 Action::Type Action::type() const {
   return type_;
@@ -38,7 +35,6 @@ Action::Type Action::type() const {
 const string& Action::argument() const {
   return argument_;
 }
-
 
 Action::Type Action::StrToActionType(const string& s) {
   if (s == "navigate_left") {
@@ -78,4 +74,4 @@ Action::Type Action::StrToActionType(const string& s) {
   }
 }
 
-} // namespace wmderland
+}  // namespace wmderland

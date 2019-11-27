@@ -3,9 +3,9 @@
 #define WMDERLAND_UTIL_H_
 
 extern "C" {
+#include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/Xatom.h>
 }
 #include <string>
 #include <vector>
@@ -36,8 +36,7 @@ bool IsSplash(Window window);
 bool IsUtility(Window window);
 bool IsNotification(Window window);
 
-} // namespace wm_utils
-
+}  // namespace wm_utils
 
 namespace string_utils {
 
@@ -48,9 +47,7 @@ bool Contains(const std::string& s, const std::string& keyword);
 void Replace(std::string& s, const std::string& keyword, const std::string& newword);
 void Strip(std::string& s);
 
-} // namespace string_utils
-
-
+}  // namespace string_utils
 
 #define NOTIFY_SEND_LOW "low"
 #define NOTIFY_SEND_NORMAL "normal"
@@ -60,10 +57,10 @@ namespace sys_utils {
 
 std::string ToAbsPath(const std::string& path);
 void ExecuteCmd(std::string cmd);
-void NotifySend(const std::string& msg, const std::string& level=NOTIFY_SEND_NORMAL);
+void NotifySend(const std::string& msg, const std::string& level = NOTIFY_SEND_NORMAL);
 
-} // namespace sys_utils
+}  // namespace sys_utils
 
-} // namespace wmderland
+}  // namespace wmderland
 
-#endif // WMDERLAND_UTIL_H_
+#endif  // WMDERLAND_UTIL_H_
