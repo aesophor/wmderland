@@ -57,7 +57,6 @@ Wmderland, while derived from i3, is built with a different philosophy in mind. 
 
 ## Todo
 * Ability to resize tiling windows based on percentage ([#16](https://github.com/aesophor/Wmderland/issues/16), [#18](https://github.com/aesophor/Wmderland/issues/18))
-* Web browser windows should go fullscreen as video goes fullscreen
 * Window title bars
 * Rounded corners
 * Two borders
