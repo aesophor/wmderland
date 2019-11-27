@@ -243,40 +243,30 @@ void WindowManager::Run() {
 }
 
 // Arranges the windows in current workspace to how they ought to be.
-// 1. Tiled windows will be re-tiled.
-// 2. Docks will be mapped, but it will be unmapped if there's a fullscreen
-// window.
-// 3. _NET_ACTIVE_WINDOW will be updated.
-// 4. Floating windows and notifications will be raised to the top.
-// 5. Fullscreen window will be resized to match the resolution again.
 void WindowManager::ArrangeWindows() const {
-  workspaces_[current_]->MapAllClients();
-  MapDocks();
-
   Client* focused_client = workspaces_[current_]->GetFocusedClient();
+
   if (!focused_client) {
+    MapDocks();
     wm_utils::ClearNetActiveWindow();
     return;
+  } else {
+    wm_utils::SetNetActiveWindow(focused_client->window());
   }
 
-  // Update NET_ACTIVE_WINDOW
-  wm_utils::SetNetActiveWindow(focused_client->window());
-  workspaces_[current_]->Tile(GetTilingArea());
-
-  // Make sure the focused client is receiving input focus.
-  workspaces_[current_]->SetFocusedClient(focused_client->window());
-
-  // But floating clients including notifications should be on top of
-  // any tiled clients.
-  workspaces_[current_]->RaiseAllFloatingClients();
-  RaiseNotifications();
-
-  // Restore fullscreen application.
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
+    workspaces_[current_]->UnmapAllClients();
     focused_client->SetBorderWidth(0);
     focused_client->MoveResize(0, 0, GetDisplayResolution());
     focused_client->Raise();
+  } else {
+    MapDocks();
+    workspaces_[current_]->MapAllClients();
+    workspaces_[current_]->Tile(GetTilingArea());
+    workspaces_[current_]->SetFocusedClient(focused_client->window());
+    workspaces_[current_]->RaiseAllFloatingClients();
+    RaiseNotifications();
   }
 }
 
