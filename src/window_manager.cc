@@ -372,6 +372,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
   // TODO: Wine steam floating menu still laggy upon removal
   wm_utils::SetWindowWmState(e.window, WM_STATE_WITHDRAWN);
 
+  hidden_windows_.erase(e.window);
   Unmanage(e.window);
 }
 
