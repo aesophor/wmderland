@@ -444,12 +444,25 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
-  if (e.message_type == prop_->net[atom::NET_CURRENT_DESKTOP]) {
+  if (e.message_type == prop_->wmderland_client_event) {
+    ipc_evmgr_.Handle(e);
+
+  } else if (e.message_type == prop_->net[atom::NET_CURRENT_DESKTOP]) {
     if (e.data.l[0] >= 0 && e.data.l[0] < WORKSPACE_COUNT) {
       GotoWorkspace(e.data.l[0]);
     }
-  } else if (e.message_type == prop_->wmderland_client_event) {
-    ipc_evmgr_.Handle(e);
+
+  } else if (e.message_type == prop_->net[atom::NET_WM_STATE]) {
+    if (static_cast<Atom>(e.data.l[1]) == prop_->net[atom::NET_WM_STATE_FULLSCREEN] ||
+        static_cast<Atom>(e.data.l[2]) == prop_->net[atom::NET_WM_STATE_FULLSCREEN]) {
+      auto it = Client::mapper_.find(e.window);
+      if (it == Client::mapper_.end()) {
+        return;
+      }
+      bool should_fullscreen = e.data.l[0] == 1 /* _NET_WM_STATE_ADD */
+          || (e.data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !it->second->is_fullscreen());
+      SetFullscreen(e.window, should_fullscreen);
+    }
   }
 }
 
