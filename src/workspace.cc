@@ -177,6 +177,13 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
 
   Tree::Node* current_node = client_tree_.current_node();
 
+  // If current node has no siblings, we can simply set the new
+  // tiling direction on its parent and return.
+  if (current_node->parent()->children().size() == 1) {
+    current_node->parent()->set_tiling_direction(tiling_direction);
+    return;
+  }
+
   unique_ptr<Client> client(current_node->release_client());
   unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(std::move(client));
 
