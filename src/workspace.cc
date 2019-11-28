@@ -137,12 +137,12 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
                               int gap_width) const {
   vector<Tree::Node*> children = node->children();
 
-  // We don't care about floating windows. Remove them.
+  // We don't care about two kinds of `Tree::Node`s
+  // 1. an internal node with no tiling clients in its subtree
+  // 2. a leaf but it has a floating client
+  // Tree::Node::HasTilingClientsInSubtree() can check 1 and 2 at the same time.
   children.erase(std::remove_if(children.begin(), children.end(),
-                                [](Tree::Node* n) {
-                                  return (!n->client() && !n->HasTilingClientsInSubtree()) ||
-                                      (n->client() && n->client()->is_floating());
-                                }),
+                                [](Tree::Node* n) { return !n->HasTilingClientsInSubtree(); }),
                  children.end());
 
   if (children.empty()) {
