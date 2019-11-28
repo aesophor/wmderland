@@ -138,10 +138,12 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
   vector<Tree::Node*> children = node->children();
 
   // We don't care about floating windows. Remove them.
-  children.erase(
-      std::remove_if(children.begin(), children.end(),
-                     [](Tree::Node* n) { return n->client() && n->client()->is_floating(); }),
-      children.end());
+  children.erase(std::remove_if(children.begin(), children.end(),
+                                [](Tree::Node* n) {
+                                  return (!n->client() && !n->HasTilingClientsInSubtree()) ||
+                                      (n->client() && n->client()->is_floating());
+                                }),
+                 children.end());
 
   if (children.empty()) {
     return;

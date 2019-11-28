@@ -38,25 +38,7 @@ Tree::Node* Tree::GetTreeNode(Client* client) const {
 }
 
 vector<Tree::Node*> Tree::GetLeaves() const {
-  vector<Tree::Node*> leaves;
-  stack<Tree::Node*> st;
-  st.push(root_node_.get());
-
-  while (!st.empty()) {
-    Tree::Node* node = st.top();
-    st.pop();
-
-    // If this node is a leaf, add it to the leaf vector.
-    if (node->children().empty()) {
-      leaves.push_back(node);
-    }
-
-    // Push all children onto the stack in reverse order (if any).
-    for (int i = node->children().size() - 1; i >= 0; i--) {
-      st.push(node->children().at(i));
-    }
-  }
-  return leaves;
+  return root_node_->GetLeaves();
 }
 
 Tree::Node* Tree::root_node() const {
@@ -241,6 +223,39 @@ Tree::Node* Tree::Node::GetRightSibling() const {
         std::find(siblings.begin(), siblings.end(), this) - siblings.begin();
     return siblings[this_node_idx + 1];
   }
+}
+
+vector<Tree::Node*> Tree::Node::GetLeaves() {
+  vector<Tree::Node*> leaves;
+  stack<Tree::Node*> st;
+  st.push(this);
+
+  while (!st.empty()) {
+    Tree::Node* node = st.top();
+    st.pop();
+
+    // If this node is a leaf, add it to the leaf vector.
+    if (node->children().empty()) {
+      leaves.push_back(node);
+    }
+
+    // Push all children onto the stack in reverse order (if any).
+    for (int i = node->children().size() - 1; i >= 0; i--) {
+      st.push(node->children().at(i));
+    }
+  }
+  return leaves;
+}
+
+bool Tree::Node::HasTilingClientsInSubtree() {
+  // Get all leaves from this node's subtree,
+  // and check if it has any tiling client.
+  for (auto leaf : this->GetLeaves()) {
+    if (!leaf->client()->is_floating()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 vector<Tree::Node*> Tree::Node::children() const {
