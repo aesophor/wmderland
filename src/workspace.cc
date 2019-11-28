@@ -143,6 +143,10 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
                      [](Tree::Node* n) { return n->client() && n->client()->is_floating(); }),
       children.end());
 
+  if (children.empty()) {
+    return;
+  }
+
   // Calculate each child's x, y, width and height based on node's tiling
   // direction.
   TilingDirection dir = node->tiling_direction();
