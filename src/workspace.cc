@@ -137,11 +137,17 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
                               int gap_width) const {
   vector<Tree::Node*> children = node->children();
 
-  // We don't care about floating windows. Remove them.
-  children.erase(
-      std::remove_if(children.begin(), children.end(),
-                     [](Tree::Node* n) { return n->client() && n->client()->is_floating(); }),
-      children.end());
+  // We don't care about two kinds of `Tree::Node`s
+  // 1. an internal node with no tiling clients in its subtree
+  // 2. a leaf but it has a floating client
+  // Tree::Node::HasTilingClientsInSubtree() can check 1 and 2 at the same time.
+  children.erase(std::remove_if(children.begin(), children.end(),
+                                [](Tree::Node* n) { return !n->HasTilingClientsInSubtree(); }),
+                 children.end());
+
+  if (children.empty()) {
+    return;
+  }
 
   // Calculate each child's x, y, width and height based on node's tiling
   // direction.
@@ -176,6 +182,13 @@ void Workspace::SetTilingDirection(TilingDirection tiling_direction) {
   }
 
   Tree::Node* current_node = client_tree_.current_node();
+
+  // If current node has no siblings, we can simply set the new
+  // tiling direction on its parent and return.
+  if (current_node->parent()->children().size() == 1) {
+    current_node->parent()->set_tiling_direction(tiling_direction);
+    return;
+  }
 
   unique_ptr<Client> client(current_node->release_client());
   unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(std::move(client));

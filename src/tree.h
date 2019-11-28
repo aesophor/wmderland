@@ -33,6 +33,9 @@ class Tree {
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
 
+    std::vector<Tree::Node*> GetLeaves();
+    bool HasTilingClientsInSubtree();
+
     std::vector<Tree::Node*> children() const;
     Tree::Node* parent() const;
     Client* client() const;
