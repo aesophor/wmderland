@@ -493,16 +493,16 @@ int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
 }
 
 void WindowManager::Manage(Window window) {
-  int target = config_->GetSpawnWorkspaceId(window);
-
-  if (target == UNSPECIFIED_WORKSPACE) {
-    target = current_;
+  // If this window id has a corresponding Client* in Client::mapper_,
+  // don't process further.
+  auto it = Client::mapper_.find(window);
+  if (it != Client::mapper_.end()) {
+    return;
   }
 
-  // If this window is already in this workspace, don't add it to this workspace
-  // again.
-  if (workspaces_[target]->Has(window)) {
-    return;
+  int target = config_->GetSpawnWorkspaceId(window);
+  if (target == UNSPECIFIED_WORKSPACE) {
+    target = current_;
   }
 
   Client* prev_focused_client = workspaces_[target]->GetFocusedClient();
