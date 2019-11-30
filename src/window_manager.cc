@@ -343,7 +343,6 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   } else {
     hidden_windows_.insert(e.window);
     Unmanage(c->window());
-    ArrangeWindows();
   }
 }
 
