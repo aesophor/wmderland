@@ -256,7 +256,6 @@ void WindowManager::ArrangeWindows() const {
 
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
-    workspaces_[current_]->UnmapAllClients();
     focused_client->SetBorderWidth(0);
     focused_client->MoveResize(0, 0, GetDisplayResolution());
     focused_client->Raise();
