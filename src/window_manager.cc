@@ -9,9 +9,6 @@ extern "C" {
 #include <algorithm>
 #include <cstring>
 #include <iostream>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 #include "client.h"
 #include "config.h"
@@ -25,12 +22,7 @@ extern "C" {
 #define MOVE_CURSOR 1
 #define RESIZE_CURSOR 3
 
-using std::exception;
 using std::pair;
-using std::string;
-using std::unique_ptr;
-using std::unordered_map;
-using std::vector;
 
 namespace wmderland {
 
