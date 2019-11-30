@@ -25,10 +25,6 @@ extern "C" {
 #define MOVE_CURSOR 1
 #define RESIZE_CURSOR 3
 
-#define WM_STATE_WITHDRAWN 0
-#define WM_STATE_NORMAL 1
-#define WM_STATE_ICONIC 3
-
 using std::exception;
 using std::pair;
 using std::string;
@@ -304,7 +300,7 @@ void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
     return;
   }
 
-  wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
+  wm_utils::SetWindowWmState(e.window, NormalState);
   Manage(e.window);
 }
 
@@ -358,7 +354,7 @@ void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
     return;
   }
 
-  wm_utils::SetWindowWmState(e.window, WM_STATE_WITHDRAWN);
+  wm_utils::SetWindowWmState(e.window, WithdrawnState);
   hidden_windows_.erase(e.window);
   Unmanage(e.window);
 }
