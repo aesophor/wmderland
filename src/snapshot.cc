@@ -86,14 +86,14 @@ void Snapshot::Load() {
   std::getline(fin, line);
   if (line != Snapshot::kNone_) {
     for (const auto& token : string_utils::Split(line, ',')) {
-      wm->docks_.push_back(static_cast<Window>(std::stoul(token)));
+      wm->docks_.insert(static_cast<Window>(std::stoul(token)));
     }
   }
 
   std::getline(fin, line);
   if (line != Snapshot::kNone_) {
     for (const auto& token : string_utils::Split(line, ',')) {
-      wm->notifications_.push_back(static_cast<Window>(std::stoul(token)));
+      wm->notifications_.insert(static_cast<Window>(std::stoul(token)));
     }
   }
 
@@ -140,9 +140,11 @@ void Snapshot::Save() {
   if (wm->docks_.empty()) {
     fout << Snapshot::kNone_;
   } else {
-    for (size_t i = 0; i < wm->docks_.size(); i++) {
-      fout << wm->docks_[i];
+    size_t i = 0;
+    for (const auto window : wm->docks_) {
+      fout << window;
       fout << ((i < wm->docks_.size() - 1) ? "," : "");
+      i++;
     }
   }
   fout << endl;
@@ -150,9 +152,11 @@ void Snapshot::Save() {
   if (wm->notifications_.empty()) {
     fout << Snapshot::kNone_;
   } else {
-    for (size_t i = 0; i < wm->notifications_.size(); i++) {
-      fout << wm->notifications_[i];
+    size_t i = 0;
+    for (const auto window : wm->notifications_) {
+      fout << window;
       fout << ((i < wm->notifications_.size() - 1) ? "," : "");
+      i++;
     }
   }
   fout << endl;

@@ -289,27 +289,22 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
 }
 
 void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
-  // If user has requested to prohibit this window from being mapped, then don't
-  // map it.
+  // If user has requested to prohibit this window from being mapped,
+  // then don't map it.
   if (config_->ShouldProhibit(e.window)) {
     return;
   }
 
-  wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
-
   // If this window is a dock (or bar), map it, add it to docks_
   // and arrange the workspace.
-  if (wm_utils::IsDock(e.window) &&
-      std::find(docks_.begin(), docks_.end(), e.window) == docks_.end()) {
+  if (wm_utils::IsDock(e.window) && docks_.find(e.window) == docks_.end()) {
     XMapWindow(dpy_, e.window);
-    docks_.push_back(e.window);
+    docks_.insert(e.window);
     workspaces_[current_]->Tile(GetTilingArea());
     return;
   }
 
-  // Pass all checks above -> we should manage this window.
-  // Spawn this window in the specified workspace if such rule exists,
-  // otherwise spawn it in current workspace.
+  wm_utils::SetWindowWmState(e.window, WM_STATE_NORMAL);
   Manage(e.window);
 }
 
@@ -318,9 +313,8 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
   // (especially dunst), So we perform the check here (after the window is
   // mapped) instead.
   if (wm_utils::IsNotification(e.window) &&
-      std::find(notifications_.begin(), notifications_.end(), e.window) ==
-          notifications_.end()) {
-    notifications_.push_back(e.window);
+      notifications_.find(e.window) == notifications_.end()) {
+    notifications_.insert(e.window);
   }
 
   auto it = Client::mapper_.find(e.window);
@@ -354,23 +348,18 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
 }
 
 void WindowManager::OnDestroyNotify(const XDestroyWindowEvent& e) {
-  // If the window is a dock/bar or notification, remove it and tile the
-  // workspace.
-  if (std::find(docks_.begin(), docks_.end(), e.window) != docks_.end()) {
-    docks_.erase(std::remove(docks_.begin(), docks_.end(), e.window), docks_.end());
+  if (docks_.find(e.window) != docks_.end()) {
+    docks_.erase(e.window);
     workspaces_[current_]->Tile(GetTilingArea());
-    return;
-  } else if (wm_utils::IsNotification(e.window)) {
-    notifications_.erase(std::remove(notifications_.begin(), notifications_.end(), e.window),
-                         notifications_.end());
     return;
   }
 
-  // Set window state to withdrawn (wine application needs this to destroy
-  // windows properly).
-  // TODO: Wine steam floating menu still laggy upon removal
-  wm_utils::SetWindowWmState(e.window, WM_STATE_WITHDRAWN);
+  if (wm_utils::IsNotification(e.window)) {
+    notifications_.erase(e.window);
+    return;
+  }
 
+  wm_utils::SetWindowWmState(e.window, WM_STATE_WITHDRAWN);
   hidden_windows_.erase(e.window);
   Unmanage(e.window);
 }
@@ -499,6 +488,8 @@ void WindowManager::Manage(Window window) {
     return;
   }
 
+  // Spawn this window in the specified workspace if such rule exists,
+  // otherwise spawn it in current workspace.
   int target = config_->GetSpawnWorkspaceId(window);
   if (target == UNSPECIFIED_WORKSPACE) {
     target = current_;

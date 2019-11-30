@@ -10,7 +10,6 @@ extern "C" {
 #include <array>
 #include <memory>
 #include <unordered_set>
-#include <vector>
 
 #include "action.h"
 #include "config.h"
@@ -96,10 +95,10 @@ class WindowManager {
   IpcEventManager ipc_evmgr_;         // client event manager
   Snapshot snapshot_;                 // error recovery
 
-  // The floating windows vector contain windows that should not be tiled but
-  // must be kept on the top, e.g., dock, notifications, etc.
-  std::vector<Window> docks_;
-  std::vector<Window> notifications_;
+  // The floating windows unordered_set contains windows that should not be
+  // tiled but must be kept on the top, e.g., dock, notifications, etc.
+  std::unordered_set<Window> docks_;
+  std::unordered_set<Window> notifications_;
 
   // Some programs (e.g., WPS office, Steam) might unmap its window(s)
   // but keep them in the background instead of destroying them. It is
