@@ -31,8 +31,8 @@ void Config::Load() {
   fin >> *this;
 }
 
-int Config::GetSpawnWorkspaceId(Window w) const {
-  for (const auto& key : GeneratePossibleConfigKeys(w)) {
+int Config::GetSpawnWorkspaceId(Window window) const {
+  for (const auto& key : GeneratePossibleConfigKeys(window)) {
     auto it = spawn_rules_.find(key);
     if (it != spawn_rules_.end()) {
       return it->second - 1;  // workspace id starts from 0.
@@ -41,8 +41,8 @@ int Config::GetSpawnWorkspaceId(Window w) const {
   return UNSPECIFIED_WORKSPACE;
 }
 
-bool Config::ShouldFloat(Window w) const {
-  for (const auto& key : GeneratePossibleConfigKeys(w)) {
+bool Config::ShouldFloat(Window window) const {
+  for (const auto& key : GeneratePossibleConfigKeys(window)) {
     auto it = float_rules_.find(key);
     if (it != float_rules_.end()) {
       return it->second;
@@ -51,8 +51,8 @@ bool Config::ShouldFloat(Window w) const {
   return false;
 }
 
-bool Config::ShouldFullscreen(Window w) const {
-  for (const auto& key : GeneratePossibleConfigKeys(w)) {
+bool Config::ShouldFullscreen(Window window) const {
+  for (const auto& key : GeneratePossibleConfigKeys(window)) {
     auto it = fullscreen_rules_.find(key);
     if (it != fullscreen_rules_.end()) {
       return it->second;
@@ -61,8 +61,8 @@ bool Config::ShouldFullscreen(Window w) const {
   return false;
 }
 
-bool Config::ShouldProhibit(Window w) const {
-  for (const auto& key : GeneratePossibleConfigKeys(w)) {
+bool Config::ShouldProhibit(Window window) const {
+  for (const auto& key : GeneratePossibleConfigKeys(window)) {
     auto it = prohibit_rules_.find(key);
     if (it != prohibit_rules_.end()) {
       return it->second;
@@ -142,11 +142,11 @@ string Config::ExtractWindowIdentifier(const std::string& s) {
   return identifier.substr(0, identifier.rfind(' '));
 }
 
-vector<string> Config::GeneratePossibleConfigKeys(Window w) const {
-  pair<string, string> hint = wm_utils::GetXClassHint(w);
+vector<string> Config::GeneratePossibleConfigKeys(Window window) const {
+  pair<string, string> hint = wm_utils::GetXClassHint(window);
   const string& res_class = hint.first;
   const string& res_name = hint.second;
-  string net_wm_name = wm_utils::GetNetWmName(w);
+  string net_wm_name = wm_utils::GetNetWmName(window);
 
   return {
       res_class + ',' + res_name + ',' + net_wm_name,

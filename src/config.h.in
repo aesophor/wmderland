@@ -69,10 +69,10 @@ class Config {
   virtual ~Config() = default;
   void Load();
 
-  int GetSpawnWorkspaceId(Window w) const;
-  bool ShouldFloat(Window w) const;
-  bool ShouldFullscreen(Window w) const;
-  bool ShouldProhibit(Window w) const;
+  int GetSpawnWorkspaceId(Window window) const;
+  bool ShouldFloat(Window window) const;
+  bool ShouldFullscreen(Window window) const;
+  bool ShouldProhibit(Window window) const;
   const std::vector<Action>& GetKeybindActions(unsigned int modifier, KeyCode keycode) const;
 
   unsigned int gap_width() const;
@@ -101,7 +101,7 @@ class Config {
 
   static Config::Keyword StrToConfigKeyword(const std::string& s);
   static std::string ExtractWindowIdentifier(const std::string& s);
-  std::vector<std::string> GeneratePossibleConfigKeys(Window w) const;
+  std::vector<std::string> GeneratePossibleConfigKeys(Window window) const;
   const std::string& ReplaceSymbols(std::string& s);
 
   static const std::vector<Action> kEmptyActions_;
