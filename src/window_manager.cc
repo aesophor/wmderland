@@ -14,13 +14,13 @@ extern "C" {
 #include "config.h"
 #include "util.h"
 
-#define MOUSE_LEFT_BTN 1
-#define MOUSE_MID_BTN 2
-#define MOUSE_RIGHT_BTN 3
+#define MOUSE_BTN_LEFT 1
+#define MOUSE_BTN_MID 2
+#define MOUSE_BTN_RIGHT 3
 
-#define NORMAL_CURSOR 0
-#define MOVE_CURSOR 1
-#define RESIZE_CURSOR 3
+#define CURSOR_NORMAL 0
+#define CURSOR_MOVE 1
+#define CURSOR_RESIZE 3
 
 using std::pair;
 
@@ -116,10 +116,10 @@ void WindowManager::InitXGrabs() {
 }
 
 void WindowManager::InitCursors() {
-  cursors_[NORMAL_CURSOR] = XCreateFontCursor(dpy_, XC_left_ptr);
-  cursors_[RESIZE_CURSOR] = XCreateFontCursor(dpy_, XC_sizing);
-  cursors_[MOVE_CURSOR] = XCreateFontCursor(dpy_, XC_fleur);
-  XDefineCursor(dpy_, root_window_, cursors_[NORMAL_CURSOR]);
+  cursors_[CURSOR_NORMAL] = XCreateFontCursor(dpy_, XC_left_ptr);
+  cursors_[CURSOR_RESIZE] = XCreateFontCursor(dpy_, XC_sizing);
+  cursors_[CURSOR_MOVE] = XCreateFontCursor(dpy_, XC_fleur);
+  XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
 }
 
 void WindowManager::InitProperties() {
@@ -391,7 +391,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
   }
 
   btn_pressed_event_.subwindow = None;
-  XDefineCursor(dpy_, root_window_, cursors_[NORMAL_CURSOR]);
+  XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
@@ -404,10 +404,10 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   const XWindowAttributes& attr = c->attr_cache();
   int xdiff = e.x - btn_pressed_event_.x;
   int ydiff = e.y - btn_pressed_event_.y;
-  int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? xdiff : 0);
-  int new_y = attr.y + ((btn_pressed_event_.button == MOUSE_LEFT_BTN) ? ydiff : 0);
-  int new_width = attr.width + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? xdiff : 0);
-  int new_height = attr.height + ((btn_pressed_event_.button == MOUSE_RIGHT_BTN) ? ydiff : 0);
+  int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_BTN_LEFT) ? xdiff : 0);
+  int new_y = attr.y + ((btn_pressed_event_.button == MOUSE_BTN_LEFT) ? ydiff : 0);
+  int new_width = attr.width + ((btn_pressed_event_.button == MOUSE_BTN_RIGHT) ? xdiff : 0);
+  int new_height = attr.height + ((btn_pressed_event_.button == MOUSE_BTN_RIGHT) ? ydiff : 0);
 
   int min_width =
       (c->size_hints().min_width > 0) ? c->size_hints().min_width : MIN_WINDOW_WIDTH;
