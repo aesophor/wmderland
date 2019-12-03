@@ -26,7 +26,7 @@ Config::Config(Display* dpy, Properties* prop, const string& filename)
     : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {}
 
 void Config::Load() {
-  // Convert it to full path first (in case it starts with ~)
+  WM_LOG(INFO, "Loading user configuration: " << filename_);
   ifstream fin(filename_);
   fin >> *this;
 }
@@ -164,8 +164,6 @@ const string& Config::ReplaceSymbols(string& s) {
 }
 
 ifstream& operator>>(ifstream& ifs, Config& config) {
-  WM_LOG(INFO, "Loading user configuration: " << config.filename_);
-
   // Load the built-in WM variables with their default values.
   config.gap_width_ = DEFAULT_GAP_WIDTH;
   config.border_width_ = DEFAULT_BORDER_WIDTH;
