@@ -25,7 +25,7 @@ find_package(glog)
 
 # CMake will generate config.h from config.h.in
 include_directories("src")
-configure_file("src/config.h.in" "../src/config.h")
+configure_file("src/config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h")
 
 # Grab all files end in .cc
 FILE(GLOB cpp_sources src/*.cc)
