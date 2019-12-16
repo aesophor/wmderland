@@ -39,7 +39,7 @@ Wmderland, while derived from i3, is built with a different philosophy in mind. 
 * follows Unix philosophy - Do one thing and do it well
 * has an easy-to-use config
 * tiling behaviors are similar to that of i3
-* written in C++ OOP and Xlib. Only ~3k lines of C++11 code, hopefully it will be a lot easier to maintain.
+* written in C++ OOP and Xlib. Only ~3k lines of C++14 code, hopefully it will be a lot easier to maintain.
 
 <br>
 
@@ -51,21 +51,13 @@ Wmderland, while derived from i3, is built with a different philosophy in mind. 
 * Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cc`
 * Error recovery mechanism
-* Has a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc-client) which can interact/control Wmderland
-
-<br>
-
-## Todo
-* Ability to resize tiling windows based on percentage ([#16](https://github.com/aesophor/Wmderland/issues/16), [#18](https://github.com/aesophor/Wmderland/issues/18))
-* Window title bars
-* Rounded corners
-* Two borders
+* Shipped with a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc-client) which can interact/control Wmderland
 
 <br>
 
 ## Build Requirements / Installation
 #### Build Requirements
-* g++ (requires C++11)
+* g++ (requires C++14)
 * CMake
 * Xlib headers
 * **Optional** - [glog](https://github.com/google/glog) (Google's C++ logging library)
