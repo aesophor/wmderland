@@ -1,6 +1,16 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #include "stacktrace.h"
 
+extern "C" {
+#include <stdlib.h>    // exit
+#ifdef __GLIBC__
+#include <execinfo.h>  // backtrace*
+#endif
+#include <fcntl.h>     // open
+#include <signal.h>    // signal
+#include <unistd.h>    // close
+}
+
 #define STACKTRACE_LOG "/tmp/Wmderland.STACKTRACE"
 #define STACKTRACE_FUNC_COUNT 10
 
