@@ -9,10 +9,13 @@ namespace wmderland {
 namespace segv {
 
 void InstallHandler(void (*Handler)(int)) {
+#ifdef __GLIBC__
   signal(SIGSEGV, Handler);
+#endif
 }
 
 void Handle(int) {
+#ifdef __GLIBC__
   void* array[STACKTRACE_FUNC_COUNT];
   size_t size = backtrace(array, STACKTRACE_FUNC_COUNT);
 
@@ -21,6 +24,7 @@ void Handle(int) {
   close(fd);
 
   exit(EXIT_FAILURE);
+#endif
 }
 
 }  // namespace segv
