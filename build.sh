@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 should_install=false
+build_failed=false
 build_type=MINSIZEREL
+
 
 function show_usage() {
   echo "Wmderland, A tiling window manager using space partitioning tree"
@@ -20,14 +22,21 @@ function show_horizontal_line() {
 function build_wmderland() {
   echo "-- Building Wmderland (WM)"
   mkdir -p build && cd build
+
   cmake .. -DCMAKE_BUILD_TYPE=${build_type}
   make
+
+  if [ $? != 0 ]; then
+    build_failed=true
+  fi
+
   if [ $should_install == true ]; then
     echo ""
     echo "-- Installing Wmderland (WM), invoked with sudo make install"
     sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
     sudo cp ../example/Wmderland.desktop /usr/share/xsessions/.
   fi
+
   cd ..
 }
 
@@ -37,19 +46,30 @@ function build_client() {
   echo "-- Building Wmderlandc (client)"
   cd ipc-client
   mkdir -p build && cd build
+
   cmake .. -DCMAKE_BUILD_TYPE=${build_type}
   make
+
+  if [ $? != 0 ]; then
+    build_failed=true
+  fi
+
   if [ $should_install == true ]; then
     echo ""
     echo "-- Installing Wmderlandc (client), invoked with sudo make install"
     sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
   fi
+
   cd ../..
 }
 
 function build() {
   build_wmderland
   build_client
+
+  if [ $build_failed == true ]; then
+    return 1;
+  fi
 }
 
 # $1 - args array
