@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=Wmderland
+Name=wmderland
 Comment=Tiling window manager using space partitioning tree
-Exec=Wmderland
-TryExec=Wmderland
+Exec=wmderland
+TryExec=wmderland
 Type=Application
-X-LightDM-DesktopName=Wmderland
-DesktopNames=Wmderland
+X-LightDM-DesktopName=wmderland
+DesktopNames=wmderland
 Keywords=tiling;wm;windowmanager;window;manager;

@@ -11,7 +11,7 @@ extern "C" {
 #include <unistd.h>    // close
 }
 
-#define STACKTRACE_LOG "/tmp/Wmderland.STACKTRACE"
+#define STACKTRACE_LOG "/tmp/wmderland.STACKTRACE"
 #define STACKTRACE_FUNC_COUNT 10
 
 namespace wmderland {

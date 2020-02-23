@@ -1,4 +1,5 @@
-; Wmderland configuration file
+; wmderland configuration file
+;
 ; To describe a window, run `xprop` and click on the target window, and
 ; you will get something like this as output:
 ;

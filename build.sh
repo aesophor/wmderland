@@ -6,7 +6,7 @@ build_type=MINSIZEREL
 
 
 function show_usage() {
-  echo "Wmderland, A tiling window manager using space partitioning tree"
+  echo "wmderland, A tiling window manager using space partitioning tree"
   echo "Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>"
   echo ""
   echo "usage: $0 [option]"
@@ -20,7 +20,7 @@ function show_horizontal_line() {
 
 # Build main project
 function build_wmderland() {
-  echo "-- Building Wmderland (WM)"
+  echo "-- Building wmderland (WM)"
   mkdir -p build && cd build
 
   cmake .. -DCMAKE_BUILD_TYPE=${build_type}
@@ -32,9 +32,9 @@ function build_wmderland() {
 
   if [ $should_install == true ]; then
     echo ""
-    echo "-- Installing Wmderland (WM), invoked with sudo make install"
+    echo "-- Installing wmderland (WM), invoked with sudo make install"
     sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
-    sudo cp ../example/Wmderland.desktop /usr/share/xsessions/.
+    sudo cp ../example/wmderland.desktop /usr/share/xsessions/.
   fi
 
   cd ..
@@ -43,7 +43,7 @@ function build_wmderland() {
 # Build client
 function build_client() {
   show_horizontal_line
-  echo "-- Building Wmderlandc (client)"
+  echo "-- Building wmderlandc (client)"
   cd ipc-client
   mkdir -p build && cd build
 
@@ -56,7 +56,7 @@ function build_client() {
 
   if [ $should_install == true ]; then
     echo ""
-    echo "-- Installing Wmderlandc (client), invoked with sudo make install"
+    echo "-- Installing wmderlandc (client), invoked with sudo make install"
     sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
   fi
 

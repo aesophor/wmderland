@@ -21,7 +21,7 @@ namespace wmderland {
 unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
 Tree::Tree() : root_node_(std::make_unique<Tree::Node>(nullptr)), current_node_() {
-  // NOTE: In Wmderland, the root node will always exist in a client tree
+  // NOTE: In wmderland, the root node will always exist in a client tree
   // at any given time.
 
   // Initialize a Tree::Node with no client associated with it,

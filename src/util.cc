@@ -263,7 +263,7 @@ void ExecuteCmd(string cmd) {
 }
 
 void NotifySend(const string& msg, const string& level) {
-  ExecuteCmd("notify-send -u " + level + " 'Wmderland' '" + msg + "'");
+  ExecuteCmd("notify-send -u " + level + " 'wmderland' '" + msg + "'");
 }
 
 }  // namespace sys_utils

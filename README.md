@@ -1,29 +1,29 @@
 <div align="center">
-  
-<h3>Wmderland</h3>
+
+<h3>WMDERLAND</h3>
 <p>Modern, Minimal X11 Tiling Window Manager</p>
 
-<a href="http://hits.dwyl.io/aesophor/Wmderland">
-  <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
+<a href="http://hits.dwyl.io/aesophor/wmderland">
+  <img src="http://hits.dwyl.io/aesophor/wmderland.svg">
 </a>
-<a href="https://github.com/aesophor/Wmderland/blob/master/LICENSE">
+<a href="https://github.com/aesophor/wmderland/blob/master/LICENSE">
   <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
  </a>
-<a href="https://travis-ci.org/aesophor/Wmderland">
-  <img src="https://travis-ci.org/aesophor/Wmderland.svg?branch=master">
+<a href="https://travis-ci.org/aesophor/wmderland">
+  <img src="https://travis-ci.org/aesophor/wmderland.svg?branch=master">
 </a>
 
-<img src="https://github.com/aesophor/Wmderland/raw/master/.meta/tiling.png">
+<img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
 </div>
 
 ## Overview
-Wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
+wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
 * A lightweight i3, written from scratch
-* An easy-to-use config system ([example](https://github.com/aesophor/Wmderland/blob/master/example/config))
+* An easy-to-use config system ([example](https://github.com/aesophor/wmderland/blob/master/example/config))
 * Stable, simple, and maintainable
 
-**Documentation available at its [wiki page](https://github.com/aesophor/Wmderland/wiki).**
+**Documentation available at its [wiki page](https://github.com/aesophor/wmderland/wiki).**
 
 <br>
 
@@ -34,8 +34,8 @@ A versatile window manager which is shipped with i3bar, has a nice tiling algori
 * there are many features that I've rarely used
 * ~44k lines of C code, which is a bit hard to trace and maintain
 
-#### Wmderland
-Wmderland, while derived from i3, is built with a different philosophy in mind. The plan for Wmderland is to become a modern but minimal tiling window manager which:
+#### wmderland
+wmderland, while derived from i3, is built with a different philosophy in mind. The plan for wmderland is to become a modern but minimal tiling window manager which:
 * follows Unix philosophy - Do one thing and do it well
 * has an easy-to-use config
 * tiling behaviors are similar to that of i3
@@ -48,10 +48,10 @@ Wmderland, while derived from i3, is built with a different philosophy in mind. 
 * Gaps and borders (like i3-gaps)
 * Statically allocated workspaces (i3 has dynamically allocated workspaces)
 * Smart floating (dialog windows will be floating by default, their pos/size will be cached)
-* Easy-to-use [config](https://github.com/aesophor/Wmderland/blob/master/example/config) with runtime reload support
+* Easy-to-use [config](https://github.com/aesophor/wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cc`
 * Error recovery mechanism
-* Shipped with a [tiny client](https://github.com/aesophor/Wmderland/tree/master/ipc-client) which can interact/control Wmderland
+* Shipped with a [tiny client](https://github.com/aesophor/wmderland/tree/master/ipc-client) which can interact/control wmderland
 
 <br>
 
@@ -65,26 +65,26 @@ Wmderland, while derived from i3, is built with a different philosophy in mind. 
 #### Installation
 1. Build and install project
 ```
-$ git clone https://github.com/aesophor/Wmderland.git
-$ cd Wmderland
+$ git clone https://github.com/aesophor/wmderland.git
+$ cd wmderland
 $ ./build.sh -i
 ```
 
 2. Copy the config file (**IMPORTANT**)
 ```
-$ mkdir -p ~/.config/Wmderland
-$ cp example/config ~/.config/Wmderland/.
+$ mkdir -p ~/.config/wmderland
+$ cp example/config ~/.config/wmderland/.
 ```
 
 3. If not using a Display Manager, add this to your ~/.xinitrc and execute `startx`
 ```
-exec Wmderland
+exec wmderland
 ```
 
 <br>
 
 ## Special Thanks
-![](https://github.com/aesophor/Wmderland/raw/master/.meta/floating.png)
+![](https://github.com/aesophor/wmderland/raw/master/.meta/floating.png)
 
 * [Markus Elfring](https://github.com/elfring) for giving me lots of helpful advice
 * Airblader's [i3wm](https://github.com/i3/i3)
@@ -98,4 +98,4 @@ exec Wmderland
 <br>
 
 ## License
-Available under the [MIT License](https://github.com/aesophor/Wmderland/blob/master/LICENSE)
+Available under the [MIT License](https://github.com/aesophor/wmderland/blob/master/LICENSE)

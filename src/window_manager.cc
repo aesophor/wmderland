@@ -126,7 +126,7 @@ void WindowManager::InitProperties() {
   char* win_mgr_name = const_cast<char*>(WIN_MGR_NAME);
   size_t win_mgr_name_len = std::strlen(win_mgr_name);
 
-  // Set the name of window manager (i.e., Wmderland) on the root_window_
+  // Set the name of window manager (i.e., wmderland) on the root_window_
   // window, so that other programs can acknowledge the name of this WM.
   XChangeProperty(dpy_, root_window_, prop_->net[atom::NET_WM_NAME], prop_->utf8string, 8,
                   PropModeReplace, reinterpret_cast<unsigned char*>(win_mgr_name),

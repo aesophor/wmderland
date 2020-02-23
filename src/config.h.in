@@ -41,9 +41,9 @@ extern "C" {
 
 #define WIN_MGR_NAME "@PROJECT_NAME@"
 #define VERSION "@PROJECT_VERSION@"
-#define CONFIG_FILE "~/.config/Wmderland/config"
-#define COOKIE_FILE "~/.cache/Wmderland/cookie"
-#define SNAPSHOT_FILE "~/.cache/Wmderland/snapshot"
+#define CONFIG_FILE "~/.config/wmderland/config"
+#define COOKIE_FILE "~/.cache/wmderland/cookie"
+#define SNAPSHOT_FILE "~/.cache/wmderland/snapshot"
 
 #define UNSPECIFIED_WORKSPACE -1
 #define WORKSPACE_COUNT 9

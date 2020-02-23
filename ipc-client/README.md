@@ -1,32 +1,32 @@
-Wmderland Client
+wmderland Client
 ---
 
-A tiny program to interact with Wmderland
+A tiny program to interact with wmderland
 
 Build
 ---
 You can run `build.sh` from the top-level directory to build this project, or
 
 ```
-$ gcc -o Wmderlandc wmderlandc.c -lX11
+$ gcc -o wmderlandc wmderlandc.c -lX11
 ```
 
 Usage
 ---
 ```
-$ Wmderlandc navigate_left
-$ Wmderlandc navigate_right
-$ Wmderlandc navigate_down
-$ Wmderlandc navigate_up
-$ Wmderlandc tile_h
-$ Wmderlandc tile_v
-$ Wmderlandc toggle_floating
-$ Wmderlandc toggle_fullscreen
-$ Wmderlandc goto_workspace <number>
-$ Wmderlandc workspace <number>
-$ Wmderlandc move_window_to_workspace <number>
-$ Wmderlandc kill # kill current window
-$ Wmderlandc exit # exit WM
-$ Wmderlandc reload # reload config
-$ Wmderlandc debug_crash # don't use this
+$ wmderlandc navigate_left
+$ wmderlandc navigate_right
+$ wmderlandc navigate_down
+$ wmderlandc navigate_up
+$ wmderlandc tile_h
+$ wmderlandc tile_v
+$ wmderlandc toggle_floating
+$ wmderlandc toggle_fullscreen
+$ wmderlandc goto_workspace <number>
+$ wmderlandc workspace <number>
+$ wmderlandc move_window_to_workspace <number>
+$ wmderlandc kill # kill current window
+$ wmderlandc exit # exit WM
+$ wmderlandc reload # reload config
+$ wmderlandc debug_crash # don't use this
 ```

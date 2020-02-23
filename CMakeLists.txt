@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(Wmderland VERSION 1.0.2)
+project(wmderland VERSION 1.0.2)
 
 # There are two CMake scripts in ./cmake
 # 1. BuildType.cmake - determine build type on demand
@@ -29,13 +29,13 @@ configure_file("src/config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h")
 
 # Grab all files end in .cc
 FILE(GLOB cpp_sources src/*.cc)
-add_executable(Wmderland ${cpp_sources})
+add_executable(wmderland ${cpp_sources})
 
 set(LINK_LIBRARIES X11)
 if(GLOG_FOUND)
   set(LINK_LIBRARIES ${LINK_LIBRARIES} glog)
 endif()
-target_link_libraries(Wmderland ${LINK_LIBRARIES})
+target_link_libraries(wmderland ${LINK_LIBRARIES})
 
 # Install rule
-install(TARGETS Wmderland DESTINATION bin)
+install(TARGETS wmderland DESTINATION bin)
