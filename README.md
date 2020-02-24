@@ -3,8 +3,8 @@
 <h3>WMDERLAND</h3>
 <p>Modern, Minimal X11 Tiling Window Manager</p>
 
-<a href="http://hits.dwyl.io/aesophor/wmderland">
-  <img src="http://hits.dwyl.io/aesophor/wmderland.svg">
+<a href="http://hits.dwyl.io/aesophor/Wmderland">
+  <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
 </a>
 <a href="https://github.com/aesophor/wmderland/blob/master/LICENSE">
   <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
