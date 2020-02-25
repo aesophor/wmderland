@@ -16,6 +16,8 @@
 <img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
 </div>
 
+<br>
+
 ## Overview
 wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
@@ -37,6 +39,11 @@ See [BUILD.md](https://github.com/aesophor/wmderland/blob/master/BUILD.md).
 ```
 yay -S wmderland-git
 ```
+
+<br>
+
+## Post-Installation
+Remember to place a config file at ~/.config/wmderland/config
 
 <br>
 
