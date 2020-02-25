@@ -43,7 +43,9 @@ yay -S wmderland-git
 <br>
 
 ## Post-Installation
-Remember to place a config file at ~/.config/wmderland/config
+Remember to place a config file at `~/.config/wmderland/config`
+
+[An example config is available here](https://github.com/aesophor/wmderland/blob/master/example/config).
 
 <br>
 
