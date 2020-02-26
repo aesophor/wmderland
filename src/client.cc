@@ -25,7 +25,6 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
   Client::mapper_[window] = this;
   SetBorderWidth(workspace->config()->border_width());
   SetBorderColor(workspace->config()->unfocused_color());
-  SelectInput(EnterWindowMask);
 }
 
 Client::~Client() {

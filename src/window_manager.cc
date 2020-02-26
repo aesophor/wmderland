@@ -348,6 +348,7 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(e.window, c);
 
+  c->SelectInput(EnterWindowMask);
   c->set_mapped(true);
 }
 
@@ -358,6 +359,7 @@ void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
   // Some program unmaps their windows but does not remove them,
   // so if this window has just been unmapped, but it was not unmapped
   // by the user, then we will remove them for user.
+  c->SelectInput(None);
   c->set_mapped(false);
 
   if (c->has_unmap_req_from_wm()) {
