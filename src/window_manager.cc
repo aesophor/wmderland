@@ -220,6 +220,12 @@ void WindowManager::Run() {
       case MotionNotify:
         OnMotionNotify(event.xbutton);
         break;
+      case EnterNotify:
+        OnEnterNotify(event.xcrossing);
+        break;
+      case LeaveNotify:
+        OnLeaveNotify(event.xcrossing);
+        break;
       case ClientMessage:
         OnClientMessage(event.xclient);
         break;
@@ -416,6 +422,14 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   new_width = (new_width < min_width) ? min_width : new_width;
   new_height = (new_height < min_height) ? min_height : new_height;
   c->MoveResize(new_x, new_y, new_width, new_height);
+}
+
+void WindowManager::OnEnterNotify(const XEnterWindowEvent& e) {
+  WM_LOG(INFO, "enter!");
+}
+
+void WindowManager::OnLeaveNotify(const XEnterWindowEvent& e) {
+  WM_LOG(INFO, "leave!");
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
