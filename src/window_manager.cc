@@ -283,7 +283,9 @@ void WindowManager::ArrangeWindows() const {
 
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
-    workspaces_[current_]->SetFocusedClient(focused_client->window());
+    focused_client->SetBorderWidth(0);
+    focused_client->MoveResize(0, 0, GetDisplayResolution());
+    focused_client->workspace()->SetFocusedClient(focused_client->window());
   } else {
     MapDocks();
     workspaces_[current_]->MapAllClients();
@@ -690,15 +692,10 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
   c->workspace()->set_fullscreen(fullscreen);
 
   if (fullscreen) {
-    UnmapDocks();
     c->set_attr_cache(c->GetXWindowAttributes());
     c->workspace()->UnmapAllClients();
     c->Map();
-    c->SetBorderWidth(0);
-    c->MoveResize(0, 0, GetDisplayResolution());
-    c->workspace()->SetFocusedClient(c->window());
   } else {
-    MapDocks();
     const XWindowAttributes& attr = c->attr_cache();
     c->SetBorderWidth(config_->border_width());
     c->MoveResize(attr.x, attr.y, attr.width, attr.height);
