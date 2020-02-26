@@ -440,6 +440,10 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 }
 
 void WindowManager::OnEnterNotify(const XEnterWindowEvent& e) {
+  if (!config_->focus_follows_mouse()) {
+    return;
+  }
+
   HAS_CLIENT_OR_RETURN(e.window);
 
   workspaces_[current_]->UnsetFocusedClient();
