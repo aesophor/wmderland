@@ -256,9 +256,6 @@ void WindowManager::Run() {
       case EnterNotify:
         OnEnterNotify(event.xcrossing);
         break;
-      case LeaveNotify:
-        OnLeaveNotify(event.xcrossing);
-        break;
       case ClientMessage:
         OnClientMessage(event.xclient);
         break;
@@ -443,16 +440,10 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 }
 
 void WindowManager::OnEnterNotify(const XEnterWindowEvent& e) {
-  WM_LOG(INFO, "enter!");
-
   HAS_CLIENT_OR_RETURN(e.window);
 
   workspaces_[current_]->UnsetFocusedClient();
   workspaces_[current_]->SetFocusedClient(e.window);
-}
-
-void WindowManager::OnLeaveNotify(const XEnterWindowEvent& e) {
-  WM_LOG(INFO, "leave!");
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
