@@ -16,12 +16,13 @@
 ; `set <Key> = <Value>` to set a builtin varaible
 ; `set $<Variable> = <Value>` to define your own variable
 ; -----------------------------------------------------------------------
-set gap_width = 12
+set gap_width = 10
 set border_width = 3
 set min_window_width = 100
 set min_window_height = 100
-set focused_color = ff4c5d70
+set focused_color = ff596e84
 set unfocused_color = ff394859
+set focus_follows_mouse = true
 set $Mod = Mod4
 
 
@@ -31,16 +32,16 @@ set $Mod = Mod4
 assign URxvt 1
 assign jetbrains-idea 2
 assign Google-chrome 3
+assign Firefox 3
 assign dolphin 4
 assign ark 4
 assign Et 5
 assign Wps 5
 assign Wpp 5
-assign Spotify 6
 assign vlc 6
-assign Gimp-2.10 7
+assign Popcorn-Time 6
+assign krita 7
 assign tiled 7
-assign Wine,steam.exe 8
 assign Steam 8
 assign PCSX2 8
 assign PPSSPPQt 8
@@ -53,6 +54,9 @@ assign Transmission 9
 ; [Floating Rules]
 ; Applications that should be floating by default
 ; -----------------------------------------------------------------------
+floating plasmashell true
+floating krunner true
+floating kcalc true
 floating systemsettings true
 floating SimpleScreenRecorder true
 floating Sxiv true
@@ -63,19 +67,22 @@ floating Gcolor2 true
 floating Steam true
 floating PCSX2 true
 floating Wine true
-floating Wine,steam.exe true
-floating Wine,tesv.exe true
 floating VirtualBox Machine true
 floating Vigilante true
 floating xfreerdp true
+floating steam_app_72850 true
+floating steam_app_105600 true
 floating com.hacklympics.main.Main true
+floating pyRollCall true
 
 
 ; [Fullscreen Rules]
 ; Applications that should be fullscreen by default
 ; -----------------------------------------------------------------------
 fullscreen Wine,maplelegendswindowed.exe true
-fullscreen Wine,tesv.exe true
+fullscreen insurgency_linux true
+fullscreen steam_app_72850 tesv_original.exe true
+fullscreen postal2-bin true
 
 
 ; [Prohibit Rules]
@@ -137,6 +144,7 @@ bindsym XF86AudioMute exec amixer -q -D pulse set Master toggle
 bindsym XF86AudioRaiseVolume exec amixer -q -D pulse set Master 5%+ unmute
 bindsym XF86AudioLowerVolume exec amixer -q -D pulse set Master 5%- unmute
 bindsym XF86PowerOff exec qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout -1 -1 -1
+bindsym $Mod+Escape exec toggle_screen.sh
 
 bindsym Control+Shift+3 exec scrotutl -f
 bindsym Control+Shift+4 exec scrotutl -s
@@ -150,7 +158,7 @@ bindsym $Mod+Return goto_workspace 1; exec urxvt
 ; Applications to execute when WM starts up (DON'T append '&' at the end)
 ; -----------------------------------------------------------------------
 exec pulseaudio --start --log-target=syslog
-exec ~/.config/mpd/launch.sh
+exec_on_reload ~/.config/mpd/launch.sh
 exec dunst
 exec dispad
 exec displayctl
