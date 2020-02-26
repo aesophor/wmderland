@@ -333,7 +333,6 @@ void Workspace::Navigate(Action::Type focus_action_type) {
       }
       UnsetFocusedClient();
       SetFocusedClient(node->client()->window());
-      client_tree_.set_current_node(node);
       WindowManager::GetInstance()->ArrangeWindows();
       return;
     } else if (node->parent() == client_tree_.root_node()) {
