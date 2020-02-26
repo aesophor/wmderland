@@ -56,7 +56,6 @@ extern "C" {
 #define CURSOR_RESIZE 3
 
 using std::pair;
-using std::vector;
 
 namespace wmderland {
 
@@ -280,10 +279,7 @@ void WindowManager::ArrangeWindows() const {
   wm_utils::SetNetActiveWindow(focused_client->window());
 
   // Pause receiving OnEnterWindowEvents for all windows in current workspace.
-  vector<Client*> clients = workspaces_[current_]->GetClients();
-  for (const auto c : clients) {
-    c->SelectInput(None);
-  }
+  workspaces_[current_]->DisableFocusFollowsMouse();
 
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
@@ -298,9 +294,7 @@ void WindowManager::ArrangeWindows() const {
   }
 
   // Resume receiving OnEnterWindowEvents for all windows in current workspace.
-  for (const auto c : clients) {
-    c->SelectInput(EnterWindowMask);
-  }
+  workspaces_[current_]->EnableFocusFollowsMouse();
 }
 
 void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
@@ -402,6 +396,7 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   GET_CLIENT_OR_RETURN(e.subwindow, c);
 
   wm_utils::SetNetActiveWindow(c->window());
+  c->workspace()->DisableFocusFollowsMouse();
   c->workspace()->UnsetFocusedClient();
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
@@ -424,6 +419,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
   }
 
+  c->workspace()->EnableFocusFollowsMouse();
   btn_pressed_event_.subwindow = None;
   XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
 }

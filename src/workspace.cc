@@ -244,51 +244,24 @@ void Workspace::UnsetFocusedClient() const {
   }
 }
 
-Client* Workspace::GetFocusedClient() const {
-  if (!client_tree_.current_node()) {
-    return nullptr;
-  }
-  return client_tree_.current_node()->client();
-}
-
-Client* Workspace::GetClient(Window window) const {
-  // We'll get the corresponding client using client mapper
-  // whose time complexity is O(1).
-  auto it = Client::mapper_.find(window);
-  if (it == Client::mapper_.end()) {
-    return nullptr;
+void Workspace::DisableFocusFollowsMouse() const {
+  if (!config_->focus_follows_mouse()) {
+    return;
   }
 
-  // But we have to check if it belongs to current workspace!
-  Client* c = it->second;
-  return (c->workspace() == this) ? c : nullptr;
-}
-
-vector<Client*> Workspace::GetClients() const {
-  vector<Client*> clients;
-
-  for (auto leaf : client_tree_.GetLeaves()) {
-    if (leaf != client_tree_.root_node()) {
-      clients.push_back(leaf->client());
-    }
+  for (const auto c : GetClients()) {
+    c->SelectInput(None);
   }
-  return clients;
 }
 
-vector<Client*> Workspace::GetFloatingClients() const {
-  vector<Client*> clients = GetClients();
-  clients.erase(std::remove_if(clients.begin(), clients.end(),
-                               [](Client* c) { return !c->is_floating(); }),
-                clients.end());
-  return clients;
-}
+void Workspace::EnableFocusFollowsMouse() const {
+  if (!config_->focus_follows_mouse()) {
+    return;
+  }
 
-vector<Client*> Workspace::GetTilingClients() const {
-  vector<Client*> clients = GetClients();
-  clients.erase(std::remove_if(clients.begin(), clients.end(),
-                               [](Client* c) { return c->is_floating(); }),
-                clients.end());
-  return clients;
+  for (const auto c : GetClients()) {
+    c->SelectInput(EnterWindowMask);
+  }
 }
 
 void Workspace::Navigate(Action::Type focus_action_type) {
@@ -340,6 +313,54 @@ void Workspace::Navigate(Action::Type focus_action_type) {
     }
   }
 }
+
+Client* Workspace::GetFocusedClient() const {
+  if (!client_tree_.current_node()) {
+    return nullptr;
+  }
+  return client_tree_.current_node()->client();
+}
+
+Client* Workspace::GetClient(Window window) const {
+  // We'll get the corresponding client using client mapper
+  // whose time complexity is O(1).
+  auto it = Client::mapper_.find(window);
+  if (it == Client::mapper_.end()) {
+    return nullptr;
+  }
+
+  // But we have to check if it belongs to current workspace!
+  Client* c = it->second;
+  return (c->workspace() == this) ? c : nullptr;
+}
+
+vector<Client*> Workspace::GetClients() const {
+  vector<Client*> clients;
+
+  for (auto leaf : client_tree_.GetLeaves()) {
+    if (leaf != client_tree_.root_node()) {
+      clients.push_back(leaf->client());
+    }
+  }
+  return clients;
+}
+
+vector<Client*> Workspace::GetFloatingClients() const {
+  vector<Client*> clients = GetClients();
+  clients.erase(std::remove_if(clients.begin(), clients.end(),
+                               [](Client* c) { return !c->is_floating(); }),
+                clients.end());
+  return clients;
+}
+
+vector<Client*> Workspace::GetTilingClients() const {
+  vector<Client*> clients = GetClients();
+  clients.erase(std::remove_if(clients.begin(), clients.end(),
+                               [](Client* c) { return c->is_floating(); }),
+                clients.end());
+  return clients;
+}
+
 
 Config* Workspace::config() const {
   return config_;

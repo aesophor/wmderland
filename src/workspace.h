@@ -32,6 +32,9 @@ class Workspace {
   void SetFocusedClient(Window window);
   void UnsetFocusedClient() const;
 
+  void DisableFocusFollowsMouse() const;
+  void EnableFocusFollowsMouse() const;
+
   void Navigate(Action::Type navigate_action_type);
   Client* GetFocusedClient() const;
   Client* GetClient(Window window) const;
