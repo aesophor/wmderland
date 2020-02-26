@@ -694,6 +694,7 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
     c->set_attr_cache(c->GetXWindowAttributes());
     c->workspace()->UnmapAllClients();
     c->Map();
+    c->SetBorderWidth(0);  // Weird workaround for "doubled visioned" KDE logout screen :(
   } else {
     const XWindowAttributes& attr = c->attr_cache();
     c->SetBorderWidth(config_->border_width());
