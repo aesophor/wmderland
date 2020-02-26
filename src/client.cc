@@ -25,7 +25,6 @@ Client::Client(Display* dpy, Window window, Workspace* workspace)
   Client::mapper_[window] = this;
   SetBorderWidth(workspace->config()->border_width());
   SetBorderColor(workspace->config()->unfocused_color());
-  XSelectInput(dpy, window, EnterWindowMask);
 }
 
 Client::~Client() {
@@ -77,6 +76,10 @@ void Client::SetBorderWidth(unsigned int width) const {
 
 void Client::SetBorderColor(unsigned long color) const {
   XSetWindowBorder(dpy_, window_, color);
+}
+
+void Client::SelectInput(long input_mask) const {
+  XSelectInput(dpy_, window_, input_mask);
 }
 
 XWindowAttributes Client::GetXWindowAttributes() const {
