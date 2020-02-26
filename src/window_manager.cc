@@ -274,15 +274,13 @@ void WindowManager::ArrangeWindows() const {
     MapDocks();
     wm_utils::ClearNetActiveWindow();
     return;
-  } else {
-    wm_utils::SetNetActiveWindow(focused_client->window());
   }
+
+  wm_utils::SetNetActiveWindow(focused_client->window());
 
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
-    focused_client->SetBorderWidth(0);
-    focused_client->MoveResize(0, 0, GetDisplayResolution());
-    focused_client->Raise();
+    workspaces_[current_]->SetFocusedClient(focused_client->window());
   } else {
     MapDocks();
     workspaces_[current_]->MapAllClients();
@@ -692,21 +690,23 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
 
   c->set_fullscreen(fullscreen);
   c->workspace()->set_fullscreen(fullscreen);
-  c->SetBorderWidth((fullscreen) ? 0 : config_->border_width());
 
   if (fullscreen) {
     UnmapDocks();
     c->set_attr_cache(c->GetXWindowAttributes());
-    c->MoveResize(0, 0, GetDisplayResolution());
     c->workspace()->UnmapAllClients();
     c->Map();
+    c->SetBorderWidth(0);
+    c->MoveResize(0, 0, GetDisplayResolution());
     c->workspace()->SetFocusedClient(c->window());
   } else {
     MapDocks();
     const XWindowAttributes& attr = c->attr_cache();
+    c->SetBorderWidth(config_->border_width());
     c->MoveResize(attr.x, attr.y, attr.width, attr.height);
-    ArrangeWindows();
   }
+
+  ArrangeWindows();
 
   // Update window's _NET_WM_STATE_FULLSCREEN property.
   // If the window is set to be NOT fullscreen, we will simply write a nullptr
