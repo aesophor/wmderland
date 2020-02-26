@@ -406,11 +406,11 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   c->workspace()->RaiseAllFloatingClients();
 
   if (c->is_floating() && !c->is_fullscreen()) {
-    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
-
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
+
     btn_pressed_event_ = e;
+    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
   }
 }
 
@@ -418,14 +418,15 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(btn_pressed_event_.subwindow, c);
 
+  c->workspace()->EnableFocusFollowsMouse();
+  
   if (c->is_floating()) {
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
-  }
 
-  c->workspace()->EnableFocusFollowsMouse();
-  btn_pressed_event_.subwindow = None;
-  XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
+    btn_pressed_event_.subwindow = None;
+    XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
+  }
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
