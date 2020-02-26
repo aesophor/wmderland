@@ -444,6 +444,11 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
 void WindowManager::OnEnterNotify(const XEnterWindowEvent& e) {
   WM_LOG(INFO, "enter!");
+
+  HAS_CLIENT_OR_RETURN(e.window);
+
+  workspaces_[current_]->UnsetFocusedClient();
+  workspaces_[current_]->SetFocusedClient(e.window);
 }
 
 void WindowManager::OnLeaveNotify(const XEnterWindowEvent& e) {
