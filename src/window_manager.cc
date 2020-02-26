@@ -444,6 +444,7 @@ void WindowManager::OnEnterNotify(const XEnterWindowEvent& e) {
 
   workspaces_[current_]->UnsetFocusedClient();
   workspaces_[current_]->SetFocusedClient(e.window);
+  ArrangeWindows();
 }
 
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
