@@ -14,6 +14,39 @@ extern "C" {
 #include "config.h"
 #include "util.h"
 
+#define HAS_CLIENT_OR_RETURN(window)        \
+  do {                                      \
+    auto it = Client::mapper_.find(window); \
+    if (it == Client::mapper_.end()) {      \
+      return;                               \
+    }                                       \
+  } while (0)
+
+#define HAS_NO_CLIENT_OR_RETURN(window)     \
+  do {                                      \
+    auto it = Client::mapper_.find(window); \
+    if (it != Client::mapper_.end()) {      \
+      return;                               \
+    }                                       \
+  } while (0)
+
+#define HAS_CLIENT_OR_RETURN_X(window, return_value) \
+  do {                                               \
+    auto it = Client::mapper_.find(window);          \
+    if (it == Client::mapper_.end()) {               \
+      return return_value;                           \
+    }                                                \
+  } while (0)
+
+#define GET_CLIENT_OR_RETURN(window, client) \
+  do {                                       \
+    auto it = Client::mapper_.find(window);  \
+    if (it == Client::mapper_.end()) {       \
+      return;                                \
+    }                                        \
+    client = it->second;                     \
+  } while (0)
+
 #define MOUSE_BTN_LEFT 1
 #define MOUSE_BTN_MID 2
 #define MOUSE_BTN_RIGHT 3
@@ -220,6 +253,9 @@ void WindowManager::Run() {
       case MotionNotify:
         OnMotionNotify(event.xbutton);
         break;
+      case EnterNotify:
+        OnEnterNotify(event.xcrossing);
+        break;
       case ClientMessage:
         OnClientMessage(event.xclient);
         break;
@@ -238,15 +274,29 @@ void WindowManager::ArrangeWindows() const {
     MapDocks();
     wm_utils::ClearNetActiveWindow();
     return;
-  } else {
-    wm_utils::SetNetActiveWindow(focused_client->window());
   }
+
+  wm_utils::SetNetActiveWindow(focused_client->window());
+
+  // Pause receiving OnEnterWindowEvents for all windows in current workspace.
+  workspaces_[current_]->DisableFocusFollowsMouse();
 
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
+    // At this point, we have to consider two cases:
+    // 1. `focused_client` is not mapped yet.
+    // 2. `focused_client` is already mapped.
+    //
+    // If we simply call UnmapAllClients() and focused_client->Map(),
+    // then the fullscreen window will "blink", which is not desirable.
+    //
+    // Therefore, we'll UnmapAllClients() except the focused_client
+    // but still call focused_client->Map() just in case it's not mapped yet.
+    workspaces_[current_]->UnmapAllClients(/*except_window=*/focused_client->window());
+    focused_client->Map();
     focused_client->SetBorderWidth(0);
     focused_client->MoveResize(0, 0, GetDisplayResolution());
-    focused_client->Raise();
+    focused_client->workspace()->SetFocusedClient(focused_client->window());
   } else {
     MapDocks();
     workspaces_[current_]->MapAllClients();
@@ -255,6 +305,9 @@ void WindowManager::ArrangeWindows() const {
     workspaces_[current_]->RaiseAllFloatingClients();
     RaiseNotifications();
   }
+
+  // Resume receiving OnEnterWindowEvents for all windows in current workspace.
+  workspaces_[current_]->EnableFocusFollowsMouse();
 }
 
 void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
@@ -305,25 +358,21 @@ void WindowManager::OnMapNotify(const XMapEvent& e) {
     notifications_.insert(e.window);
   }
 
-  auto it = Client::mapper_.find(e.window);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(e.window, c);
 
-  Client* c = it->second;
+  c->SelectInput(EnterWindowMask);
   c->set_mapped(true);
 }
 
 void WindowManager::OnUnmapNotify(const XUnmapEvent& e) {
-  auto it = Client::mapper_.find(e.window);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
-
-  // Some program unmaps their windows but does not remove them,
+  // Some program unmaps their windows but does not destroy them,
   // so if this window has just been unmapped, but it was not unmapped
   // by the user, then we will remove them for user.
-  Client* c = it->second;
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(e.window, c);
+
+  c->SelectInput(None);
   c->set_mapped(false);
 
   if (c->has_unmap_req_from_wm()) {
@@ -358,49 +407,43 @@ void WindowManager::OnKeyPress(const XKeyEvent& e) {
 }
 
 void WindowManager::OnButtonPress(const XButtonEvent& e) {
-  auto it = Client::mapper_.find(e.subwindow);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(e.subwindow, c);
 
-  Client* c = it->second;
   wm_utils::SetNetActiveWindow(c->window());
+  c->workspace()->DisableFocusFollowsMouse();
   c->workspace()->UnsetFocusedClient();
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
 
   if (c->is_floating() && !c->is_fullscreen()) {
-    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
-
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
+
     btn_pressed_event_ = e;
+    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
   }
 }
 
 void WindowManager::OnButtonRelease(const XButtonEvent&) {
-  auto it = Client::mapper_.find(btn_pressed_event_.subwindow);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(btn_pressed_event_.subwindow, c);
 
-  Client* c = it->second;
+  c->workspace()->EnableFocusFollowsMouse();
+
   if (c->is_floating()) {
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
-  }
 
-  btn_pressed_event_.subwindow = None;
-  XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
+    btn_pressed_event_.subwindow = None;
+    XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
+  }
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
-  auto it = Client::mapper_.find(btn_pressed_event_.subwindow);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(btn_pressed_event_.subwindow, c);
 
-  Client* c = it->second;
   const XWindowAttributes& attr = c->attr_cache();
   int xdiff = e.x - btn_pressed_event_.x;
   int ydiff = e.y - btn_pressed_event_.y;
@@ -418,6 +461,18 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   c->MoveResize(new_x, new_y, new_width, new_height);
 }
 
+void WindowManager::OnEnterNotify(const XEnterWindowEvent& e) {
+  if (!config_->focus_follows_mouse()) {
+    return;
+  }
+
+  HAS_CLIENT_OR_RETURN(e.window);
+
+  workspaces_[current_]->UnsetFocusedClient();
+  workspaces_[current_]->SetFocusedClient(e.window);
+  ArrangeWindows();
+}
+
 void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
   if (e.message_type == prop_->wmderland_client_event) {
     ipc_evmgr_.Handle(e);
@@ -430,12 +485,11 @@ void WindowManager::OnClientMessage(const XClientMessageEvent& e) {
   } else if (e.message_type == prop_->net[atom::NET_WM_STATE]) {
     if (static_cast<Atom>(e.data.l[1]) == prop_->net[atom::NET_WM_STATE_FULLSCREEN] ||
         static_cast<Atom>(e.data.l[2]) == prop_->net[atom::NET_WM_STATE_FULLSCREEN]) {
-      auto it = Client::mapper_.find(e.window);
-      if (it == Client::mapper_.end()) {
-        return;
-      }
+      Client* c = nullptr;
+      GET_CLIENT_OR_RETURN(e.window, c);
+
       bool should_fullscreen = e.data.l[0] == 1 /* _NET_WM_STATE_ADD */
-          || (e.data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !it->second->is_fullscreen());
+          || (e.data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !c->is_fullscreen());
       SetFullscreen(e.window, should_fullscreen);
     }
   }
@@ -468,12 +522,9 @@ int WindowManager::OnWmDetected(Display*, XErrorEvent*) {
 }
 
 void WindowManager::Manage(Window window) {
-  // If this window id has a corresponding Client* in Client::mapper_,
-  // don't process further.
-  auto it = Client::mapper_.find(window);
-  if (it != Client::mapper_.end()) {
-    return;
-  }
+  // This window should NOT have a corresponding Client* in Client::mapper_ yet.
+  // If we really found one, don't re-manage it.
+  HAS_NO_CLIENT_OR_RETURN(window);
 
   // Spawn this window in the specified workspace if such rule exists,
   // otherwise spawn it in current workspace.
@@ -515,12 +566,8 @@ void WindowManager::Manage(Window window) {
 
 void WindowManager::Unmanage(Window window) {
   // If we aren't managing this window, there's no need to proceed further.
-  auto it = Client::mapper_.find(window);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
-
-  Client* c = it->second;
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(window, c);
 
   // If the client being destroyed is in fullscreen mode, make sure to unset the
   // workspace's fullscreen state.
@@ -599,7 +646,6 @@ void WindowManager::GotoWorkspace(int next) {
   }
 
   workspaces_[current_]->UnmapAllClients();
-  workspaces_[next]->MapAllClients();
   current_ = next;
   ArrangeWindows();
 
@@ -609,13 +655,14 @@ void WindowManager::GotoWorkspace(int next) {
 }
 
 void WindowManager::MoveWindowToWorkspace(Window window, int next) {
-  auto it = Client::mapper_.find(window);
-  if (current_ == next || it == Client::mapper_.end() || next < 0 ||
-      next >= (int)workspaces_.size()) {
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(window, c);
+
+  // Return early if current_ == next or `next` is out of bounds.
+  if (current_ == next || next < 0 || next >= (int)workspaces_.size()) {
     return;
   }
 
-  Client* c = it->second;
   if (workspaces_[current_]->is_fullscreen()) {
     SetFullscreen(c->window(), false);
   }
@@ -627,12 +674,9 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
 }
 
 void WindowManager::SetFloating(Window window, bool floating, bool use_default_size) {
-  auto it = Client::mapper_.find(window);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(window, c);
 
-  Client* c = it->second;
   if (c->is_fullscreen()) {
     return;
   }
@@ -647,33 +691,28 @@ void WindowManager::SetFloating(Window window, bool floating, bool use_default_s
 }
 
 void WindowManager::SetFullscreen(Window window, bool fullscreen) {
-  auto it = Client::mapper_.find(window);
-  if (it == Client::mapper_.end()) {
-    return;
-  }
+  Client* c = nullptr;
+  GET_CLIENT_OR_RETURN(window, c);
 
-  Client* c = it->second;
   if (c->is_fullscreen() == fullscreen) {
     return;
   }
 
   c->set_fullscreen(fullscreen);
   c->workspace()->set_fullscreen(fullscreen);
-  c->SetBorderWidth((fullscreen) ? 0 : config_->border_width());
 
   if (fullscreen) {
-    UnmapDocks();
+    // Save the window's position and size before resizing it to fullscreen.
     c->set_attr_cache(c->GetXWindowAttributes());
-    c->MoveResize(0, 0, GetDisplayResolution());
     c->workspace()->UnmapAllClients();
-    c->Map();
-    c->workspace()->SetFocusedClient(c->window());
   } else {
-    MapDocks();
+    // Restore the window's position and size.
     const XWindowAttributes& attr = c->attr_cache();
+    c->SetBorderWidth(config_->border_width());
     c->MoveResize(attr.x, attr.y, attr.width, attr.height);
-    ArrangeWindows();
   }
+
+  ArrangeWindows();
 
   // Update window's _NET_WM_STATE_FULLSCREEN property.
   // If the window is set to be NOT fullscreen, we will simply write a nullptr
@@ -758,11 +797,7 @@ Client::Area WindowManager::GetTilingArea() const {
 
 Client::Area WindowManager::GetFloatingWindowArea(Window window, bool use_default_size) {
   Client::Area area;
-
-  auto it = Client::mapper_.find(window);
-  if (it == Client::mapper_.end()) {
-    return area;
-  }
+  HAS_CLIENT_OR_RETURN_X(window, area);
 
   if (use_default_size) {
     pair<int, int> res = GetDisplayResolution();

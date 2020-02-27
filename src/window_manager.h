@@ -53,6 +53,7 @@ class WindowManager {
   void OnButtonPress(const XButtonEvent& e);
   void OnButtonRelease(const XButtonEvent& e);
   void OnMotionNotify(const XButtonEvent& e);
+  void OnEnterNotify(const XEnterWindowEvent& e);
   void OnClientMessage(const XClientMessageEvent& e);
   void OnConfigReload();
   static int OnXError(Display* dpy, XErrorEvent* e);

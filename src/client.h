@@ -42,6 +42,7 @@ class Client {
   void SetInputFocus() const;
   void SetBorderWidth(unsigned int width) const;
   void SetBorderColor(unsigned long color) const;
+  void SelectInput(long input_mask) const;
   XWindowAttributes GetXWindowAttributes() const;
 
   Window window() const;

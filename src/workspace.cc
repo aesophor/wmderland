@@ -208,9 +208,11 @@ void Workspace::MapAllClients() const {
   }
 }
 
-void Workspace::UnmapAllClients() const {
+void Workspace::UnmapAllClients(Window except_window) const {
   for (const auto c : GetClients()) {
-    c->Unmap();
+    if (c->window() != except_window) {
+      c->Unmap();
+    }
   }
 }
 
@@ -241,6 +243,76 @@ void Workspace::UnsetFocusedClient() const {
   Client* c = client_tree_.current_node()->client();
   if (c) {
     c->SetBorderColor(config_->unfocused_color());
+  }
+}
+
+void Workspace::DisableFocusFollowsMouse() const {
+  if (!config_->focus_follows_mouse()) {
+    return;
+  }
+
+  for (const auto c : GetClients()) {
+    c->SelectInput(None);
+  }
+}
+
+void Workspace::EnableFocusFollowsMouse() const {
+  if (!config_->focus_follows_mouse()) {
+    return;
+  }
+
+  for (const auto c : GetClients()) {
+    c->SelectInput(EnterWindowMask);
+  }
+}
+
+void Workspace::Navigate(Action::Type focus_action_type) {
+  // Do not let user navigate between windows if
+  // 1. there's no currently focused client
+  // 2. current workspace is in fullscreen mode (there's a fullscreen window)
+  if (!client_tree_.current_node() || this->is_fullscreen()) {
+    return;
+  }
+
+  TilingDirection target_direction = TilingDirection::HORIZONTAL;
+  bool find_leftward = true;
+
+  switch (focus_action_type) {
+    case Action::Type::NAVIGATE_LEFT:
+      target_direction = TilingDirection::HORIZONTAL;
+      find_leftward = true;
+      break;
+    case Action::Type::NAVIGATE_RIGHT:
+      target_direction = TilingDirection::HORIZONTAL;
+      find_leftward = false;
+      break;
+    case Action::Type::NAVIGATE_UP:
+      target_direction = TilingDirection::VERTICAL;
+      find_leftward = true;
+      break;
+    case Action::Type::NAVIGATE_DOWN:
+      target_direction = TilingDirection::VERTICAL;
+      find_leftward = false;
+      break;
+    default:
+      return;
+  }
+
+  for (Tree::Node* node = client_tree_.current_node(); node; node = node->parent()) {
+    Tree::Node* sibling = (find_leftward) ? node->GetLeftSibling() : node->GetRightSibling();
+
+    if (node->parent()->tiling_direction() == target_direction && sibling) {
+      node = sibling;
+      while (!node->leaf()) {
+        node = (find_leftward) ? node->children().back() : node->children().front();
+      }
+      UnsetFocusedClient();
+      SetFocusedClient(node->client()->window());
+      WindowManager::GetInstance()->ArrangeWindows();
+      return;
+    } else if (node->parent() == client_tree_.root_node()) {
+      return;
+    }
   }
 }
 
@@ -289,57 +361,6 @@ vector<Client*> Workspace::GetTilingClients() const {
                                [](Client* c) { return c->is_floating(); }),
                 clients.end());
   return clients;
-}
-
-void Workspace::Navigate(Action::Type focus_action_type) {
-  // Do not let user navigate between windows if
-  // 1. there's no currently focused client
-  // 2. current workspace is in fullscreen mode (there's a fullscreen window)
-  if (!client_tree_.current_node() || this->is_fullscreen()) {
-    return;
-  }
-
-  TilingDirection target_direction = TilingDirection::HORIZONTAL;
-  bool find_leftward = true;
-
-  switch (focus_action_type) {
-    case Action::Type::NAVIGATE_LEFT:
-      target_direction = TilingDirection::HORIZONTAL;
-      find_leftward = true;
-      break;
-    case Action::Type::NAVIGATE_RIGHT:
-      target_direction = TilingDirection::HORIZONTAL;
-      find_leftward = false;
-      break;
-    case Action::Type::NAVIGATE_UP:
-      target_direction = TilingDirection::VERTICAL;
-      find_leftward = true;
-      break;
-    case Action::Type::NAVIGATE_DOWN:
-      target_direction = TilingDirection::VERTICAL;
-      find_leftward = false;
-      break;
-    default:
-      return;
-  }
-
-  for (Tree::Node* node = client_tree_.current_node(); node; node = node->parent()) {
-    Tree::Node* sibling = (find_leftward) ? node->GetLeftSibling() : node->GetRightSibling();
-
-    if (node->parent()->tiling_direction() == target_direction && sibling) {
-      node = sibling;
-      while (!node->leaf()) {
-        node = (find_leftward) ? node->children().back() : node->children().front();
-      }
-      UnsetFocusedClient();
-      SetFocusedClient(node->client()->window());
-      client_tree_.set_current_node(node);
-      WindowManager::GetInstance()->ArrangeWindows();
-      return;
-    } else if (node->parent() == client_tree_.root_node()) {
-      return;
-    }
-  }
 }
 
 Config* Workspace::config() const {

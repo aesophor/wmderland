@@ -103,6 +103,10 @@ unsigned long Config::unfocused_color() const {
   return unfocused_color_;
 }
 
+bool Config::focus_follows_mouse() const {
+  return focus_follows_mouse_;
+}
+
 const map<pair<unsigned int, KeyCode>, vector<Action>>& Config::keybind_rules() const {
   return keybind_rules_;
 }
@@ -171,6 +175,7 @@ ifstream& operator>>(ifstream& ifs, Config& config) {
   config.min_window_height_ = MIN_WINDOW_HEIGHT;
   config.focused_color_ = DEFAULT_FOCUSED_COLOR;
   config.unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
+  config.focus_follows_mouse_ = DEFAULT_FOCUS_FOLLOWS_MOUSE;
 
   config.symtab_.clear();
   config.spawn_rules_.clear();
@@ -224,6 +229,8 @@ ifstream& operator>>(ifstream& ifs, Config& config) {
             config.focused_color_ = std::stoul(value, nullptr, 16);
           } else if (key == "unfocused_color") {
             config.unfocused_color_ = std::stoul(value, nullptr, 16);
+          } else if (key == "focus_follows_mouse") {
+            stringstream(tokens.back()) >> std::boolalpha >> config.focus_follows_mouse_;
           } else {
             WM_LOG(ERROR, "config: unrecognized identifier: " << key);
           }

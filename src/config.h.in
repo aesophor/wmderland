@@ -57,6 +57,7 @@ extern "C" {
 #define DEFAULT_BORDER_WIDTH 3
 #define DEFAULT_FOCUSED_COLOR 0xffffffff
 #define DEFAULT_UNFOCUSED_COLOR 0xff41485f
+#define DEFAULT_FOCUS_FOLLOWS_MOUSE true
 
 #define VARIABLE_PREFIX "$"
 #define DEFAULT_EXIT_KEY "Mod4+Shift+Escape"
@@ -81,6 +82,7 @@ class Config {
   unsigned int min_window_height() const;
   unsigned long focused_color() const;
   unsigned long unfocused_color() const;
+  bool focus_follows_mouse() const;
   const std::map<std::pair<unsigned int, KeyCode>, std::vector<Action>>& keybind_rules() const;
   const std::vector<std::string>& autostart_cmds() const;
   const std::vector<std::string>& autostart_cmds_on_reload() const;
@@ -113,6 +115,7 @@ class Config {
   unsigned int min_window_height_;
   unsigned long focused_color_;
   unsigned long unfocused_color_;
+  bool focus_follows_mouse_;
 
   // symtab: for storing user-declared identifiers.
   // spawn_rules_: spawn certain apps in certain workspaces.
