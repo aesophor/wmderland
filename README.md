@@ -70,5 +70,17 @@ See [BUILD.md](https://github.com/aesophor/wmderland/blob/master/BUILD.md).
 
 <br>
 
+## Upgrading from 1.0.2 or before
+Since 1.0.3, Wmderland has been renamed to `w`mderland. The following files have been renamed:
+```
+* ~/.config/Wmderland/config
+* ~/.cache/Wmderland/cookie
+* /usr/local/bin/Wmderland
+* /usr/local/bin/Wmderlandc
+* /usr/share/xsessions/wmderland.desktop
+```
+
+<br>
+
 ## License
 Available under the [MIT License](https://github.com/aesophor/wmderland/blob/master/LICENSE)
