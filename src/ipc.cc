@@ -1,12 +1,11 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "ipc.h"
 
 extern "C" {
 #include <X11/Xlib.h>
 }
 
-#include "client.h"
-#include "config.h"
+#include "log.h"
 #include "window_manager.h"
 
 #define CMD_ID 0
@@ -22,9 +21,13 @@ IpcEvent::IpcEvent(const XClientMessageEvent& e)
 
 void IpcEventManager::Handle(const XClientMessageEvent& e) const {
   WindowManager* wm = WindowManager::GetInstance();
+
   if (!wm) {
+    const char* err_msg = "IpcEventManager::Handle(), wm is nullptr!";
+    WM_LOG(FATAL, err_msg);
     return;
   }
+
 
   IpcEvent ipc_event(e);
   Action action(ipc_event.actionType);
