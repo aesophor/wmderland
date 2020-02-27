@@ -77,19 +77,5 @@ wmderland, while derived from i3, is built with a different philosophy in mind. 
 
 <br>
 
-## Special Thanks
-![](https://github.com/aesophor/wmderland/raw/master/.meta/floating.png)
-
-* [Markus Elfring](https://github.com/elfring) for giving me lots of helpful advice
-* Airblader's [i3wm](https://github.com/i3/i3)
-* suckless.org's [dwm](https://dwm.suckless.org/)
-* jichu4n's [basic_wm](https://github.com/jichu4n/basic_wm)
-* baskerville's [bspwm](https://github.com/baskerville/bspwm)
-* mil's [simple_wm](https://github.com/mil/simple-wm)
-* JLErvin's [berry](https://github.com/JLErvin/berry)
-* Mr messyhair's [eveningwm](https://gitlab.com/mrmessyhair/eveningwm/blob/master/eveningwm.c)
-
-<br>
-
 ## License
 Available under the [MIT License](https://github.com/aesophor/wmderland/blob/master/LICENSE)
