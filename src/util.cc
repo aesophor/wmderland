@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "util.h"
 
 #include <sstream>
 
-#include "config.h"
+#include "log.h"
 
 using std::pair;
 using std::size_t;

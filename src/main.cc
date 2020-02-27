@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 extern "C" {
 #include <unistd.h>
 }
@@ -6,10 +6,7 @@ extern "C" {
 #include <iostream>
 #include <memory>
 
-#if GLOG_FOUND
-#include <glog/logging.h>
-#endif
-#include "config.h"
+#include "log.h"
 #include "snapshot.h"
 #include "stacktrace.h"
 #include "util.h"

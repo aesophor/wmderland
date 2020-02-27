@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #ifndef WMDERLAND_CONFIG_H_
 #define WMDERLAND_CONFIG_H_
 
@@ -16,29 +16,6 @@ extern "C" {
 #include "util.h"
 
 #define GLOG_FOUND @GLOG_FOUND@
-
-// If glog is not installed on the compiling machine,
-// then these macros will do nothing.
-#if GLOG_FOUND
-#include <glog/logging.h>
-#define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
-#define WM_LOG(severity, msg)                \
-  do {                                       \
-    LOG(severity) << msg;                    \
-    google::FlushLogFiles(google::severity); \
-  } while (0)
-#else
-#define WM_INIT_LOGGING(executable_name)
-#define WM_LOG(severity, msg)
-#endif
-
-#define WM_LOG_WITH_ERRNO(reason, errno)               \
-  do {                                                 \
-    const char* err_msg = reason;                      \
-    WM_LOG(ERROR, err_msg << ": " << strerror(errno)); \
-    perror(err_msg);                                   \
-  } while (0)
-
 #define WIN_MGR_NAME "@PROJECT_NAME@"
 #define VERSION "@PROJECT_VERSION@"
 #define CONFIG_FILE "~/.config/wmderland/config"

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "window_manager.h"
 
 extern "C" {
@@ -11,8 +11,7 @@ extern "C" {
 #include <iostream>
 
 #include "client.h"
-#include "config.h"
-#include "util.h"
+#include "log.h"
 
 #define HAS_CLIENT_OR_RETURN(window)        \
   do {                                      \

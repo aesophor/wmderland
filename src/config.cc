@@ -1,13 +1,11 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "config.h"
 
 #include <fstream>
 #include <sstream>
 
-#if GLOG_FOUND
-#include <glog/logging.h>
-#endif
 #include "action.h"
+#include "log.h"
 #include "util.h"
 
 using std::ifstream;
