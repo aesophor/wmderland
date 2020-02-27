@@ -3,6 +3,8 @@
 * CMake >= 3.9
 * libx11 (X11 headers)
 
+<br>
+
 ## Build and Install
 1. Build and install project (installed to /usr/local/bin/)
 ```
