@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(wmderlandc VERSION 1.0.1)
+project(wmderlandc VERSION 1.0.3)
 
 # Find the required libraries.
 find_package(X11 REQUIRED)
