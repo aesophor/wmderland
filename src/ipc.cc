@@ -5,6 +5,7 @@ extern "C" {
 #include <X11/Xlib.h>
 }
 
+#include <iostream>
 #include "log.h"
 #include "window_manager.h"
 
@@ -25,6 +26,7 @@ void IpcEventManager::Handle(const XClientMessageEvent& e) const {
   if (!wm) {
     const char* err_msg = "IpcEventManager::Handle(), wm is nullptr!";
     WM_LOG(FATAL, err_msg);
+    std::cerr << err_msg << std::endl;
     return;
   }
 
