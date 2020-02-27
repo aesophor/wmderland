@@ -208,9 +208,11 @@ void Workspace::MapAllClients() const {
   }
 }
 
-void Workspace::UnmapAllClients() const {
+void Workspace::UnmapAllClients(Window except_window) const {
   for (const auto c : GetClients()) {
-    c->Unmap();
+    if (c->window() != except_window) {
+      c->Unmap();
+    }
   }
 }
 
@@ -360,7 +362,6 @@ vector<Client*> Workspace::GetTilingClients() const {
                 clients.end());
   return clients;
 }
-
 
 Config* Workspace::config() const {
   return config_;

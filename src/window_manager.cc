@@ -283,6 +283,17 @@ void WindowManager::ArrangeWindows() const {
 
   if (workspaces_[current_]->is_fullscreen()) {
     UnmapDocks();
+    // At this point, we have to consider two cases:
+    // 1. `focused_client` is not mapped yet.
+    // 2. `focused_client` is already mapped.
+    //
+    // If we simply call UnmapAllClients() and focused_client->Map(),
+    // then the fullscreen window will "blink", which is not desirable.
+    //
+    // Therefore, we'll UnmapAllClients() except the focused_client
+    // but still call focused_client->Map() just in case it's not mapped yet.
+    workspaces_[current_]->UnmapAllClients(/*except_window=*/focused_client->window());
+    focused_client->Map();
     focused_client->SetBorderWidth(0);
     focused_client->MoveResize(0, 0, GetDisplayResolution());
     focused_client->workspace()->SetFocusedClient(focused_client->window());
@@ -419,7 +430,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
   GET_CLIENT_OR_RETURN(btn_pressed_event_.subwindow, c);
 
   c->workspace()->EnableFocusFollowsMouse();
-  
+
   if (c->is_floating()) {
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
@@ -635,7 +646,6 @@ void WindowManager::GotoWorkspace(int next) {
   }
 
   workspaces_[current_]->UnmapAllClients();
-  workspaces_[next]->MapAllClients();
   current_ = next;
   ArrangeWindows();
 
@@ -649,7 +659,7 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
   GET_CLIENT_OR_RETURN(window, c);
 
   // Return early if current_ == next or `next` is out of bounds.
-  if (current_ == next || next < 0 || next >= (int) workspaces_.size()) {
+  if (current_ == next || next < 0 || next >= (int)workspaces_.size()) {
     return;
   }
 
@@ -692,11 +702,11 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
   c->workspace()->set_fullscreen(fullscreen);
 
   if (fullscreen) {
+    // Save the window's position and size before resizing it to fullscreen.
     c->set_attr_cache(c->GetXWindowAttributes());
     c->workspace()->UnmapAllClients();
-    c->Map();
-    c->SetBorderWidth(0);  // Weird workaround for "doubled visioned" KDE logout screen :(
   } else {
+    // Restore the window's position and size.
     const XWindowAttributes& attr = c->attr_cache();
     c->SetBorderWidth(config_->border_width());
     c->MoveResize(attr.x, attr.y, attr.width, attr.height);

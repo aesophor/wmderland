@@ -27,7 +27,7 @@ class Workspace {
   void SetTilingDirection(TilingDirection tiling_direction);
 
   void MapAllClients() const;
-  void UnmapAllClients() const;
+  void UnmapAllClients(Window except_window = None) const;
   void RaiseAllFloatingClients() const;
   void SetFocusedClient(Window window);
   void UnsetFocusedClient() const;
