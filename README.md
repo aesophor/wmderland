@@ -57,7 +57,7 @@ wmderland, while derived from i3, is built with a different philosophy in mind. 
 <br>
 
 ## Installation
-Remember to place a config file ([example](https://github.com/aesophor/wmderland/blob/master/example/config)) at `~/.config/wmderland/config` after installation.
+Remember to place a config file ([example](https://github.com/aesophor/wmderland/blob/master/example/config)) at **~/.config/wmderland/config** after installation.
 
 * Arch Linux (AUR): `yay -S wmderland-git`
 
