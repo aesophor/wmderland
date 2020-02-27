@@ -4,7 +4,6 @@
 extern "C" {
 #include <X11/Xatom.h>
 #include <X11/Xproto.h>
-#include <X11/cursorfont.h>
 }
 #include <algorithm>
 #include <cstring>
@@ -46,14 +45,6 @@ extern "C" {
     client = it->second;                     \
   } while (0)
 
-#define MOUSE_BTN_LEFT 1
-#define MOUSE_BTN_MID 2
-#define MOUSE_BTN_RIGHT 3
-
-#define CURSOR_NORMAL 0
-#define CURSOR_MOVE 1
-#define CURSOR_RESIZE 3
-
 using std::pair;
 
 namespace wmderland {
@@ -78,7 +69,7 @@ WindowManager::WindowManager(Display* dpy)
     : dpy_(dpy),
       root_window_(DefaultRootWindow(dpy_)),
       wmcheckwin_(XCreateSimpleWindow(dpy_, root_window_, 0, 0, 1, 1, 0, 0, 0)),
-      cursors_(),
+      mouse_(std::make_unique<Mouse>(dpy_, root_window_)),
       prop_(std::make_unique<Properties>(dpy_)),
       config_(std::make_unique<Config>(dpy_, prop_.get(), CONFIG_FILE)),
       cookie_(dpy_, prop_.get(), COOKIE_FILE),
@@ -88,8 +79,7 @@ WindowManager::WindowManager(Display* dpy)
       notifications_(),
       hidden_windows_(),
       workspaces_(),
-      current_(),
-      btn_pressed_event_() {
+      current_() {
   if (HasAnotherWmRunning()) {
     std::cerr << "Another window manager is already running." << std::endl;
     return;
@@ -105,7 +95,6 @@ WindowManager::WindowManager(Display* dpy)
   InitWorkspaces();
   InitProperties();
   InitXGrabs();
-  InitCursors();
   XSync(dpy_, false);
 
   // Run the autostart_cmds defined in user's config.
@@ -145,13 +134,6 @@ void WindowManager::InitXGrabs() {
   XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
               ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync,
               GrabModeAsync, None, None);
-}
-
-void WindowManager::InitCursors() {
-  cursors_[CURSOR_NORMAL] = XCreateFontCursor(dpy_, XC_left_ptr);
-  cursors_[CURSOR_RESIZE] = XCreateFontCursor(dpy_, XC_sizing);
-  cursors_[CURSOR_MOVE] = XCreateFontCursor(dpy_, XC_fleur);
-  XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
 }
 
 void WindowManager::InitProperties() {
@@ -224,6 +206,7 @@ void WindowManager::Run() {
   while (is_running_) {
     // Retrieve and dispatch next X event.
     XNextEvent(dpy_, &event);
+
     switch (event.type) {
       case ConfigureRequest:
         OnConfigureRequest(event.xconfigurerequest);
@@ -419,37 +402,39 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
 
-    btn_pressed_event_ = e;
-    XDefineCursor(dpy_, root_window_, cursors_[e.button]);
+    mouse_->btn_pressed_event_ = e;
+    mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
   }
 }
 
 void WindowManager::OnButtonRelease(const XButtonEvent&) {
   Client* c = nullptr;
-  GET_CLIENT_OR_RETURN(btn_pressed_event_.subwindow, c);
+  GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
   c->workspace()->EnableFocusFollowsMouse();
 
   if (c->is_floating()) {
-    XWindowAttributes attr = wm_utils::GetXWindowAttributes(btn_pressed_event_.subwindow);
+    
+    XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
 
-    btn_pressed_event_.subwindow = None;
-    XDefineCursor(dpy_, root_window_, cursors_[CURSOR_NORMAL]);
+    mouse_->btn_pressed_event_.subwindow = None;
+    mouse_->SetCursor(Mouse::CursorType::NORMAL);
   }
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   Client* c = nullptr;
-  GET_CLIENT_OR_RETURN(btn_pressed_event_.subwindow, c);
+  GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
   const XWindowAttributes& attr = c->attr_cache();
-  int xdiff = e.x - btn_pressed_event_.x;
-  int ydiff = e.y - btn_pressed_event_.y;
-  int new_x = attr.x + ((btn_pressed_event_.button == MOUSE_BTN_LEFT) ? xdiff : 0);
-  int new_y = attr.y + ((btn_pressed_event_.button == MOUSE_BTN_LEFT) ? ydiff : 0);
-  int new_width = attr.width + ((btn_pressed_event_.button == MOUSE_BTN_RIGHT) ? xdiff : 0);
-  int new_height = attr.height + ((btn_pressed_event_.button == MOUSE_BTN_RIGHT) ? ydiff : 0);
+  const XButtonEvent& btn_pressed_event = mouse_->btn_pressed_event_;
+  int xdiff = e.x - btn_pressed_event.x;
+  int ydiff = e.y - btn_pressed_event.y;
+  int new_x = attr.x + ((btn_pressed_event.button == Mouse::Button::LEFT) ? xdiff : 0);
+  int new_y = attr.y + ((btn_pressed_event.button == Mouse::Button::LEFT) ? ydiff : 0);
+  int new_width = attr.width + ((btn_pressed_event.button == Mouse::Button::RIGHT) ? xdiff : 0);
+  int new_height = attr.height + ((btn_pressed_event.button == Mouse::Button::RIGHT) ? ydiff : 0);
 
   int min_width =
       (c->size_hints().min_width > 0) ? c->size_hints().min_width : MIN_WINDOW_WIDTH;

@@ -15,6 +15,7 @@ extern "C" {
 #include "config.h"
 #include "cookie.h"
 #include "ipc.h"
+#include "mouse.h"
 #include "properties.h"
 #include "snapshot.h"
 #include "util.h"
@@ -39,7 +40,6 @@ class WindowManager {
 
   bool HasAnotherWmRunning();
   void InitXGrabs();
-  void InitCursors();
   void InitProperties();
   void InitWorkspaces();
 
@@ -85,11 +85,12 @@ class WindowManager {
   // Misc
   void UpdateClientList();
 
+
   Display* dpy_;
   Window root_window_;
   Window wmcheckwin_;
-  Cursor cursors_[4];
 
+  std::unique_ptr<Mouse> mouse_;      // mouse cursors, window move/resize event cache
   std::unique_ptr<Properties> prop_;  // X and EWMH atoms
   std::unique_ptr<Config> config_;    // user config
   Cookie cookie_;                     // remembers pos/size of each window
@@ -112,9 +113,6 @@ class WindowManager {
   // by the window manager.
   std::array<std::unique_ptr<Workspace>, WORKSPACE_COUNT> workspaces_;
   int current_;  // current workspace
-
-  // Window move, resize event cache.
-  XButtonEvent btn_pressed_event_;
 
   friend class IpcEventManager;
   friend class Snapshot;
