@@ -77,7 +77,7 @@ Since 1.0.3, Wmderland has been renamed to `w`mderland. The following files have
 * ~/.cache/Wmderland/cookie
 * /usr/local/bin/Wmderland
 * /usr/local/bin/Wmderlandc
-* /usr/share/xsessions/wmderland.desktop
+* /usr/share/xsessions/Wmderland.desktop
 ```
 
 <br>
