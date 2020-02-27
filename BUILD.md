@@ -1,18 +1,13 @@
-## Build Requirements / Installation
-#### Build Requirements
-* g++ (requires C++14)
-* CMake
-* Xlib headers
-* **Optional** - [glog](https://github.com/google/glog) (Google's C++ logging library)
+## Build Requirements
+* g++ >= 6.0
+* CMake >= 3.9
+* libx11 (X11 headers)
 
-<br>
-
-#### Installation
-1. Build and install project (executables will be installed under /usr/local/bin/)
+## Installation
+1. Build and install project (installed to /usr/local/bin/)
 ```
 $ git clone https://github.com/aesophor/wmderland.git
-$ cd wmderland
-$ ./build.sh -i
+$ cd wmderland && ./build.sh --install
 ```
 
 2. Copy the config file (**IMPORTANT**)
