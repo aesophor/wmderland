@@ -1,7 +1,7 @@
 <div align="center">
 
 <h3>WMDERLAND</h3>
-<p>Modern, Minimal X11 Tiling Window Manager</p>
+<p>Modern and Minimal X11 Tiling Window Manager</p>
 
 <a href="http://hits.dwyl.io/aesophor/Wmderland">
   <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
@@ -19,33 +19,13 @@
 <br>
 
 ## Overview
-wmderland is a modern, minimal Tiling Window Manager written in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
+wmderland is a modern and minimal Tiling Window Manager developed in C/C++ with [Xlib](https://en.wikipedia.org/wiki/Xlib)
 
-* A lightweight i3, written from scratch
+* A lightweight i3-gaps, written from scratch
 * An easy-to-use config system ([example](https://github.com/aesophor/wmderland/blob/master/example/config))
 * Stable, simple, and maintainable
 
 **Documentation available at its [wiki page](https://github.com/aesophor/wmderland/wiki).**
-
-<br>
-
-## Build Manually
-See [BUILD.md](https://github.com/aesophor/wmderland/blob/master/BUILD.md).
-
-<br>
-
-## Installation
-* Arch Linux
-```
-yay -S wmderland-git
-```
-
-<br>
-
-## Post-Installation
-Remember to place a config file at `~/.config/wmderland/config`
-
-[An example config is available here](https://github.com/aesophor/wmderland/blob/master/example/config).
 
 <br>
 
@@ -60,20 +40,33 @@ A versatile window manager which is shipped with i3bar, has a nice tiling algori
 wmderland, while derived from i3, is built with a different philosophy in mind. The plan for wmderland is to become a modern but minimal tiling window manager which:
 * follows Unix philosophy - Do one thing and do it well
 * has an easy-to-use config
-* tiling behaviors are similar to that of i3
+* tiling behaviors are similar to that of i3wm
 * written in C++ OOP and Xlib. Only ~3k lines of C++14 code, hopefully it will be a lot easier to maintain.
 
 <br>
 
 ## What's Included?
-* Tree-based horizontal and vertical tiling (like i3)
+* Tree-based horizontal and vertical tiling (like i3wm)
 * Gaps and borders (like i3-gaps)
-* Statically allocated workspaces (i3 has dynamically allocated workspaces)
-* Smart floating (dialog windows will be floating by default, their pos/size will be cached)
+* Statically allocated workspaces (i3wm has dynamically allocated workspaces)
+* Smart floating (dialog windows will be floating by default, their pos/size will be remembered)
 * Easy-to-use [config](https://github.com/aesophor/wmderland/blob/master/example/config) with runtime reload support
 * Supports a subset of EWMH, see `src/properties.cc`
-* Error recovery mechanism
 * Shipped with a [tiny client](https://github.com/aesophor/wmderland/tree/master/ipc-client) which can interact/control wmderland
+
+<br>
+
+## Installation
+Remember to place a config file ([example](https://github.com/aesophor/wmderland/blob/master/example/config)) at `~/.config/wmderland/config` after installation.
+
+* Arch Linux (AUR): `yay -S wmderland-git`
+
+* Gentoo Linux (aesophor-overlay): `emerge -av x11-wm/wmderland` ([Add my overlay first](https://github.com/aesophor/aesophor-overlay))
+
+<br>
+
+## Build Manually
+See [BUILD.md](https://github.com/aesophor/wmderland/blob/master/BUILD.md).
 
 <br>
 
