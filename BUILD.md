@@ -3,7 +3,7 @@
 * CMake >= 3.9
 * libx11 (X11 headers)
 
-## Installation
+## Build and Install
 1. Build and install project (installed to /usr/local/bin/)
 ```
 $ git clone https://github.com/aesophor/wmderland.git
