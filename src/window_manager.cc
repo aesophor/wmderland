@@ -136,6 +136,19 @@ void WindowManager::InitXGrabs() {
               GrabModeAsync, None, None);
 }
 
+void WindowManager::UndoXGrabs() {
+  for (const auto& rule : config_->keybind_rules()) {
+    unsigned int modifier = rule.first.first;
+    KeyCode keycode = rule.first.second;
+
+    XUngrabKey(dpy_, keycode, modifier, root_window_);
+    XUngrabKey(dpy_, keycode, modifier | LockMask, root_window_);
+  }
+
+  // Define which mouse clicks will send us X events.
+  XUngrabButton(dpy_, AnyButton, Mod4Mask, root_window_);
+}
+
 void WindowManager::InitProperties() {
   char* win_mgr_name = const_cast<char*>(WIN_MGR_NAME);
   size_t win_mgr_name_len = std::strlen(win_mgr_name);
@@ -623,7 +636,9 @@ void WindowManager::HandleAction(const Action& action) {
       break;
     case Action::Type::RELOAD:
       sys_utils::NotifySend("Reloading config...");
+      UndoXGrabs();  // XUngrabKey(), XUngrabButton()
       config_->Load();
+      InitXGrabs();  // XGrabKey(), XGrabButton()
       OnConfigReload();
       break;
     case Action::Type::DEBUG_CRASH:
