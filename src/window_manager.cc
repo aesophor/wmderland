@@ -592,7 +592,8 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::FLOAT_MOVE_RIGHT:
     case Action::Type::FLOAT_MOVE_UP:
     case Action::Type::FLOAT_MOVE_DOWN:
-      if (!focused_client || !focused_client->is_floating()) return;
+      if (!focused_client ||
+          !focused_client->is_floating() || focused_client->is_fullscreen()) return;
       workspaces_[current_]->DisableFocusFollowsMouse();
       focused_client->Move(action);
       workspaces_[current_]->EnableFocusFollowsMouse();
@@ -601,7 +602,8 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::FLOAT_RESIZE_RIGHT:
     case Action::Type::FLOAT_RESIZE_UP:
     case Action::Type::FLOAT_RESIZE_DOWN:
-      if (!focused_client || !focused_client->is_floating()) return;
+      if (!focused_client ||
+          !focused_client->is_floating() || focused_client->is_fullscreen()) return;
       workspaces_[current_]->DisableFocusFollowsMouse();
       focused_client->Resize(action);
       workspaces_[current_]->EnableFocusFollowsMouse();
