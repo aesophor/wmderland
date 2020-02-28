@@ -18,7 +18,7 @@ const char* version() {
   return WIN_MGR_NAME
       " " VERSION
       "\n"
-      "Copyright (C) 2018-2019 Marco Wang <m.aesophor@gmail.com>\n"
+      "Copyright (C) 2018-2020 Marco Wang <m.aesophor@gmail.com>\n"
       "This is free software, see the source for copying conditions. There is no\n"
       "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE";
 }
