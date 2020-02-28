@@ -23,7 +23,10 @@ set min_window_height = 100
 set focused_color = ff596e84
 set unfocused_color = ff394859
 set focus_follows_mouse = true
-set $Mod = Mod4
+
+set $Alt = Mod1
+set $Cmd = Mod4
+set $Mod = $Cmd
 
 
 ; [Spawning Rules]
@@ -121,8 +124,16 @@ bindsym $Mod+Shift+9 move_window_to_workspace 9
 
 bindsym $Mod+h navigate_left
 bindsym $Mod+l navigate_right
-bindsym $Mod+j navigate_down
 bindsym $Mod+k navigate_up
+bindsym $Mod+j navigate_down
+bindsym $Mod+$Alt+Shift+h float_move_left
+bindsym $Mod+$Alt+Shift+l float_move_right
+bindsym $Mod+$Alt+Shift+k float_move_up
+bindsym $Mod+$Alt+Shift+j float_move_down
+bindsym $Mod+$Alt+h float_resize_left
+bindsym $Mod+$Alt+l float_resize_right
+bindsym $Mod+$Alt+k float_resize_up
+bindsym $Mod+$Alt+j float_resize_down
 bindsym $Mod+g tile_h
 bindsym $Mod+v tile_v
 bindsym $Mod+Shift+space toggle_floating
