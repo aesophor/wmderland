@@ -115,21 +115,22 @@ XWindowAttributes Client::GetXWindowAttributes() const {
 }
 
 void Client::Move(const Action& action) const {
+  const int& move_step = workspace_->config()->float_move_step();
   int x_offset = 0;
   int y_offset = 0;
 
   switch (action.type()) {
     case Action::Type::FLOAT_MOVE_LEFT:
-      x_offset = -10;
+      x_offset = -move_step;
       break;
     case Action::Type::FLOAT_MOVE_RIGHT:
-      x_offset = 10;
+      x_offset = move_step;
       break;
     case Action::Type::FLOAT_MOVE_UP:
-      y_offset = -10;
+      y_offset = -move_step;
       break;
     case Action::Type::FLOAT_MOVE_DOWN:
-      y_offset = 10;
+      y_offset = move_step;
       break;
     default:
       break;
@@ -139,21 +140,22 @@ void Client::Move(const Action& action) const {
 }
 
 void Client::Resize(const Action& action) const {
+  const int& resize_step = workspace_->config()->float_resize_step();
   int width_offset = 0;
   int height_offset = 0;
 
   switch (action.type()) {
     case Action::Type::FLOAT_RESIZE_LEFT:
-      width_offset = -10;
+      width_offset = -resize_step;
       break;
     case Action::Type::FLOAT_RESIZE_RIGHT:
-      width_offset = 10;
+      width_offset = resize_step;
       break;
     case Action::Type::FLOAT_RESIZE_UP:
-      height_offset = -10;
+      height_offset = -resize_step;
       break;
     case Action::Type::FLOAT_RESIZE_DOWN:
-      height_offset = 10;
+      height_offset = resize_step;
       break;
     default:
       break;

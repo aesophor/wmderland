@@ -93,6 +93,14 @@ unsigned int Config::min_window_height() const {
   return min_window_height_;
 }
 
+unsigned int Config::float_move_step() const {
+  return float_move_step_;
+}
+
+unsigned int Config::float_resize_step() const {
+  return float_resize_step_;
+}
+
 unsigned long Config::focused_color() const {
   return focused_color_;
 }
@@ -171,6 +179,8 @@ ifstream& operator>>(ifstream& ifs, Config& config) {
   config.border_width_ = DEFAULT_BORDER_WIDTH;
   config.min_window_width_ = MIN_WINDOW_WIDTH;
   config.min_window_height_ = MIN_WINDOW_HEIGHT;
+  config.float_move_step_ = DEFAULT_FLOAT_MOVE_STEP;
+  config.float_resize_step_ = DEFAULT_FLOAT_RESIZE_STEP;
   config.focused_color_ = DEFAULT_FOCUSED_COLOR;
   config.unfocused_color_ = DEFAULT_UNFOCUSED_COLOR;
   config.focus_follows_mouse_ = DEFAULT_FOCUS_FOLLOWS_MOUSE;
@@ -223,6 +233,10 @@ ifstream& operator>>(ifstream& ifs, Config& config) {
             config.min_window_width_ = std::stoi(value);
           } else if (key == "min_window_height") {
             config.min_window_height_ = std::stoi(value);
+          } else if (key == "float_move_step") {
+            config.float_move_step_ = std::stoi(value);
+          } else if (key == "float_resize_step") {
+            config.float_resize_step_ = std::stoi(value);
           } else if (key == "focused_color") {
             config.focused_color_ = std::stoul(value, nullptr, 16);
           } else if (key == "unfocused_color") {

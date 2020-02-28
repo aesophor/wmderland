@@ -32,6 +32,8 @@ extern "C" {
 
 #define DEFAULT_GAP_WIDTH 15
 #define DEFAULT_BORDER_WIDTH 3
+#define DEFAULT_FLOAT_MOVE_STEP 10
+#define DEFAULT_FLOAT_RESIZE_STEP 10
 #define DEFAULT_FOCUSED_COLOR 0xffffffff
 #define DEFAULT_UNFOCUSED_COLOR 0xff41485f
 #define DEFAULT_FOCUS_FOLLOWS_MOUSE true
@@ -57,6 +59,8 @@ class Config {
   unsigned int border_width() const;
   unsigned int min_window_width() const;
   unsigned int min_window_height() const;
+  unsigned int float_move_step() const;
+  unsigned int float_resize_step() const;
   unsigned long focused_color() const;
   unsigned long unfocused_color() const;
   bool focus_follows_mouse() const;
@@ -90,6 +94,8 @@ class Config {
   unsigned int border_width_;
   unsigned int min_window_width_;
   unsigned int min_window_height_;
+  unsigned int float_move_step_;
+  unsigned int float_resize_step_;
   unsigned long focused_color_;
   unsigned long unfocused_color_;
   bool focus_follows_mouse_;
