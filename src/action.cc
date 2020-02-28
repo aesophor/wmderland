@@ -41,10 +41,26 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::NAVIGATE_LEFT;
   } else if (s == "navigate_right") {
     return Action::Type::NAVIGATE_RIGHT;
-  } else if (s == "navigate_down") {
-    return Action::Type::NAVIGATE_DOWN;
   } else if (s == "navigate_up") {
     return Action::Type::NAVIGATE_UP;
+  } else if (s == "navigate_down") {
+    return Action::Type::NAVIGATE_DOWN;
+  } else if (s == "float_move_left") {
+    return Action::Type::FLOAT_MOVE_LEFT;
+  } else if (s == "float_move_right") {
+    return Action::Type::FLOAT_MOVE_RIGHT;
+  } else if (s == "float_move_up") {
+    return Action::Type::FLOAT_MOVE_UP;
+  } else if (s == "float_move_down") {
+    return Action::Type::FLOAT_MOVE_DOWN;
+  } else if (s == "float_resize_left") {
+    return Action::Type::FLOAT_RESIZE_LEFT;
+  } else if (s == "float_resize_right") {
+    return Action::Type::FLOAT_RESIZE_RIGHT;
+  } else if (s == "float_resize_up") {
+    return Action::Type::FLOAT_RESIZE_UP;
+  } else if (s == "float_resize_down") {
+    return Action::Type::FLOAT_RESIZE_DOWN;
   } else if (s == "tile_h") {
     return Action::Type::TILE_H;
   } else if (s == "tile_v") {

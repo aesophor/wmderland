@@ -575,6 +575,20 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::NAVIGATE_DOWN:
       workspaces_[current_]->Navigate(action.type());
       break;
+    case Action::Type::FLOAT_MOVE_LEFT:
+    case Action::Type::FLOAT_MOVE_RIGHT:
+    case Action::Type::FLOAT_MOVE_UP:
+    case Action::Type::FLOAT_MOVE_DOWN:
+      if (!focused_client || !focused_client->is_floating()) return;
+      focused_client->Move(action);
+      break;
+    case Action::Type::FLOAT_RESIZE_LEFT:
+    case Action::Type::FLOAT_RESIZE_RIGHT:
+    case Action::Type::FLOAT_RESIZE_UP:
+    case Action::Type::FLOAT_RESIZE_DOWN:
+      if (!focused_client || !focused_client->is_floating()) return;
+      focused_client->Resize(action);
+      break;
     case Action::Type::TILE_H:
       workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
       break;

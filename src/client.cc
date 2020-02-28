@@ -50,16 +50,34 @@ void Client::Raise() const {
   XRaiseWindow(dpy_, window_);
 }
 
-void Client::Move(int x, int y) const {
-  XMoveWindow(dpy_, window_, x, y);
+void Client::Move(int x, int y, bool absolute) const {
+  if (absolute) {
+    XMoveWindow(dpy_, window_, x, y);
+    return;
+  }
+
+  XWindowAttributes attr = GetXWindowAttributes();
+  XMoveWindow(dpy_, window_, attr.x + x, attr.y + y);
 }
 
-void Client::Resize(int w, int h) const {
-  XResizeWindow(dpy_, window_, w, h);
+void Client::Resize(int w, int h, bool absolute) const {
+  if (absolute) {
+    XResizeWindow(dpy_, window_, w, h);
+    return;
+  }
+
+  XWindowAttributes attr = GetXWindowAttributes();
+  XResizeWindow(dpy_, window_, attr.width + w, attr.height + h);
 }
 
-void Client::MoveResize(int x, int y, int w, int h) const {
-  XMoveResizeWindow(dpy_, window_, x, y, w, h);
+void Client::MoveResize(int x, int y, int w, int h, bool absolute) const {
+  if (absolute) {
+    XMoveResizeWindow(dpy_, window_, x, y, w, h);
+    return;
+  }
+
+  XWindowAttributes attr = GetXWindowAttributes();
+  XMoveResizeWindow(dpy_, window_, attr.x + x, attr.y + y, attr.width + w, attr.height + h);
 }
 
 void Client::MoveResize(int x, int y, const std::pair<int, int>& size) const {
@@ -84,6 +102,54 @@ void Client::SelectInput(long input_mask) const {
 
 XWindowAttributes Client::GetXWindowAttributes() const {
   return wm_utils::GetXWindowAttributes(window_);
+}
+
+void Client::Move(const Action& action) const {
+  int x_offset = 0;
+  int y_offset = 0;
+
+  switch (action.type()) {
+    case Action::Type::FLOAT_MOVE_LEFT:
+      x_offset = -10;
+      break;
+    case Action::Type::FLOAT_MOVE_RIGHT:
+      x_offset = 10;
+      break;
+    case Action::Type::FLOAT_MOVE_UP:
+      y_offset = -10;
+      break;
+    case Action::Type::FLOAT_MOVE_DOWN:
+      y_offset = 10;
+      break;
+    default:
+      break;
+  }
+
+  Move(x_offset, y_offset, /*absolute=*/false);
+}
+
+void Client::Resize(const Action& action) const {
+  int width_offset = 0;
+  int height_offset = 0;
+
+  switch (action.type()) {
+    case Action::Type::FLOAT_RESIZE_LEFT:
+      width_offset = -10;
+      break;
+    case Action::Type::FLOAT_RESIZE_RIGHT:
+      width_offset = 10;
+      break;
+    case Action::Type::FLOAT_RESIZE_UP:
+      height_offset = -10;
+      break;
+    case Action::Type::FLOAT_RESIZE_DOWN:
+      height_offset = 10;
+      break;
+    default:
+      break;
+  }
+
+  Resize(width_offset, height_offset, /*absolute=*/false);
 }
 
 Window Client::window() const {
