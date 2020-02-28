@@ -62,22 +62,32 @@ void Client::Move(int x, int y, bool absolute) const {
 
 void Client::Resize(int w, int h, bool absolute) const {
   if (absolute) {
+    ConstrainSize(w, h);
     XResizeWindow(dpy_, window_, w, h);
     return;
   }
 
+  // Resize window by relative width and height.
   XWindowAttributes attr = GetXWindowAttributes();
-  XResizeWindow(dpy_, window_, attr.width + w, attr.height + h);
+  w = attr.width + w;
+  h = attr.height + h;
+  ConstrainSize(w, h);
+  XResizeWindow(dpy_, window_, w, h);
 }
 
 void Client::MoveResize(int x, int y, int w, int h, bool absolute) const {
   if (absolute) {
+    ConstrainSize(w, h);
     XMoveResizeWindow(dpy_, window_, x, y, w, h);
     return;
   }
 
+  // Resize window by relative width and height.
   XWindowAttributes attr = GetXWindowAttributes();
-  XMoveResizeWindow(dpy_, window_, attr.x + x, attr.y + y, attr.width + w, attr.height + h);
+  w = attr.width + w;
+  h = attr.height + h;
+  ConstrainSize(w, h);
+  XMoveResizeWindow(dpy_, window_, attr.x + x, attr.y + y, w, h);
 }
 
 void Client::MoveResize(int x, int y, const std::pair<int, int>& size) const {
@@ -206,6 +216,14 @@ void Client::set_has_unmap_req_from_wm(bool has_unmap_req_from_wm) {
 
 void Client::set_attr_cache(const XWindowAttributes& attr) {
   attr_cache_ = attr;
+}
+
+void Client::ConstrainSize(int& w, int& h) const {
+  const int min_w = (size_hints_.flags & PMinSize) ? size_hints_.min_width : MIN_WINDOW_WIDTH;
+  const int min_h = (size_hints_.flags & PMinSize) ? size_hints_.min_height : MIN_WINDOW_HEIGHT;
+
+  w = (w < min_w) ? min_w : w;
+  h = (h < min_h) ? min_h : h;
 }
 
 Client::Area::Area() : x(), y(), w(), h() {}

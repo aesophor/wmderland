@@ -427,7 +427,6 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
   c->workspace()->EnableFocusFollowsMouse();
 
   if (c->is_floating()) {
-    
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
 
@@ -442,6 +441,7 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
   const XWindowAttributes& attr = c->attr_cache();
   const XButtonEvent& btn_pressed_event = mouse_->btn_pressed_event_;
+
   int xdiff = e.x - btn_pressed_event.x;
   int ydiff = e.y - btn_pressed_event.y;
   int new_x = attr.x + ((btn_pressed_event.button == Mouse::Button::LEFT) ? xdiff : 0);
@@ -449,12 +449,6 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   int new_width = attr.width + ((btn_pressed_event.button == Mouse::Button::RIGHT) ? xdiff : 0);
   int new_height = attr.height + ((btn_pressed_event.button == Mouse::Button::RIGHT) ? ydiff : 0);
 
-  int min_width =
-      (c->size_hints().min_width > 0) ? c->size_hints().min_width : MIN_WINDOW_WIDTH;
-  int min_height =
-      (c->size_hints().min_height > 0) ? c->size_hints().min_height : MIN_WINDOW_HEIGHT;
-  new_width = (new_width < min_width) ? min_width : new_width;
-  new_height = (new_height < min_height) ? min_height : new_height;
   c->MoveResize(new_x, new_y, new_width, new_height);
 }
 

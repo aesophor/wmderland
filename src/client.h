@@ -67,6 +67,8 @@ class Client {
   void set_attr_cache(const XWindowAttributes& attr);
 
  private:
+  void ConstrainSize(int& w, int& h) const;
+
   Display* dpy_;
   Window window_;
   Workspace* workspace_;
