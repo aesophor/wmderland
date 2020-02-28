@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "client.h"
 
 #include "config.h"
@@ -50,16 +50,44 @@ void Client::Raise() const {
   XRaiseWindow(dpy_, window_);
 }
 
-void Client::Move(int x, int y) const {
-  XMoveWindow(dpy_, window_, x, y);
+void Client::Move(int x, int y, bool absolute) const {
+  if (absolute) {
+    XMoveWindow(dpy_, window_, x, y);
+    return;
+  }
+
+  XWindowAttributes attr = GetXWindowAttributes();
+  XMoveWindow(dpy_, window_, attr.x + x, attr.y + y);
 }
 
-void Client::Resize(int w, int h) const {
+void Client::Resize(int w, int h, bool absolute) const {
+  if (absolute) {
+    ConstrainSize(w, h);
+    XResizeWindow(dpy_, window_, w, h);
+    return;
+  }
+
+  // Resize window by relative width and height.
+  XWindowAttributes attr = GetXWindowAttributes();
+  w = attr.width + w;
+  h = attr.height + h;
+  ConstrainSize(w, h);
   XResizeWindow(dpy_, window_, w, h);
 }
 
-void Client::MoveResize(int x, int y, int w, int h) const {
-  XMoveResizeWindow(dpy_, window_, x, y, w, h);
+void Client::MoveResize(int x, int y, int w, int h, bool absolute) const {
+  if (absolute) {
+    ConstrainSize(w, h);
+    XMoveResizeWindow(dpy_, window_, x, y, w, h);
+    return;
+  }
+
+  // Resize window by relative width and height.
+  XWindowAttributes attr = GetXWindowAttributes();
+  w = attr.width + w;
+  h = attr.height + h;
+  ConstrainSize(w, h);
+  XMoveResizeWindow(dpy_, window_, attr.x + x, attr.y + y, w, h);
 }
 
 void Client::MoveResize(int x, int y, const std::pair<int, int>& size) const {
@@ -84,6 +112,56 @@ void Client::SelectInput(long input_mask) const {
 
 XWindowAttributes Client::GetXWindowAttributes() const {
   return wm_utils::GetXWindowAttributes(window_);
+}
+
+void Client::Move(const Action& action) const {
+  const int& move_step = workspace_->config()->float_move_step();
+  int x_offset = 0;
+  int y_offset = 0;
+
+  switch (action.type()) {
+    case Action::Type::FLOAT_MOVE_LEFT:
+      x_offset = -move_step;
+      break;
+    case Action::Type::FLOAT_MOVE_RIGHT:
+      x_offset = move_step;
+      break;
+    case Action::Type::FLOAT_MOVE_UP:
+      y_offset = -move_step;
+      break;
+    case Action::Type::FLOAT_MOVE_DOWN:
+      y_offset = move_step;
+      break;
+    default:
+      break;
+  }
+
+  Move(x_offset, y_offset, /*absolute=*/false);
+}
+
+void Client::Resize(const Action& action) const {
+  const int& resize_step = workspace_->config()->float_resize_step();
+  int width_offset = 0;
+  int height_offset = 0;
+
+  switch (action.type()) {
+    case Action::Type::FLOAT_RESIZE_LEFT:
+      width_offset = -resize_step;
+      break;
+    case Action::Type::FLOAT_RESIZE_RIGHT:
+      width_offset = resize_step;
+      break;
+    case Action::Type::FLOAT_RESIZE_UP:
+      height_offset = -resize_step;
+      break;
+    case Action::Type::FLOAT_RESIZE_DOWN:
+      height_offset = resize_step;
+      break;
+    default:
+      break;
+  }
+
+  Resize(width_offset, height_offset, /*absolute=*/false);
 }
 
 Window Client::window() const {
@@ -140,6 +218,13 @@ void Client::set_has_unmap_req_from_wm(bool has_unmap_req_from_wm) {
 
 void Client::set_attr_cache(const XWindowAttributes& attr) {
   attr_cache_ = attr;
+}
+
+void Client::ConstrainSize(int& w, int& h) const {
+  const int min_w = (size_hints_.flags & PMinSize) ? size_hints_.min_width : MIN_WINDOW_WIDTH;
+  const int min_h = (size_hints_.flags & PMinSize) ? size_hints_.min_height : MIN_WINDOW_HEIGHT;
+  w = (w < min_w) ? min_w : w;
+  h = (h < min_h) ? min_h : h;
 }
 
 Client::Area::Area() : x(), y(), w(), h() {}

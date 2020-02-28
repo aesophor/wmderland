@@ -40,6 +40,7 @@ class WindowManager {
 
   bool HasAnotherWmRunning();
   void InitXGrabs();
+  void UndoXGrabs();
   void InitProperties();
   void InitWorkspaces();
 

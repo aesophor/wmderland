@@ -8,6 +8,7 @@ extern "C" {
 }
 #include <string>
 #include <unordered_map>
+#include "action.h"
 
 namespace wmderland {
 
@@ -35,15 +36,18 @@ class Client {
   void Map() const;
   void Unmap();
   void Raise() const;
-  void Move(int x, int y) const;
-  void Resize(int w, int h) const;
-  void MoveResize(int x, int y, int w, int h) const;
+  void Move(int x, int y, bool absolute = true) const;
+  void Resize(int w, int h, bool absolute = true) const;
+  void MoveResize(int x, int y, int w, int h, bool absolute = true) const;
   void MoveResize(int x, int y, const std::pair<int, int>& size) const;
   void SetInputFocus() const;
   void SetBorderWidth(unsigned int width) const;
   void SetBorderColor(unsigned long color) const;
   void SelectInput(long input_mask) const;
   XWindowAttributes GetXWindowAttributes() const;
+
+  void Move(const Action& action) const;  // FLOAT_MOVE_{LEFT,RIGHT,UP,DOWN}
+  void Resize(const Action& action) const;  // FLOAT_RESIZE_{LEFT,RIGHT,UP,DOWN}
 
   Window window() const;
   Workspace* workspace() const;
@@ -63,6 +67,8 @@ class Client {
   void set_attr_cache(const XWindowAttributes& attr);
 
  private:
+  void ConstrainSize(int& w, int& h) const;
+
   Display* dpy_;
   Window window_;
   Workspace* workspace_;

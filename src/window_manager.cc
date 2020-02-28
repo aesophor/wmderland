@@ -136,6 +136,19 @@ void WindowManager::InitXGrabs() {
               GrabModeAsync, None, None);
 }
 
+void WindowManager::UndoXGrabs() {
+  for (const auto& rule : config_->keybind_rules()) {
+    unsigned int modifier = rule.first.first;
+    KeyCode keycode = rule.first.second;
+
+    XUngrabKey(dpy_, keycode, modifier, root_window_);
+    XUngrabKey(dpy_, keycode, modifier | LockMask, root_window_);
+  }
+
+  // Define which mouse clicks will send us X events.
+  XUngrabButton(dpy_, AnyButton, Mod4Mask, root_window_);
+}
+
 void WindowManager::InitProperties() {
   char* win_mgr_name = const_cast<char*>(WIN_MGR_NAME);
   size_t win_mgr_name_len = std::strlen(win_mgr_name);
@@ -414,7 +427,6 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
   c->workspace()->EnableFocusFollowsMouse();
 
   if (c->is_floating()) {
-    
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
 
@@ -429,6 +441,7 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
 
   const XWindowAttributes& attr = c->attr_cache();
   const XButtonEvent& btn_pressed_event = mouse_->btn_pressed_event_;
+
   int xdiff = e.x - btn_pressed_event.x;
   int ydiff = e.y - btn_pressed_event.y;
   int new_x = attr.x + ((btn_pressed_event.button == Mouse::Button::LEFT) ? xdiff : 0);
@@ -436,12 +449,6 @@ void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   int new_width = attr.width + ((btn_pressed_event.button == Mouse::Button::RIGHT) ? xdiff : 0);
   int new_height = attr.height + ((btn_pressed_event.button == Mouse::Button::RIGHT) ? ydiff : 0);
 
-  int min_width =
-      (c->size_hints().min_width > 0) ? c->size_hints().min_width : MIN_WINDOW_WIDTH;
-  int min_height =
-      (c->size_hints().min_height > 0) ? c->size_hints().min_height : MIN_WINDOW_HEIGHT;
-  new_width = (new_width < min_width) ? min_width : new_width;
-  new_height = (new_height < min_height) ? min_height : new_height;
   c->MoveResize(new_x, new_y, new_width, new_height);
 }
 
@@ -575,6 +582,24 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::NAVIGATE_DOWN:
       workspaces_[current_]->Navigate(action.type());
       break;
+    case Action::Type::FLOAT_MOVE_LEFT:
+    case Action::Type::FLOAT_MOVE_RIGHT:
+    case Action::Type::FLOAT_MOVE_UP:
+    case Action::Type::FLOAT_MOVE_DOWN:
+    case Action::Type::FLOAT_RESIZE_LEFT:
+    case Action::Type::FLOAT_RESIZE_RIGHT:
+    case Action::Type::FLOAT_RESIZE_UP:
+    case Action::Type::FLOAT_RESIZE_DOWN:
+      if (!focused_client ||
+          !focused_client->is_floating() || focused_client->is_fullscreen()) return;
+      workspaces_[current_]->DisableFocusFollowsMouse();
+      if (action.type() <= Action::Type::FLOAT_MOVE_DOWN) {
+        focused_client->Move(action);
+      } else {
+        focused_client->Resize(action);
+      }
+      workspaces_[current_]->EnableFocusFollowsMouse();
+      break;
     case Action::Type::TILE_H:
       workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
       break;
@@ -609,7 +634,9 @@ void WindowManager::HandleAction(const Action& action) {
       break;
     case Action::Type::RELOAD:
       sys_utils::NotifySend("Reloading config...");
+      UndoXGrabs();  // XUngrabKey(), XUngrabButton()
       config_->Load();
+      InitXGrabs();  // XGrabKey(), XGrabButton()
       OnConfigReload();
       break;
     case Action::Type::DEBUG_CRASH:
