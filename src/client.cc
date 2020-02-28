@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
+// Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "client.h"
 
 #include "config.h"
@@ -221,7 +221,6 @@ void Client::set_attr_cache(const XWindowAttributes& attr) {
 void Client::ConstrainSize(int& w, int& h) const {
   const int min_w = (size_hints_.flags & PMinSize) ? size_hints_.min_width : MIN_WINDOW_WIDTH;
   const int min_h = (size_hints_.flags & PMinSize) ? size_hints_.min_height : MIN_WINDOW_HEIGHT;
-
   w = (w < min_w) ? min_w : w;
   h = (h < min_h) ? min_h : h;
 }
