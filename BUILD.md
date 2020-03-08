@@ -13,7 +13,11 @@
 ## Build Requirements
 * g++ >= 6.0
 * CMake >= 3.9
-* libx11-dev (X11 headers)
+* X11 headers:
+  * Ubuntu: libx11-dev
+  * Fedora: libX11-devel
+  * Arch: libx11
+  * Gentoo: libX11
 
 <br>
 
