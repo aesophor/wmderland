@@ -2,6 +2,7 @@
 * Build, Install and Running
   * [build requirements](https://github.com/aesophor/wmderland/blob/master/BUILD.md#build-requirements)
   * [build and install](https://github.com/aesophor/wmderland/blob/master/BUILD.md#build-and-install)
+  * [black screen?](https://github.com/aesophor/wmderland/blob/master/BUILD.md#black-screen)
   * [configure and run](https://github.com/aesophor/wmderland/blob/master/BUILD.md#configure-and-run)
   
 * Workarounds
