@@ -18,7 +18,12 @@ $ mkdir -p ~/.config/wmderland
 $ cp example/config ~/.config/wmderland/.
 ```
 
-3. If not using a Display Manager, add this to your ~/.xinitrc and execute `startx`
+3. If using a Display Manager, copy the .desktop file
+```
+$ sudo cp example/wmderland.desktop /usr/share/xsessions/.
+```
+
+4. If not using a Display Manager, add this to your ~/.xinitrc and execute `startx`
 ```
 exec wmderland
 ```
