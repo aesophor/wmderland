@@ -18,6 +18,7 @@ function show_horizontal_line() {
   printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 }
 
+
 # Build main project
 function build_wmderland() {
   echo "-- Building wmderland (WM)"
@@ -34,7 +35,11 @@ function build_wmderland() {
     echo ""
     echo "-- Installing wmderland (WM), invoked with sudo make install"
     sudo make install && echo -e "-- Installed to "`cat install_manifest.txt`"\n"
-    sudo cp ../example/wmderland.desktop /usr/share/xsessions/.
+
+    sudo mkdir -p /etc/xdg/wmderland/
+    sudo mkdir -p /usr/share/xsessions/
+    sudo install -D -m644 ../example/config /etc/xdg/wmderland/
+    sudo install -D -m644 ../example/wmderland.desktop /usr/share/xsessions/
   fi
 
   cd ..
@@ -71,6 +76,7 @@ function build() {
     return 1;
   fi
 }
+
 
 # $1 - args array
 # $2 - the target argument to match
