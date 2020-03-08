@@ -36,8 +36,10 @@ A minimal i3-gaps, written in C++ and Xlib.
 
 ## Advantages over i3wm and i3-gaps
 wmderland, while derived from i3wm, is built with a different philosophy in mind:
-* For minimalist; no bloated features!
-* easy-to-use config
+
+* No bloated (unused) features!
+* For minimalism!
+* Easy-to-use config
 * Only 88KB after compiled and stripped
 
 ## Installation
