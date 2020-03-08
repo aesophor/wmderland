@@ -15,7 +15,7 @@
 
 <img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
 
-`configurable workflow` `tree-based tiling` `easy-to-use config` `minimalism`
+`easy-to-use config` `tree-based tiling`  `minimalism`
 </div>
 
 <br>
