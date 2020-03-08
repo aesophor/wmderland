@@ -14,8 +14,9 @@
 </a>
 
 <img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
-</div>
 
+`configurable workflow` `tree-based tiling` `easy-to-use config` `minimalism`
+</div>
 
 ## Wmderland (Pronounced "Wonderland")
 A minimal i3-gaps, written in C++ and Xlib.
