@@ -31,7 +31,7 @@ A minimal i3-gaps, written in C++ and Xlib.
 
 * Window focus follows mouse
 * Smart floating
-* A subset of EWMH, see `src/properties.cc`
+* Supports a subset of EWMH, see `src/properties.cc`
 * [Tiny IPC Client](https://github.com/aesophor/wmderland/tree/master/ipc-client)
 
 ## Advantages over i3wm
