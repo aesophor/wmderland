@@ -14,8 +14,6 @@
 </a>
 
 <img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
-
-`easy-to-use config` `tree-based tiling`  `minimalism`
 </div>
 
 <br>
