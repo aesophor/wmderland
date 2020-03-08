@@ -23,6 +23,8 @@
 ## Wmderland (Pronounced "Wonderland")
 A minimal i3-gaps, written in C++ and Xlib.
 
+<a href="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/floating.png"><img src="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/floating.png" width="43%" align="right"></a>
+
 * Configurable workflow (keyboard, mouse, or both)
 * i3-like [config](https://github.com/aesophor/wmderland/blob/master/example/config); easy to use!
 * 9 Workspaces (static)
@@ -38,9 +40,9 @@ A minimal i3-gaps, written in C++ and Xlib.
 wmderland, while derived from i3wm, is built with a different philosophy in mind:
 
 * No bloated (unused) features!
-* For minimalism!
 * Easy-to-use config
 * Only 88KB after compiled and stripped
+* It's designed for a minimalist like you
 
 ## Installation
 | Distro | Readme |
