@@ -87,6 +87,13 @@ function build() {
   if [ $build_failed == true ]; then
     return 1;
   fi
+
+  show_horizontal_line
+
+  cat << EOF
+==> IMPORTANT: Make sure you have a config file in ~/.config/wmderland/config
+==> An example config file has been placed at /etc/xdg/wmderland/config
+EOF
 }
 
 
