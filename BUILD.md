@@ -99,4 +99,4 @@ $ rm -rf build
 $ ./build.sh --install
 ```
 
-For further details, please see issue #39.
+For further details, please see [issue #39](https://github.com/aesophor/wmderland/issues/39).
