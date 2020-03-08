@@ -54,3 +54,33 @@ In case you are stucked in a black screen, you can try **ONE** of the following:
 * **Mod (Windows/Command key) + Shift + Esc**: the keybinding to exit the window manager
 
 * **Ctrl + Alt + F2 and run `pkill X`, and Ctrl + Alt + F1**
+
+<br>
+
+## Entry Not Present in GDM (Fedora Workstation 31)
+
+If wmderland's entry just won't show up in GDM even after reboot, you can try to:
+1. autoremove GDM (this will break GNOME a bit, but it can be restored, see step 3)
+2. reinstall gdm
+3. reinstall gnome-desktop
+4. remove wmderland (./build.sh --uninstall)
+4. reboot
+5. recompile and reinstall wmderland (./build.sh --install)
+```
+$ sudo systemctl disable gdm.service
+$ sudo dnf autoremove -y gdm
+$ sudo dnf upgrade -y
+$ sudo dnf install -y gdm
+$ sudo dnf group install -y gnome-desktop
+$ sudo systemctl enable gdm.service
+
+# Now cd to wmderland's project directory
+$ ./build.sh --uninstall
+$ sudo reboot
+
+# After rebooting, cd to wmderland's project directory
+$ rm -rf build
+$ ./build.sh --install
+```
+
+For further details, please see issue #39.
