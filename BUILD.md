@@ -37,6 +37,16 @@ The syntax are very similar to that of i3wm:
 * [keybindings](https://github.com/aesophor/wmderland/blob/master/example/config#L166)
 * [autostart](https://github.com/aesophor/wmderland/blob/master/example/config#L177)
 
+For example, to bind Mod+d to `rofi -show drun`:
+```
+bindsym $Mod+d exec rofi -show drun
+```
+
+By default, the Mod key is the Windows/Command key. this option can be modified [here](https://github.com/aesophor/wmderland/blob/master/example/config#L31):
+```
+set $Mod = $Cmd
+```
+
 For example, to set a wallpaper using `feh`:
 ```
 exec feh --bg-fill ~/Pictures/Wallpaper.jpg
