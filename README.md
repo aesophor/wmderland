@@ -43,10 +43,16 @@ wmderland, while derived from i3wm, is built with a different philosophy in mind
 * It's designed for a minimalist like you
 
 ## Installation
-| Distro | Readme |
-| --- | --- |
-| Arch, Gentoo | See [INSTALL.md](https://github.com/aesophor/wmderland/blob/master/INSTALL.md) |
-| Others | See [BUILD.md](https://github.com/aesophor/wmderland/blob/master/BUILD.md) |
+| Distro | Source | Command |
+| --- | --- | --- |
+| Arch | [AUR](https://aur.archlinux.org/packages/wmderland-git/) | `yay -S wmderland-git` |
+| Gentoo | [aesophor-overlay](https://github.com/aesophor/aesophor-overlay) | `emerge -av x11-wm/wmderland` |
+| Others | build manually | See [BUILD.md](https://github.com/aesophor/wmderland/blob/master/BUILD.md) |
+
+## Post-Installation
+After installation, remember to place a config file ([example](https://github.com/aesophor/wmderland/blob/master/example/config)) at **~/.config/wmderland/config**.
+
+Before starting wmderland, [EDIT your config first!](https://github.com/aesophor/wmderland/blob/master/BUILD.md#configure-and-run) Or you'll get a blackscreen.
 
 ## License
 Available under the [MIT License](https://github.com/aesophor/wmderland/blob/master/LICENSE)
