@@ -6,8 +6,8 @@ build_type=MINSIZEREL
 
 
 function show_usage() {
-  echo "wmderland, A tiling window manager using space partitioning tree"
-  echo "Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>"
+  echo "wmderland, X11 tiling window manager using space partitioning tree"
+  echo "Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>"
   echo ""
   echo "usage: $0 [option]"
   echo "-i, --install - Build and install project (sudo make install)"
@@ -16,6 +16,18 @@ function show_usage() {
 
 function show_horizontal_line() {
   printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+}
+
+function uninstall() {
+  read -p "Are you sure? " -n 1 -r
+  echo
+
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    sudo rm /usr/local/bin/wmderland
+    sudo rm /usr/local/bin/wmderlandc
+    sudo rm /usr/share/xsessions/wmderland.desktop
+    sudo rm -rf /etc/xdg/wmderland
+  fi
 }
 
 
@@ -95,5 +107,5 @@ function has_argument() {
 
 
 (has_argument $@ '-h' || has_argument $@ '--help') && show_usage && exit 0
-(has_argument $@ '-i' || has_argument $@ '--install') && should_install=true
-build
+(has_argument $@ '-u' || has_argument $@ '--uninstall') && uninstall && exit 0
+(has_argument $@ '-i' || has_argument $@ '--install') && should_install=true && build
