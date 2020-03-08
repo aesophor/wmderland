@@ -88,12 +88,14 @@ function build() {
     return 1;
   fi
 
-  show_horizontal_line
+  if [ $should_install == true ]; then
+    show_horizontal_line
 
-  cat << EOF
+    cat << EOF
 ==> IMPORTANT: Make sure you have a config file in ~/.config/wmderland/config
 ==> An example config file has been placed at /etc/xdg/wmderland/config
 EOF
+  fi
 }
 
 
@@ -115,4 +117,5 @@ function has_argument() {
 
 (has_argument $@ '-h' || has_argument $@ '--help') && show_usage && exit 0
 (has_argument $@ '-u' || has_argument $@ '--uninstall') && uninstall && exit 0
-(has_argument $@ '-i' || has_argument $@ '--install') && should_install=true && build
+(has_argument $@ '-i' || has_argument $@ '--install') && should_install=true
+build
