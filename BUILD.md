@@ -1,7 +1,7 @@
 ## Build Requirements
 * g++ >= 6.0
 * CMake >= 3.9
-* libx11 (X11 headers)
+* libx11-dev (X11 headers)
 
 <br>
 
