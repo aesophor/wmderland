@@ -1,3 +1,15 @@
+## Table of Contents
+* Build, Install and Running
+  * [build requirements](https://github.com/aesophor/wmderland/blob/master/BUILD.md#build-requirements)
+  * [build and install](https://github.com/aesophor/wmderland/blob/master/BUILD.md#build-and-install)
+  * [configure and run](https://github.com/aesophor/wmderland/blob/master/BUILD.md#configure-and-run)
+  
+* Workarounds
+  * [escape from the black screen](https://github.com/aesophor/wmderland/blob/master/BUILD.md#escape-from-the-black-screen)
+  * [GDM entry not present (Fedora Workstation 31)](https://github.com/aesophor/wmderland/blob/master/BUILD.md#gdm-entry-not-present-fedora-workstation-31)
+
+<br>
+
 ## Build Requirements
 * g++ >= 6.0
 * CMake >= 3.9
@@ -57,7 +69,7 @@ In case you are stucked in a black screen, you can try **ONE** of the following:
 
 <br>
 
-## Entry Not Present in GDM (Fedora Workstation 31)
+## GDM Entry Not Present (Fedora Workstation 31)
 
 If wmderland's entry just won't show up in GDM even after reboot, you can try to:
 1. autoremove GDM (this will break GNOME a bit, but it can be restored, see step 3)
