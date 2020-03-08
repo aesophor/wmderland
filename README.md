@@ -21,7 +21,7 @@
 A minimal i3-gaps, written in C++ and Xlib.
 
 * Configurable workflow (keyboard, mouse, or both)
-* Easy-to-use [config](https://github.com/aesophor/wmderland/blob/master/example/config)
+* i3-like [config](https://github.com/aesophor/wmderland/blob/master/example/config); easy to use!
 * 9 Workspaces (static)
 * Fullscreen toggle
 * Floating toggle
