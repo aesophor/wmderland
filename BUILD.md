@@ -47,7 +47,7 @@ To bind Mod+d to `rofi -show drun`:
 bindsym $Mod+d exec rofi -show drun
 ```
 
-By default, the Mod key is the Windows/Command key, but this option can be modified [here](https://github.com/aesophor/wmderland/blob/master/example/config#L31):
+By default, the Mod key is the Windows/Command key, but this option [can be configured here](https://github.com/aesophor/wmderland/blob/master/example/config#L31):
 ```
 set $Mod = $Cmd
 ```
