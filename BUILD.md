@@ -41,10 +41,13 @@ exec wmderland
 
 <br>
 
-## Configure and Run
-Before you start wmderland, you'll need to modify the config file (~/.config/wmderland/config) first, otherwise you'll get a black screen. See the next section on how to escape from the black screen.
+## Black Screen?
+Before you start wmderland, you'll need to modify the config file (~/.config/wmderland/config) first, otherwise you'll get a black screen. [How do I escape from the black screen!?](https://github.com/aesophor/wmderland/blob/master/BUILD.md#escape-from-the-black-screen)
 
-The syntax are very similar to that of i3wm:
+<br>
+
+## Configure and Run
+Edit `~/.config/wmderland/config`. The syntax is very similar to that of i3wm:
 * [autostart](https://github.com/aesophor/wmderland/blob/master/example/config#L177)
 * [keybindings](https://github.com/aesophor/wmderland/blob/master/example/config#L166)
 
