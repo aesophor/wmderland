@@ -18,6 +18,8 @@
 `configurable workflow` `tree-based tiling` `easy-to-use config` `minimalism`
 </div>
 
+<br>
+
 ## Wmderland (Pronounced "Wonderland")
 A minimal i3-gaps, written in C++ and Xlib.
 
