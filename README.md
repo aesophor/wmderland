@@ -29,9 +29,6 @@ A minimal i3-gaps, written in C++ and Xlib.
 * Fullscreen toggle
 * Floating toggle
 * Gaps & borders
-
-<br>
-
 * Window focus follows mouse
 * Smart floating
 * Supports a subset of EWMH, see `src/properties.cc`
