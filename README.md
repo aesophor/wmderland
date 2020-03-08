@@ -34,9 +34,9 @@ A minimal i3-gaps, written in C++ and Xlib.
 * Supports a subset of EWMH, see `src/properties.cc`
 * [Tiny IPC Client](https://github.com/aesophor/wmderland/tree/master/ipc-client)
 
-## Advantages over i3wm
+## Advantages over i3wm and i3-gaps
 wmderland, while derived from i3wm, is built with a different philosophy in mind:
-* For minimalist (no bloated features)
+* For minimalist; no bloated features!
 * easy-to-use config
 * Only 88KB after compiled and stripped
 
