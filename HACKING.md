@@ -1,6 +1,7 @@
 # Hacking Guide
 This README will guide you to hack wmderland. I'll make everything short and simple.
 
+<br>
 
 ## Table of Contents
 * [Core Concepts](https://github.com/aesophor/wmderland/blob/master/HACKING.md#core-concepts)
