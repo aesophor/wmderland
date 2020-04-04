@@ -34,7 +34,6 @@ class WindowManager {
   Snapshot& snapshot();
 
  private:
-  static WindowManager* instance_;
   static bool is_running_;
   WindowManager(Display* dpy);
 

@@ -49,20 +49,16 @@ using std::pair;
 
 namespace wmderland {
 
-WindowManager* WindowManager::instance_ = nullptr;
 bool WindowManager::is_running_ = true;
 
 WindowManager* WindowManager::GetInstance() {
-  if (!instance_) {
-    Display* dpy = XOpenDisplay(None);
-    try {
-      instance_ = (dpy) ? new WindowManager(dpy) : nullptr;
-    } catch (const std::bad_alloc& ex) {
-      fputs("Out of memory\n", stderr);
-      instance_ = nullptr;
-    }
+  Display* dpy = XOpenDisplay(None);
+  if (!dpy) {
+    return nullptr;
   }
-  return instance_;
+
+  static WindowManager instance(dpy);
+  return &instance;
 }
 
 WindowManager::WindowManager(Display* dpy)
