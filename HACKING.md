@@ -114,4 +114,4 @@ as there is no need for `shared_ptr` currently.
 <br>
 
 ## Questions?
-If you want to start hacking but don't know where to start, please open an issue. I'm always open to discussion and changes!
+If you want to start hacking but don't know where to start, please open an issue. I'm always open to discussions and changes!
