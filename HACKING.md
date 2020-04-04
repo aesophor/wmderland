@@ -7,6 +7,7 @@ This README will guide you to hack wmderland. I'll make everything short and sim
 * [Core Concepts](https://github.com/aesophor/wmderland/blob/master/HACKING.md#core-concepts)
 * [Internal Data Structures](https://github.com/aesophor/wmderland/blob/master/HACKING.md#internal-data-structures)
 * [Windows? Clients?](https://github.com/aesophor/wmderland/blob/master/HACKING.md#windows-clients)
+* [Coding Style](https://github.com/aesophor/wmderland/blob/master/HACKING.md#coding-style)
 * [Memory Management](https://github.com/aesophor/wmderland/blob/master/HACKING.md#memory-management)
 * [Questions?](https://github.com/aesophor/wmderland/blob/master/HACKING.md#questions)
 
@@ -104,6 +105,11 @@ c.MoveResize(x, y, width, height);
 
 Each Xlib function which operates on `Window`s should have a corresponding method in `Client` class.
 Prefer these C++ method over the ones provided by Xlib. If you can't find a method in `Client`, you may add it yourself.
+
+<br>
+
+## Coding Style
+Please follow [Google C++ coding style](https://google.github.io/styleguide/cppguide.html).
 
 <br>
 
