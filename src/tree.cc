@@ -201,6 +201,18 @@ void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref)
   children_.insert(children_.begin() + ref_idx + 1, std::move(child));
 }
 
+void Tree::Node::Swap(Tree::Node* destination) {
+  if(!leaf() || !destination->leaf()) {
+    return;
+  }
+
+  unique_ptr<Tree::Node>& this_ptr = owning_pointer_();
+  unique_ptr<Tree::Node>& dest_ptr = destination->owning_pointer_();
+
+  this_ptr.swap(dest_ptr);
+  std::swap(parent_, destination->parent_);
+}
+
 Tree::Node* Tree::Node::GetLeftSibling() const {
   vector<Tree::Node*> siblings = parent_->children();
 
@@ -301,6 +313,12 @@ void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
 
 bool Tree::Node::leaf() const {
   return children_.empty();
+}
+
+unique_ptr<Tree::Node>& Tree::Node::owning_pointer_() const {
+  return
+      *std::find_if(parent_->children_.begin(), parent_->children_.end(),
+                    [&](unique_ptr<Tree::Node>& node) { return node.get() == this; });
 }
 
 }  // namespace wmderland

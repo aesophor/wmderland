@@ -115,6 +115,30 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
 }
 
+void Workspace::Swap(Window window0, Window window1) {
+  Client* c0 = GetClient(window0);
+  if (!c0) {
+    return;
+  }
+
+  Tree::Node* node0 = client_tree_.GetTreeNode(c0);
+  if (!node0) {
+    return;
+  }
+
+  Client* c1 = GetClient(window1);
+  if (!c1) {
+    return;
+  }
+
+  Tree::Node* node1 = client_tree_.GetTreeNode(c1);
+  if (!node1) {
+    return;
+  }
+
+  node0->Swap(node1);
+}
+
 void Workspace::Tile(const Client::Area& tiling_area) const {
   // If there are no clients in this workspace or all clients are floating,
   // return at once.

@@ -29,6 +29,7 @@ class Tree {
     void AddChild(std::unique_ptr<Tree::Node> child);
     void RemoveChild(Tree::Node* child);
     void InsertChildAfter(std::unique_ptr<Tree::Node> child, Tree::Node* ref);
+    void Swap(Tree::Node* destination);
 
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
@@ -50,6 +51,8 @@ class Tree {
     static std::unordered_map<Client*, Tree::Node*> mapper_;
 
    private:
+    std::unique_ptr<Tree::Node>& owning_pointer_() const;
+
     std::vector<std::unique_ptr<Tree::Node>> children_;
     Tree::Node* parent_;
 

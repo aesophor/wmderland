@@ -23,6 +23,7 @@ class Workspace {
   void Add(Window window);
   void Remove(Window window);
   void Move(Window window, Workspace* new_workspace);
+  void Swap(Window window0, Window window1);
   void Tile(const Client::Area& tiling_area) const;
   void SetTilingDirection(TilingDirection tiling_direction);
 
