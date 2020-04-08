@@ -202,7 +202,7 @@ void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref)
 }
 
 void Tree::Node::Swap(Tree::Node* destination) {
-  if(!leaf() || !destination->leaf()) {
+  if (!leaf() || !destination->leaf()) {
     return;
   }
 
@@ -316,9 +316,8 @@ bool Tree::Node::leaf() const {
 }
 
 unique_ptr<Tree::Node>& Tree::Node::owning_pointer_() const {
-  return
-      *std::find_if(parent_->children_.begin(), parent_->children_.end(),
-                    [&](unique_ptr<Tree::Node>& node) { return node.get() == this; });
+  return *std::find_if(parent_->children_.begin(), parent_->children_.end(),
+                       [&](unique_ptr<Tree::Node>& node) { return node.get() == this; });
 }
 
 }  // namespace wmderland
