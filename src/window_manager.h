@@ -66,6 +66,7 @@ class WindowManager {
   // Workspace manipulation
   void GotoWorkspace(int next);
   void MoveWindowToWorkspace(Window window, int next);
+  void SwapWindows(Window window0, Window window1);
 
   // Client manipulation
   void SetFloating(Window window, bool floating, bool use_default_size);

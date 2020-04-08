@@ -42,6 +42,7 @@ static Command cmd_table[] = {
   {"goto_workspace",           1, ARG_TYPE_DEC },
   {"workspace",                1, ARG_TYPE_DEC },
   {"move_window_to_workspace", 1, ARG_TYPE_DEC },
+  {"swap",                     1, ARG_TYPE_DEC },
   {"kill",                     0, ARG_TYPE_NONE},
   {"exit",                     0, ARG_TYPE_NONE},
   {"reload",                   0, ARG_TYPE_NONE},

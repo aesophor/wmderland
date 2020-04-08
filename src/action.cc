@@ -75,6 +75,8 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::WORKSPACE;
   } else if (s == "move_window_to_workspace") {
     return Action::Type::MOVE_WINDOW_TO_WORKSPACE;
+  } else if (s == "swap") {
+    return Action::Type::SWAP;
   } else if (s == "kill") {
     return Action::Type::KILL;
   } else if (s == "exit") {
