@@ -695,6 +695,17 @@ void WindowManager::SwapWindows(Window window0, Window window1) {
       client->Unmap();
     }
   }
+
+  XWindowAttributes attr0 = c0->GetXWindowAttributes();
+
+  if (c0->is_floating()) {
+    XWindowAttributes attr = c1->GetXWindowAttributes();
+    c0->MoveResize(attr.x, attr.y, attr.width, attr.height);
+  }
+  if (c1->is_floating()) {
+    c1->MoveResize(attr0.x, attr0.y, attr0.width, attr0.height);
+  }
+
   ArrangeWindows();
 }
 

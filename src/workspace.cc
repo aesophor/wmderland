@@ -136,6 +136,11 @@ void Workspace::Swap(Window window0, Window window1) {
     return;
   }
 
+  bool is_floating0 = c0->is_floating();
+
+  c0->set_floating(c1->is_floating());
+  c1->set_floating(is_floating0);
+
   node0->Swap(node1);
 
   if (c0->workspace() != c1->workspace()) {
