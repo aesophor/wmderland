@@ -116,7 +116,7 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
 }
 
 void Workspace::Swap(Window window0, Window window1) {
-  Client* c0 = GetClient(window0);
+  Client* c0 = GetClient(window0, /*allow_other_workspace=*/true);
   if (!c0) {
     return;
   }
@@ -126,7 +126,7 @@ void Workspace::Swap(Window window0, Window window1) {
     return;
   }
 
-  Client* c1 = GetClient(window1);
+  Client* c1 = GetClient(window1, /*allow_other_workspace=*/true);
   if (!c1) {
     return;
   }
@@ -137,6 +137,23 @@ void Workspace::Swap(Window window0, Window window1) {
   }
 
   node0->Swap(node1);
+
+  if (c0->workspace() != c1->workspace()) {
+    Workspace* workspace0 = c0->workspace();
+
+    c0->set_workspace(c1->workspace());
+    c1->set_workspace(workspace0);
+
+    Tree& tree0 = c0->workspace()->client_tree_;
+    Tree& tree1 = c1->workspace()->client_tree_;
+
+    if (tree0.current_node() == node1) {
+      tree0.set_current_node(node0);
+    }
+    if (tree1.current_node() == node0) {
+      tree1.set_current_node(node1);
+    }
+  }
 }
 
 void Workspace::Tile(const Client::Area& tiling_area) const {
@@ -347,7 +364,7 @@ Client* Workspace::GetFocusedClient() const {
   return client_tree_.current_node()->client();
 }
 
-Client* Workspace::GetClient(Window window) const {
+Client* Workspace::GetClient(Window window, bool allow_other_workspace) const {
   // We'll get the corresponding client using client mapper
   // whose time complexity is O(1).
   auto it = Client::mapper_.find(window);
@@ -357,7 +374,7 @@ Client* Workspace::GetClient(Window window) const {
 
   // But we have to check if it belongs to current workspace!
   Client* c = it->second;
-  return (c->workspace() == this) ? c : nullptr;
+  return (allow_other_workspace || c->workspace() == this) ? c : nullptr;
 }
 
 vector<Client*> Workspace::GetClients() const {
