@@ -202,7 +202,7 @@ void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref)
 }
 
 void Tree::Node::Swap(Tree::Node* destination) {
-  if (!leaf() || !destination->leaf()) {
+  if (!leaf() || !destination->leaf() || !parent_ || !destination->parent_) {
     return;
   }
 
