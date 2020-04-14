@@ -46,6 +46,7 @@ extern "C" {
   } while (0)
 
 using std::pair;
+using std::tuple;
 
 namespace wmderland {
 
@@ -407,33 +408,49 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
 
-  if (c->is_floating() && !c->is_fullscreen()) {
+  if (c->is_fullscreen()) {
+    return;
+  }
+
+  if (c->is_floating()) {
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
-
-    mouse_->btn_pressed_event_ = e;
     mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
   }
+
+  mouse_->btn_pressed_event_ = e;
 }
 
-void WindowManager::OnButtonRelease(const XButtonEvent&) {
+void WindowManager::OnButtonRelease(const XButtonEvent& e) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
   c->workspace()->EnableFocusFollowsMouse();
 
   if (c->is_floating()) {
-    XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
+    XWindowAttributes attr =
+        wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
 
     mouse_->btn_pressed_event_.subwindow = None;
     mouse_->SetCursor(Mouse::CursorType::NORMAL);
+  } else {
+    tuple<Window, AreaType, TilingDirection, TilingPosition> drop_location =
+        GetDropLocation(e);
+
+    MoveWindow(c->window(), std::get<Window>(drop_location), std::get<AreaType>(drop_location),
+               std::get<TilingDirection>(drop_location),
+               std::get<TilingPosition>(drop_location));
   }
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
+
+  if (!c->is_floating()) {
+    return;
+  }
 
   const XWindowAttributes& attr = c->attr_cache();
   const XButtonEvent& btn_pressed_event = mouse_->btn_pressed_event_;
@@ -683,6 +700,24 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
   ArrangeWindows();
 }
 
+void WindowManager::MoveWindow(Window window, Window ref, AreaType area_type,
+                               TilingDirection tiling_direction,
+                               TilingPosition tiling_position) {
+  Client* c = nullptr;
+  Client* ref_client = nullptr;
+  GET_CLIENT_OR_RETURN(window, c);
+  GET_CLIENT_OR_RETURN(ref, ref_client);
+
+  if (area_type == AreaType::CENTER || ref_client->is_floating()) {
+    SwapWindows(window, ref);
+    return;
+  }
+
+  workspaces_[current_]->Move(window, ref, area_type, tiling_direction, tiling_position);
+
+  ArrangeWindows();
+}
+
 void WindowManager::SwapWindows(Window window0, Window window1) {
   Client* c0 = nullptr;
   Client* c1 = nullptr;
@@ -881,6 +916,50 @@ Client::Area WindowManager::GetFloatingWindowArea(Window window, bool use_defaul
   }
 
   return area;
+}
+
+tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropLocation(
+    const XButtonEvent& e) const {
+  Client* c = nullptr;
+  auto it = Client::mapper_.find(e.subwindow);
+  if (it == Client::mapper_.end()) {
+    return std::make_tuple(None, AreaType::UNDEFINED, TilingDirection::UNSPECIFIED,
+                           TilingPosition::AFTER);
+  }
+  c = it->second;
+
+  XWindowAttributes attr = c->GetXWindowAttributes();
+
+  int x = e.x - attr.x - 0.5 * attr.width;
+  int y = e.y - attr.y - 0.5 * attr.height;
+  double r = x != 0 ? (double)y / x : 0.;
+  double r_diagonal = attr.width != 0 ? (double)attr.height / attr.width : 0.;
+
+  TilingDirection tiling_direction;
+  double d;
+  double d_edge;
+  if (x == 0 || r >= r_diagonal || r <= -r_diagonal) {
+    tiling_direction = TilingDirection::VERTICAL;
+    d = (double)y / attr.height;
+    d_edge = 0.5 - 35. / attr.height;
+  } else {
+    tiling_direction = TilingDirection::HORIZONTAL;
+    d = (double)x / attr.width;
+    d_edge = 0.5 - 35. / attr.width;
+  }
+
+  TilingPosition tiling_position = d >= 0. ? TilingPosition::AFTER : TilingPosition::BEFORE;
+
+  AreaType area_type;
+  if (d >= -0.1 && d <= 0.1) {
+    area_type = AreaType::CENTER;
+  } else if (d >= -d_edge && d <= d_edge) {
+    area_type = AreaType::MID;
+  } else {
+    area_type = AreaType::EDGE;
+  }
+
+  return std::make_tuple(c->window(), area_type, tiling_direction, tiling_position);
 }
 
 void WindowManager::UpdateClientList() {

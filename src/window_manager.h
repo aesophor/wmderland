@@ -9,6 +9,7 @@ extern "C" {
 }
 #include <array>
 #include <memory>
+#include <tuple>
 #include <unordered_set>
 
 #include "action.h"
@@ -65,7 +66,11 @@ class WindowManager {
 
   // Workspace manipulation
   void GotoWorkspace(int next);
+
+  // Window replacement
   void MoveWindowToWorkspace(Window window, int next);
+  void MoveWindow(Window window, Window ref, AreaType area_type,
+                  TilingDirection tiling_direction, TilingPosition tiling_position);
   void SwapWindows(Window window0, Window window1);
 
   // Client manipulation
@@ -82,6 +87,8 @@ class WindowManager {
   std::pair<int, int> GetDisplayResolution() const;
   Client::Area GetTilingArea() const;
   Client::Area GetFloatingWindowArea(Window window, bool use_default_size);
+  std::tuple<Window, AreaType, TilingDirection, TilingPosition> GetDropLocation(
+      const XButtonEvent& e) const;
 
   // Misc
   void UpdateClientList();

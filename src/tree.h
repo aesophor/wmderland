@@ -16,6 +16,11 @@ enum class TilingDirection {
   VERTICAL,
 };
 
+enum class TilingPosition {
+  BEFORE,
+  AFTER,
+};
+
 class Tree {
  public:
   Tree();
@@ -27,8 +32,12 @@ class Tree {
     virtual ~Node();
 
     void AddChild(std::unique_ptr<Tree::Node> child);
-    void RemoveChild(Tree::Node* child);
+    std::unique_ptr<Tree::Node> RemoveChild(Tree::Node* child);
     void InsertChildAfter(std::unique_ptr<Tree::Node> child, Tree::Node* ref);
+    void InsertChildBeside(std::unique_ptr<Tree::Node> child, Tree::Node* ref,
+                           TilingPosition tiling_position);
+    void InsertChildAboveChildren(std::unique_ptr<Tree::Node> child);
+    void InsertParent(std::unique_ptr<Tree::Node> parent);
     void Swap(Tree::Node* destination);
 
     Tree::Node* GetLeftSibling() const;

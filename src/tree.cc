@@ -184,21 +184,49 @@ void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
   children_.push_back(std::move(child));
 }
 
-void Tree::Node::RemoveChild(Tree::Node* child) {
+unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
+  unique_ptr<Tree::Node> removed_ptr = nullptr;
+
   child->set_parent(nullptr);
-  children_.erase(
-      std::remove_if(children_.begin(), children_.end(),
-                     [&](unique_ptr<Tree::Node>& node) { return node.get() == child; }),
-      children_.end());
+  children_.erase(std::remove_if(children_.begin(), children_.end(),
+                                 [&](unique_ptr<Tree::Node>& node) {
+                                   return node.get() == child &&
+                                       (removed_ptr = std::move(node), true);
+                                 }),
+                  children_.end());
+  return removed_ptr;
 }
 
 void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref) {
+  InsertChildBeside(std::move(child), ref, TilingPosition::AFTER);
+}
+
+void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref,
+                                   TilingPosition tiling_position) {
   child->set_parent(this);
   ptrdiff_t ref_idx =
       std::find_if(children_.begin(), children_.end(),
                    [&](unique_ptr<Tree::Node>& node) { return node.get() == ref; }) -
       children_.begin();
-  children_.insert(children_.begin() + ref_idx + 1, std::move(child));
+  ptrdiff_t position = tiling_position == TilingPosition::BEFORE ? 0 : 1;
+  children_.insert(children_.begin() + ref_idx + position, std::move(child));
+}
+
+void Tree::Node::InsertChildAboveChildren(unique_ptr<Tree::Node> child) {
+  for (const auto current_child : children()) {
+    unique_ptr<Tree::Node> current_child_ptr = RemoveChild(current_child);
+    child->AddChild(std::move(current_child_ptr));
+  }
+
+  AddChild(std::move(child));
+}
+
+void Tree::Node::InsertParent(std::unique_ptr<Tree::Node> parent) {
+  Tree::Node* parent_raw = parent.get();
+
+  parent_->InsertChildAfter(std::move(parent), this);
+  unique_ptr<Tree::Node> this_ptr = parent_->RemoveChild(this);
+  parent_raw->AddChild(std::move(this_ptr));
 }
 
 void Tree::Node::Swap(Tree::Node* destination) {
