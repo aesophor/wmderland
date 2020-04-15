@@ -8,6 +8,7 @@ extern "C" {
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 #include "client.h"
 #include "log.h"
@@ -47,6 +48,7 @@ extern "C" {
 
 using std::pair;
 using std::tuple;
+using std::vector;
 
 namespace wmderland {
 
@@ -922,11 +924,28 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
     const XButtonEvent& e) const {
   Client* c = nullptr;
   auto it = Client::mapper_.find(e.subwindow);
-  if (it == Client::mapper_.end()) {
-    return std::make_tuple(None, AreaType::UNDEFINED, TilingDirection::UNSPECIFIED,
-                           TilingPosition::AFTER);
+  if (it != Client::mapper_.end()) {
+    c = it->second;
+  } else {
+    vector<Client*> clients = workspaces_[current_]->GetClients();
+    int half_gap = 1 + config_->gap_width() / 2;
+    auto it = std::find_if(clients.begin(), clients.end(), [&](Client* client) {
+      if (client->is_floating()) {
+        return false;
+      }
+
+      XWindowAttributes attr = client->GetXWindowAttributes();
+
+      return e.x >= attr.x - half_gap && e.x <= attr.x + attr.width + half_gap &&
+          e.y >= attr.y - half_gap && e.y <= attr.y + attr.height + half_gap;
+    });
+    if (it != clients.end()) {
+      c = *it;
+    } else {
+      return std::make_tuple(None, AreaType::UNDEFINED, TilingDirection::UNSPECIFIED,
+                             TilingPosition::AFTER);
+    }
   }
-  c = it->second;
 
   XWindowAttributes attr = c->GetXWindowAttributes();
 
