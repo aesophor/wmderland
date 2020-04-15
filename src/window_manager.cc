@@ -710,6 +710,7 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
 
   if (fullscreen) {
     // Save the window's position and size before resizing it to fullscreen.
+    c->workspace()->DisableFocusFollowsMouse();
     c->set_attr_cache(c->GetXWindowAttributes());
     c->workspace()->UnmapAllClients();
   } else {
