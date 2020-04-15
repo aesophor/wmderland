@@ -6,6 +6,7 @@ extern "C" {
 #include <X11/Xproto.h>
 }
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <iostream>
 
@@ -402,12 +403,12 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   GET_CLIENT_OR_RETURN(e.subwindow, c);
 
   wm_utils::SetNetActiveWindow(c->window());
-  c->workspace()->DisableFocusFollowsMouse();
   c->workspace()->UnsetFocusedClient();
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
 
   if (c->is_floating() && !c->is_fullscreen()) {
+    c->workspace()->DisableFocusFollowsMouse();
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
 
@@ -420,15 +421,14 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
+  assert(c->is_floating() && !c->is_fullscreen());
   c->workspace()->EnableFocusFollowsMouse();
 
-  if (c->is_floating()) {
-    XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
-    cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
+  XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
+  cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
 
-    mouse_->btn_pressed_event_.subwindow = None;
-    mouse_->SetCursor(Mouse::CursorType::NORMAL);
-  }
+  mouse_->btn_pressed_event_.subwindow = None;
+  mouse_->SetCursor(Mouse::CursorType::NORMAL);
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
