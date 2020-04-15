@@ -169,7 +169,7 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
 }
 
 Tree::Node::Node(unique_ptr<Client> client)
-    : client_(std::move(client)), tiling_direction_(TilingDirection::UNSPECIFIED) {
+    : parent_(), client_(std::move(client)), tiling_direction_(TilingDirection::UNSPECIFIED) {
   if (client_) {
     Tree::Node::mapper_[client_.get()] = this;
   }
