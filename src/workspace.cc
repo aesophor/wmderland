@@ -114,6 +114,8 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   c->set_floating(is_floating);
   c->set_fullscreen(false);
   c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
+
+  client_tree_.Normalize();
 }
 
 void Workspace::Move(Window window, Window ref, AreaType area_type,
@@ -147,6 +149,8 @@ void Workspace::Move(Window window, Window ref, AreaType area_type,
     default:
       break;
   }
+
+  client_tree_.Normalize();
 }
 
 void Workspace::MoveAndSplit(Window window, Window ref, TilingDirection tiling_direction,
