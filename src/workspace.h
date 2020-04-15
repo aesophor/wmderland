@@ -34,7 +34,8 @@ class Workspace {
             TilingPosition tiling_position);
   void MoveAndSplit(Window window, Window ref, TilingDirection tiling_direction,
                     TilingPosition tiling_position, bool branch_outer);
-  void MoveAndInsert(Window window, Window ref, TilingPosition tiling_position);
+  void MoveAndInsert(Window window, Window ref, TilingPosition tiling_position,
+                     bool insert_outer = false);
   void Swap(Window window0, Window window1);
   void Tile(const Client::Area& tiling_area) const;
   void SetTilingDirection(TilingDirection tiling_direction);

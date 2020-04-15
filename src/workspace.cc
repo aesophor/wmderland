@@ -137,6 +137,9 @@ void Workspace::Move(Window window, Window ref, AreaType area_type,
     case AreaType::EDGE:
       if (ref_node->parent()->tiling_direction() == tiling_direction) {
         MoveAndInsert(window, ref, tiling_position);
+      } else if (ref_node->parent()->parent() &&
+                 ref_node->parent()->parent()->tiling_direction() == tiling_direction) {
+        MoveAndInsert(window, ref, tiling_position, true);
       } else {
         MoveAndSplit(window, ref, tiling_direction, tiling_position, true);
       }
@@ -199,7 +202,8 @@ void Workspace::MoveAndSplit(Window window, Window ref, TilingDirection tiling_d
   c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
 }
 
-void Workspace::MoveAndInsert(Window window, Window ref, TilingPosition tiling_position) {
+void Workspace::MoveAndInsert(Window window, Window ref, TilingPosition tiling_position,
+                              bool insert_outer) {
   if (window == ref) {
     return;
   }
@@ -214,7 +218,8 @@ void Workspace::MoveAndInsert(Window window, Window ref, TilingPosition tiling_p
     return;
   }
 
-  Tree::Node* ref_node = client_tree_.GetTreeNode(ref_client);
+  Tree::Node* ref_node = insert_outer ? client_tree_.GetTreeNode(ref_client)->parent()
+                                      : client_tree_.GetTreeNode(ref_client);
   if (!ref_node) {
     return;
   }
