@@ -220,6 +220,11 @@ void Workspace::RaiseAllFloatingClients() const {
   for (const auto c : GetFloatingClients()) {
     c->Raise();
   }
+
+  Client* focused_client = GetFocusedClient();
+  if (focused_client && focused_client->is_floating()) {
+    focused_client->Raise();
+  }
 }
 
 void Workspace::SetFocusedClient(Window window) {
