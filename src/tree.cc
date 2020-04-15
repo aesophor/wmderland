@@ -41,6 +41,10 @@ vector<Tree::Node*> Tree::GetLeaves() const {
   return root_node_->GetLeaves();
 }
 
+void Tree::Normalize() {
+  root_node_->Normalize();
+}
+
 Tree::Node* Tree::root_node() const {
   return root_node_.get();
 }
@@ -239,6 +243,22 @@ void Tree::Node::Swap(Tree::Node* destination) {
 
   this_ptr.swap(dest_ptr);
   std::swap(parent_, destination->parent_);
+}
+
+void Tree::Node::Normalize() {
+  for (auto& child : children()) {
+    if (child->children_.size() == 1) {
+      unique_ptr<Tree::Node> grandchild = child->RemoveChild(child->children_.front().get());
+      Tree::Node* grandchild_raw = grandchild.get();
+
+      InsertChildAfter(std::move(grandchild), child);
+      RemoveChild(child);
+
+      grandchild_raw->Normalize();
+    } else {
+      child->Normalize();
+    }
+  }
 }
 
 Tree::Node* Tree::Node::GetLeftSibling() const {

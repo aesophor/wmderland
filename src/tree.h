@@ -40,6 +40,8 @@ class Tree {
     void InsertParent(std::unique_ptr<Tree::Node> parent);
     void Swap(Tree::Node* destination);
 
+    void Normalize();
+
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
 
@@ -71,6 +73,8 @@ class Tree {
 
   Tree::Node* GetTreeNode(Client* client) const;
   std::vector<Tree::Node*> GetLeaves() const;
+
+  void Normalize();
 
   Tree::Node* root_node() const;
   Tree::Node* current_node() const;
