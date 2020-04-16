@@ -28,7 +28,6 @@ class Action {
     GOTO_WORKSPACE,
     WORKSPACE,
     MOVE_WINDOW_TO_WORKSPACE,
-    SWAP,
     KILL,
     EXIT,
     RELOAD,

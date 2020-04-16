@@ -640,9 +640,6 @@ void WindowManager::HandleAction(const Action& action) {
       if (!focused_client) return;
       MoveWindowToWorkspace(focused_client->window(), std::stoi(action.argument()) - 1);
       break;
-    case Action::Type::SWAP:
-      SwapWindows(focused_client->window(), std::stol(action.argument()));
-      break;
     case Action::Type::KILL:
       if (!focused_client) return;
       KillClient(focused_client->window());
