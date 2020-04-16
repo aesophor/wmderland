@@ -727,11 +727,6 @@ void WindowManager::SwapWindows(Window window0, Window window1) {
   GET_CLIENT_OR_RETURN(window1, c1);
 
   workspaces_[current_]->Swap(window0, window1);
-  for (const auto& client : {c0, c1}) {
-    if (client->workspace() != workspaces_[current_].get()) {
-      client->Unmap();
-    }
-  }
 
   XWindowAttributes attr0 = c0->GetXWindowAttributes();
 

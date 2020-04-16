@@ -51,7 +51,7 @@ class Workspace {
 
   void Navigate(Action::Type navigate_action_type);
   Client* GetFocusedClient() const;
-  Client* GetClient(Window window, bool allow_other_workspace = false) const;
+  Client* GetClient(Window window) const;
   std::vector<Client*> GetClients() const;
   std::vector<Client*> GetFloatingClients() const;
   std::vector<Client*> GetTilingClients() const;
