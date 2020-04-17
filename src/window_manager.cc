@@ -415,13 +415,13 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   }
 
   if (c->is_floating()) {
-    c->workspace()->DisableFocusFollowsMouse();
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
   } else if (e.button != Mouse::Button::LEFT) {
     return;
   }
 
+  c->workspace()->DisableFocusFollowsMouse();
   mouse_->btn_pressed_event_ = e;
   mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
 }
@@ -433,8 +433,6 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
   assert(!c->is_fullscreen());
 
   if (c->is_floating()) {
-    c->workspace()->EnableFocusFollowsMouse();
-    
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
   } else {
@@ -446,6 +444,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
                std::get<TilingPosition>(drop_location));
   }
 
+  c->workspace()->EnableFocusFollowsMouse();
   mouse_->btn_pressed_event_.subwindow = None;
   mouse_->SetCursor(Mouse::CursorType::NORMAL);
 }
