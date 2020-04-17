@@ -6,6 +6,7 @@ extern "C" {
 #include <X11/Xproto.h>
 }
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -405,7 +406,6 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   GET_CLIENT_OR_RETURN(e.subwindow, c);
 
   wm_utils::SetNetActiveWindow(c->window());
-  c->workspace()->DisableFocusFollowsMouse();
   c->workspace()->UnsetFocusedClient();
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
@@ -415,27 +415,28 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   }
 
   if (c->is_floating()) {
+    c->workspace()->DisableFocusFollowsMouse();
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
-    mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
+  } else if (e.button != Mouse::Button::LEFT) {
+    return;
   }
 
   mouse_->btn_pressed_event_ = e;
+  mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
 }
 
 void WindowManager::OnButtonRelease(const XButtonEvent& e) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
-  c->workspace()->EnableFocusFollowsMouse();
+  assert(!c->is_fullscreen());
 
   if (c->is_floating()) {
-    XWindowAttributes attr =
-        wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
+    c->workspace()->EnableFocusFollowsMouse();
+    
+    XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
     cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
-
-    mouse_->btn_pressed_event_.subwindow = None;
-    mouse_->SetCursor(Mouse::CursorType::NORMAL);
   } else {
     tuple<Window, AreaType, TilingDirection, TilingPosition> drop_location =
         GetDropLocation(e);
@@ -444,6 +445,9 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
                std::get<TilingDirection>(drop_location),
                std::get<TilingPosition>(drop_location));
   }
+
+  mouse_->btn_pressed_event_.subwindow = None;
+  mouse_->SetCursor(Mouse::CursorType::NORMAL);
 }
 
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
@@ -768,6 +772,7 @@ void WindowManager::SetFullscreen(Window window, bool fullscreen) {
 
   if (fullscreen) {
     // Save the window's position and size before resizing it to fullscreen.
+    c->workspace()->DisableFocusFollowsMouse();
     c->set_attr_cache(c->GetXWindowAttributes());
     c->workspace()->UnmapAllClients();
   } else {
