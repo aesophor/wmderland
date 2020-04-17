@@ -710,6 +710,9 @@ void WindowManager::MoveWindow(Window window, Window ref, AreaType area_type,
   GET_CLIENT_OR_RETURN(window, c);
   GET_CLIENT_OR_RETURN(ref, ref_client);
 
+  // Suppress the warning for the unused variable 'c'.
+  (void)c;
+
   if (area_type == AreaType::CENTER || ref_client->is_floating()) {
     SwapWindows(window, ref);
     return;
