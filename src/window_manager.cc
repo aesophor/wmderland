@@ -929,7 +929,8 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
     c = it->second;
   } else {  // If the point dropped at is not on a window, try to find the window which area
             // contains the point.
-    int half_gap = 1 + config_->gap_width() / 2;
+    int pad_lt = 1 + config_->gap_width() / 2;
+    int pad_rb = pad_lt + 2 * config_->border_width();
     vector<Client*> clients = workspaces_[current_]->GetClients();
     auto it = std::find_if(clients.begin(), clients.end(), [&](Client* client) {
       if (client->is_floating()) {
@@ -938,13 +939,14 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
 
       XWindowAttributes attr = client->GetXWindowAttributes();
 
-      return e.x >= attr.x - half_gap && e.x <= attr.x + attr.width + half_gap &&
-          e.y >= attr.y - half_gap && e.y <= attr.y + attr.height + half_gap;
+      return e.x >= attr.x - pad_lt && e.x <= attr.x + attr.width + pad_rb &&
+          e.y >= attr.y - pad_lt && e.y <= attr.y + attr.height + pad_rb;
     });
 
     if (it != clients.end()) {
       c = *it;
     } else {
+      sys_utils::NotifySend("not found");
       return std::make_tuple(None, AreaType::UNDEFINED, TilingDirection::UNSPECIFIED,
                              TilingPosition::AFTER);
     }
@@ -952,10 +954,12 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
 
   XWindowAttributes attr = c->GetXWindowAttributes();
 
-  int x = e.x - attr.x - 0.5 * attr.width;
-  int y = e.y - attr.y - 0.5 * attr.height;
+  int width = attr.width + 2 * config_->border_width();
+  int height = attr.height + 2 * config_->border_width();
+  int x = e.x - attr.x - 0.5 * width;
+  int y = e.y - attr.y - 0.5 * height;
   double r = x != 0 ? (double)y / x : 0.;
-  double r_diagonal = attr.width != 0 ? (double)attr.height / attr.width : 0.;
+  double r_diagonal = width != 0 ? (double)height / width : 0.;
 
   TilingDirection tiling_direction;
   // How the point dropped at differ from the center of the window. (Normalized in [-0.5, 0.5])
@@ -964,12 +968,12 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
   double d_edge;
   if (x == 0 || r >= r_diagonal || r <= -r_diagonal) {  // Dropped in the North or the South
     tiling_direction = TilingDirection::VERTICAL;
-    d = (double)y / attr.height;
-    d_edge = 0.5 - 35. / attr.height;
+    d = (double)y / height;
+    d_edge = 0.5 - 35. / height;
   } else {  // Dropped in the East or the West
     tiling_direction = TilingDirection::HORIZONTAL;
-    d = (double)x / attr.width;
-    d_edge = 0.5 - 35. / attr.width;
+    d = (double)x / width;
+    d_edge = 0.5 - 35. / width;
   }
 
   TilingPosition tiling_position = d >= 0. ? TilingPosition::AFTER : TilingPosition::BEFORE;
