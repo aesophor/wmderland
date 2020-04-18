@@ -216,6 +216,8 @@ void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref
   children_.insert(children_.begin() + ref_idx + position, std::move(child));
 }
 
+// Insert a child node, but every current child of this node will be the child of the inserted
+// node.
 void Tree::Node::InsertChildAboveChildren(unique_ptr<Tree::Node> child) {
   for (const auto current_child : children()) {
     unique_ptr<Tree::Node> current_child_ptr = RemoveChild(current_child);
@@ -225,6 +227,7 @@ void Tree::Node::InsertChildAboveChildren(unique_ptr<Tree::Node> child) {
   AddChild(std::move(child));
 }
 
+// Insert a node as a parent while lifting the current parent up to the grandparent.
 void Tree::Node::InsertParent(std::unique_ptr<Tree::Node> parent) {
   Tree::Node* parent_raw = parent.get();
 
@@ -245,6 +248,7 @@ void Tree::Node::Swap(Tree::Node* destination) {
   std::swap(parent_, destination->parent_);
 }
 
+// Delete redundant internal nodes below this node.
 void Tree::Node::Normalize() {
   for (auto& child : children()) {
     if (child->children_.size() == 1) {

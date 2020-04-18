@@ -431,6 +431,7 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
   assert(!c->is_fullscreen());
+  c->workspace()->EnableFocusFollowsMouse();
 
   if (c->is_floating()) {
     XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
@@ -444,7 +445,6 @@ void WindowManager::OnButtonRelease(const XButtonEvent& e) {
                std::get<TilingPosition>(drop_location));
   }
 
-  c->workspace()->EnableFocusFollowsMouse();
   mouse_->btn_pressed_event_.subwindow = None;
   mouse_->SetCursor(Mouse::CursorType::NORMAL);
 }
@@ -731,8 +731,8 @@ void WindowManager::SwapWindows(Window window0, Window window1) {
 
   workspaces_[current_]->Swap(window0, window1);
 
+  // Also swap the coordinates of the windows. (Apply it if the window is floating.)
   XWindowAttributes attr0 = c0->GetXWindowAttributes();
-
   if (c0->is_floating()) {
     XWindowAttributes attr = c1->GetXWindowAttributes();
     c0->MoveResize(attr.x, attr.y, attr.width, attr.height);
@@ -919,15 +919,18 @@ Client::Area WindowManager::GetFloatingWindowArea(Window window, bool use_defaul
   return area;
 }
 
+// Detect where the mouse button was released.
 tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropLocation(
     const XButtonEvent& e) const {
   Client* c = nullptr;
   auto it = Client::mapper_.find(e.subwindow);
+
   if (it != Client::mapper_.end()) {
     c = it->second;
-  } else {
-    vector<Client*> clients = workspaces_[current_]->GetClients();
+  } else {  // If the point dropped at is not on a window, try to find the window which area
+            // contains the point.
     int half_gap = 1 + config_->gap_width() / 2;
+    vector<Client*> clients = workspaces_[current_]->GetClients();
     auto it = std::find_if(clients.begin(), clients.end(), [&](Client* client) {
       if (client->is_floating()) {
         return false;
@@ -938,6 +941,7 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
       return e.x >= attr.x - half_gap && e.x <= attr.x + attr.width + half_gap &&
           e.y >= attr.y - half_gap && e.y <= attr.y + attr.height + half_gap;
     });
+
     if (it != clients.end()) {
       c = *it;
     } else {
@@ -954,13 +958,15 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
   double r_diagonal = attr.width != 0 ? (double)attr.height / attr.width : 0.;
 
   TilingDirection tiling_direction;
+  // How the point dropped at differ from the center of the window. (Normalized in [-0.5, 0.5])
   double d;
+  // Value of `d` such that it is 35px away from the end of the window.
   double d_edge;
-  if (x == 0 || r >= r_diagonal || r <= -r_diagonal) {
+  if (x == 0 || r >= r_diagonal || r <= -r_diagonal) {  // Dropped in the North or the South
     tiling_direction = TilingDirection::VERTICAL;
     d = (double)y / attr.height;
     d_edge = 0.5 - 35. / attr.height;
-  } else {
+  } else {  // Dropped in the East or the West
     tiling_direction = TilingDirection::HORIZONTAL;
     d = (double)x / attr.width;
     d_edge = 0.5 - 35. / attr.width;
