@@ -224,7 +224,11 @@ void Client::set_attr_cache(const XWindowAttributes& attr) {
   attr_cache_ = attr;
 }
 
-void Client::RoundCorner(unsigned int radius) const {
+void Client::RoundCorners(unsigned int radius) const {
+  if (radius == 0) {
+    return;
+  }
+
   XWindowAttributes attr = GetXWindowAttributes();
   int width = attr.width + attr.border_width;
   int height = attr.height + attr.border_width;

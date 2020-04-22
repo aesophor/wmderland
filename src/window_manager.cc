@@ -298,6 +298,13 @@ void WindowManager::ArrangeWindows() const {
     RaiseNotifications();
   }
 
+  if (config_->corner_radius()) {
+      for (const auto c : workspaces_[current_]->GetClients()) {
+        c->RoundCorners(config_->corner_radius());
+        c->SetBorderWidth(config_->border_width());
+      }
+    }
+
   // Resume receiving OnEnterWindowEvents for all windows in current workspace.
   workspaces_[current_]->EnableFocusFollowsMouse();
 }
@@ -317,7 +324,7 @@ void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
     hidden_windows_.erase(e.window);
     Manage(e.window);
   }
-
+  
   ArrangeWindows();
 }
 
