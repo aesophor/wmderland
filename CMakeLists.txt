@@ -31,7 +31,7 @@ configure_file("src/config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h")
 FILE(GLOB cpp_sources src/*.cc)
 add_executable(wmderland ${cpp_sources})
 
-set(LINK_LIBRARIES X11)
+set(LINK_LIBRARIES X11 Xext)
 if(GLOG_FOUND)
   set(LINK_LIBRARIES ${LINK_LIBRARIES} glog)
 endif()

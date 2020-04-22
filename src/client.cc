@@ -1,6 +1,10 @@
 // Copyright (c) 2018-2020 Marco Wang <m.aesophor@gmail.com>
 #include "client.h"
 
+extern "C" {
+#include <X11/extensions/shape.h>
+}
+
 #include "config.h"
 #include "util.h"
 #include "workspace.h"
@@ -218,6 +222,29 @@ void Client::set_has_unmap_req_from_wm(bool has_unmap_req_from_wm) {
 
 void Client::set_attr_cache(const XWindowAttributes& attr) {
   attr_cache_ = attr;
+}
+
+void Client::RoundCorner(unsigned int radius) const {
+  XWindowAttributes attr = GetXWindowAttributes();
+  int width = attr.width + attr.border_width;
+  int height = attr.height + attr.border_width;
+  Pixmap mask = XCreatePixmap(dpy_, window_, width, height, 1);
+  XGCValues xgcv;
+  GC shape_gc = XCreateGC(dpy_, mask, 0, &xgcv);
+  int rad = radius;
+  int dia = 2 * rad;
+
+  XSetForeground(dpy_, shape_gc, 0);
+  XFillRectangle(dpy_, mask, shape_gc, 0, 0, width, height);
+  XSetForeground(dpy_, shape_gc, 1);
+  XFillArc(dpy_, mask, shape_gc, 0, 0, dia, dia, 0, 23040);
+  XFillArc(dpy_, mask, shape_gc, width-dia-1, 0, dia, dia, 0, 23040);
+  XFillArc(dpy_, mask, shape_gc, 0, height-dia-1, dia, dia, 0, 23040);
+  XFillArc(dpy_, mask, shape_gc, width-dia-1, height-dia-1, dia, dia, 0, 23040);
+  XFillRectangle(dpy_, mask, shape_gc, rad, 0, width-dia, height);
+  XFillRectangle(dpy_, mask, shape_gc, 0, rad, width, height-dia);
+  XShapeCombineMask(dpy_, window_, ShapeBounding, 0, 0, mask, ShapeSet);
+  XFreePixmap(dpy_, mask);
 }
 
 void Client::ConstrainSize(int& w, int& h) const {

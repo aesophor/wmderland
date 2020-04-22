@@ -85,6 +85,10 @@ unsigned int Config::border_width() const {
   return border_width_;
 }
 
+unsigned int Config::corner_radius() const {
+  return corner_radius_;
+}
+
 unsigned int Config::min_window_width() const {
   return min_window_width_;
 }
@@ -177,6 +181,7 @@ ifstream& operator>>(ifstream& ifs, Config& config) {
   // Load the built-in WM variables with their default values.
   config.gap_width_ = DEFAULT_GAP_WIDTH;
   config.border_width_ = DEFAULT_BORDER_WIDTH;
+  config.corner_radius_ = DEFAULT_CORNER_RADIUS;
   config.min_window_width_ = MIN_WINDOW_WIDTH;
   config.min_window_height_ = MIN_WINDOW_HEIGHT;
   config.float_move_step_ = DEFAULT_FLOAT_MOVE_STEP;
@@ -229,6 +234,8 @@ ifstream& operator>>(ifstream& ifs, Config& config) {
             config.gap_width_ = std::stoi(value);
           } else if (key == "border_width") {
             config.border_width_ = std::stoi(value);
+          } else if (key == "corner_radius") {
+            config.corner_radius_ = std::stoi(value);
           } else if (key == "min_window_width") {
             config.min_window_width_ = std::stoi(value);
           } else if (key == "min_window_height") {

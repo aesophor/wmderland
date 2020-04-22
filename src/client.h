@@ -67,6 +67,7 @@ class Client {
   void set_attr_cache(const XWindowAttributes& attr);
 
  private:
+  void RoundCorner(unsigned int radius) const;
   void ConstrainSize(int& w, int& h) const;
 
   Display* dpy_;
