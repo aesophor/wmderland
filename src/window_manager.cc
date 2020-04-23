@@ -578,14 +578,17 @@ void WindowManager::Unmanage(Window window) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(window, c);
 
+  Workspace* workspace = c->workspace();
+
   // If the client being destroyed is in fullscreen mode, make sure to unset the
   // workspace's fullscreen state.
   if (c->is_fullscreen()) {
-    c->workspace()->set_fullscreen(false);
+    workspace->set_fullscreen(false);
   }
 
   // Remove the corresponding client from the client tree.
-  c->workspace()->Remove(window);
+  workspace->Remove(window);
+  workspace->Normalize();
   UpdateClientList();
   ArrangeWindows();
 }

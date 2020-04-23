@@ -29,6 +29,7 @@ class Workspace {
   bool Has(Window window) const;
   void Add(Window window, TilingPosition tiling_position = TilingPosition::AFTER);
   void Remove(Window window);
+  void Normalize();
   void Move(Window window, Workspace* new_workspace);
   void Move(Window window, Window ref, AreaType area_type, TilingDirection tiling_direction,
             TilingPosition tiling_position);

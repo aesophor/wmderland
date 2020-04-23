@@ -94,6 +94,14 @@ void Workspace::Remove(Window window) {
   client_tree_.set_current_node(nodes[idx]);
 }
 
+// The tree with redundant internal nodes looks the same as the tree without them though they
+// result the different behavior on the window insertion.
+// Thus, to prevent users hitting inconsistent behaviors, we normalize the tree after removing
+// clients.
+void Workspace::Normalize() {
+  client_tree_.Normalize();
+}
+
 void Workspace::Move(Window window, Workspace* new_workspace) {
   Client* c = GetClient(window);
   if (!c) {
