@@ -949,7 +949,6 @@ tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropL
     if (it != clients.end()) {
       c = *it;
     } else {
-      sys_utils::NotifySend("not found");
       return std::make_tuple(None, AreaType::UNDEFINED, TilingDirection::UNSPECIFIED,
                              TilingPosition::AFTER);
     }
