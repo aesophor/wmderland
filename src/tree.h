@@ -16,6 +16,11 @@ enum class TilingDirection {
   VERTICAL,
 };
 
+enum class TilingPosition {
+  BEFORE,
+  AFTER,
+};
+
 class Tree {
  public:
   Tree();
@@ -27,8 +32,15 @@ class Tree {
     virtual ~Node();
 
     void AddChild(std::unique_ptr<Tree::Node> child);
-    void RemoveChild(Tree::Node* child);
+    std::unique_ptr<Tree::Node> RemoveChild(Tree::Node* child);
     void InsertChildAfter(std::unique_ptr<Tree::Node> child, Tree::Node* ref);
+    void InsertChildBeside(std::unique_ptr<Tree::Node> child, Tree::Node* ref,
+                           TilingPosition tiling_position);
+    void InsertChildAboveChildren(std::unique_ptr<Tree::Node> child);
+    void InsertParent(std::unique_ptr<Tree::Node> parent);
+    void Swap(Tree::Node* destination);
+
+    void Normalize();
 
     Tree::Node* GetLeftSibling() const;
     Tree::Node* GetRightSibling() const;
@@ -50,6 +62,8 @@ class Tree {
     static std::unordered_map<Client*, Tree::Node*> mapper_;
 
    private:
+    std::unique_ptr<Tree::Node>& owning_pointer_() const;
+
     std::vector<std::unique_ptr<Tree::Node>> children_;
     Tree::Node* parent_;
 
@@ -59,6 +73,8 @@ class Tree {
 
   Tree::Node* GetTreeNode(Client* client) const;
   std::vector<Tree::Node*> GetLeaves() const;
+
+  void Normalize();
 
   Tree::Node* root_node() const;
   Tree::Node* current_node() const;

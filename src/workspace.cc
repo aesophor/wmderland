@@ -30,7 +30,7 @@ bool Workspace::Has(Window window) const {
   return GetClient(window) != nullptr;
 }
 
-void Workspace::Add(Window window) {
+void Workspace::Add(Window window, TilingPosition tiling_position) {
   unique_ptr<Client> client = std::make_unique<Client>(dpy_, window, this);
   unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(std::move(client));
 
@@ -42,7 +42,8 @@ void Workspace::Add(Window window) {
     client_tree_.root_node()->AddChild(std::move(new_node));
   } else {
     Tree::Node* current_node = client_tree_.current_node();
-    current_node->parent()->InsertChildAfter(std::move(new_node), current_node);
+    current_node->parent()->InsertChildBeside(std::move(new_node), current_node,
+                                              tiling_position);
   }
 
   if (!is_fullscreen_) {
@@ -93,6 +94,14 @@ void Workspace::Remove(Window window) {
   client_tree_.set_current_node(nodes[idx]);
 }
 
+// The tree with redundant internal nodes looks the same as the tree without them though they
+// result the different behavior on the window insertion.
+// Thus, to prevent users hitting inconsistent behaviors, we normalize the tree after removing
+// clients.
+void Workspace::Normalize() {
+  client_tree_.Normalize();
+}
+
 void Workspace::Move(Window window, Workspace* new_workspace) {
   Client* c = GetClient(window);
   if (!c) {
@@ -113,6 +122,178 @@ void Workspace::Move(Window window, Workspace* new_workspace) {
   c->set_floating(is_floating);
   c->set_fullscreen(false);
   c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
+
+  client_tree_.Normalize();
+}
+
+void Workspace::Move(Window window, Window ref, AreaType area_type,
+                     TilingDirection tiling_direction, TilingPosition tiling_position) {
+  Client* c = GetClient(window);
+  if (!c) {
+    return;
+  }
+
+  Client* ref_client = GetClient(ref);
+  if (!ref_client) {
+    return;
+  }
+
+  Tree::Node* ref_node = client_tree_.GetTreeNode(ref_client);
+
+  // We handle four cases here:
+  // 1. The window was released in the middle area of `ref` window.
+  // 2. The window was released on the edge of `ref` window and -
+  //     a. - `ref` window is tiled in the same direction as `tiling_direction`.
+  //     b. - `ref` window is NOT tiled in the same direction as `tiling_direction` but its
+  //          parent window is.
+  //     c. - both of `ref` window and its parent are tiled in the different direction from
+  //          `tiling_direction`.
+  switch (area_type) {
+    case AreaType::MID:
+      MoveAndSplit(window, ref, tiling_direction, tiling_position, false);
+      break;
+    case AreaType::EDGE:
+      if (ref_node->parent()->tiling_direction() == tiling_direction) {
+        MoveAndInsert(window, ref, tiling_position);
+      } else if (ref_node->parent()->parent() &&
+                 ref_node->parent()->parent()->tiling_direction() == tiling_direction) {
+        MoveAndInsert(window, ref, tiling_position, true);
+      } else {
+        MoveAndSplit(window, ref, tiling_direction, tiling_position, true);
+      }
+      break;
+    default:
+      break;
+  }
+
+  client_tree_.Normalize();
+}
+
+void Workspace::MoveAndSplit(Window window, Window ref, TilingDirection tiling_direction,
+                             TilingPosition tiling_position, bool branch_outer) {
+  if (window == ref) {
+    return;
+  }
+
+  Client* c = GetClient(window);
+  if (!c) {
+    return;
+  }
+
+  Client* ref_client = GetClient(ref);
+  if (!ref_client) {
+    return;
+  }
+
+  Tree::Node* ref_node = client_tree_.GetTreeNode(ref_client);
+  if (!ref_node) {
+    return;
+  }
+
+  bool is_floating = c->is_floating();
+  bool is_mapped = c->is_mapped();
+  bool has_unmap_req_from_wm = c->has_unmap_req_from_wm();
+
+  Remove(window);
+
+  unique_ptr<Tree::Node> new_node = std::make_unique<Tree::Node>(nullptr);
+  Tree::Node* new_node_raw = new_node.get();
+  Tree::Node* original_parent_node = ref_node->parent();
+
+  // If `branch_outer` is true, wrap the container containing `ref` by new container and put
+  // `window` as sibling of the wrapped container.
+  // Otherwise, split the area where `ref` is placed to put `ref` and `window` there.
+  if (branch_outer) {
+    original_parent_node->InsertChildAboveChildren(std::move(new_node));
+    client_tree_.set_current_node(new_node_raw);
+
+    new_node_raw->set_tiling_direction(original_parent_node->tiling_direction());
+    original_parent_node->set_tiling_direction(tiling_direction);
+  } else {
+    ref_node->InsertParent(std::move(new_node));
+    client_tree_.set_current_node(ref_node);
+
+    new_node_raw->set_tiling_direction(tiling_direction);
+  }
+
+  Add(window, tiling_position);
+
+  // Transfer old client's state to the new client.
+  c = ref_client->workspace()->GetClient(window);
+  c->set_floating(is_floating);
+  c->set_fullscreen(false);
+  c->set_mapped(is_mapped);
+  c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
+}
+
+void Workspace::MoveAndInsert(Window window, Window ref, TilingPosition tiling_position,
+                              bool insert_outer) {
+  if (window == ref) {
+    return;
+  }
+
+  Client* c = GetClient(window);
+  if (!c) {
+    return;
+  }
+
+  Client* ref_client = GetClient(ref);
+  if (!ref_client) {
+    return;
+  }
+
+  // If `insert_outer` is true, insert `window` beside the container containing `ref`.
+  // Otherwise, insert `window` beside `ref`.
+  Tree::Node* ref_node = insert_outer ? client_tree_.GetTreeNode(ref_client)->parent()
+                                      : client_tree_.GetTreeNode(ref_client);
+  if (!ref_node) {
+    return;
+  }
+
+  bool is_floating = c->is_floating();
+  bool is_mapped = c->is_mapped();
+  bool has_unmap_req_from_wm = c->has_unmap_req_from_wm();
+
+  Remove(window);
+
+  client_tree_.set_current_node(ref_node);
+  Add(window, tiling_position);
+
+  // Transfer old client's state to the new client.
+  c = ref_client->workspace()->GetClient(window);
+  c->set_floating(is_floating);
+  c->set_fullscreen(false);
+  c->set_mapped(is_mapped);
+  c->set_has_unmap_req_from_wm(has_unmap_req_from_wm);
+}
+
+void Workspace::Swap(Window window0, Window window1) {
+  Client* c0 = GetClient(window0);
+  if (!c0) {
+    return;
+  }
+
+  Tree::Node* node0 = client_tree_.GetTreeNode(c0);
+  if (!node0) {
+    return;
+  }
+
+  Client* c1 = GetClient(window1);
+  if (!c1) {
+    return;
+  }
+
+  Tree::Node* node1 = client_tree_.GetTreeNode(c1);
+  if (!node1) {
+    return;
+  }
+
+  // Swap the states of the clients whether they are floating or not.
+  bool is_floating0 = c0->is_floating();
+  c0->set_floating(c1->is_floating());
+  c1->set_floating(is_floating0);
+
+  node0->Swap(node1);
 }
 
 void Workspace::Tile(const Client::Area& tiling_area) const {

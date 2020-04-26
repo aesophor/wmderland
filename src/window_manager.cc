@@ -9,6 +9,7 @@ extern "C" {
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 #include "client.h"
 #include "log.h"
@@ -47,6 +48,8 @@ extern "C" {
   } while (0)
 
 using std::pair;
+using std::tuple;
+using std::vector;
 
 namespace wmderland {
 
@@ -407,25 +410,40 @@ void WindowManager::OnButtonPress(const XButtonEvent& e) {
   c->workspace()->SetFocusedClient(c->window());
   c->workspace()->RaiseAllFloatingClients();
 
-  if (c->is_floating() && !c->is_fullscreen()) {
-    c->workspace()->DisableFocusFollowsMouse();
+  if (c->is_fullscreen()) {
+    return;
+  }
+
+  if (c->is_floating()) {
     c->Raise();
     c->set_attr_cache(c->GetXWindowAttributes());
-
-    mouse_->btn_pressed_event_ = e;
-    mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
+  } else if (e.button != Mouse::Button::LEFT) {
+    return;
   }
+
+  c->workspace()->DisableFocusFollowsMouse();
+  mouse_->btn_pressed_event_ = e;
+  mouse_->SetCursor(static_cast<Mouse::CursorType>(e.button));
 }
 
-void WindowManager::OnButtonRelease(const XButtonEvent&) {
+void WindowManager::OnButtonRelease(const XButtonEvent& e) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
 
-  assert(c->is_floating() && !c->is_fullscreen());
+  assert(!c->is_fullscreen());
   c->workspace()->EnableFocusFollowsMouse();
 
-  XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
-  cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
+  if (c->is_floating()) {
+    XWindowAttributes attr = wm_utils::GetXWindowAttributes(mouse_->btn_pressed_event_.subwindow);
+    cookie_.Put(c->window(), {attr.x, attr.y, attr.width, attr.height});
+  } else {
+    tuple<Window, AreaType, TilingDirection, TilingPosition> drop_location =
+        GetDropLocation(e);
+
+    MoveWindow(c->window(), std::get<Window>(drop_location), std::get<AreaType>(drop_location),
+               std::get<TilingDirection>(drop_location),
+               std::get<TilingPosition>(drop_location));
+  }
 
   mouse_->btn_pressed_event_.subwindow = None;
   mouse_->SetCursor(Mouse::CursorType::NORMAL);
@@ -434,6 +452,10 @@ void WindowManager::OnButtonRelease(const XButtonEvent&) {
 void WindowManager::OnMotionNotify(const XButtonEvent& e) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(mouse_->btn_pressed_event_.subwindow, c);
+
+  if (!c->is_floating()) {
+    return;
+  }
 
   const XWindowAttributes& attr = c->attr_cache();
   const XButtonEvent& btn_pressed_event = mouse_->btn_pressed_event_;
@@ -556,14 +578,17 @@ void WindowManager::Unmanage(Window window) {
   Client* c = nullptr;
   GET_CLIENT_OR_RETURN(window, c);
 
+  Workspace* workspace = c->workspace();
+
   // If the client being destroyed is in fullscreen mode, make sure to unset the
   // workspace's fullscreen state.
   if (c->is_fullscreen()) {
-    c->workspace()->set_fullscreen(false);
+    workspace->set_fullscreen(false);
   }
 
   // Remove the corresponding client from the client tree.
-  c->workspace()->Remove(window);
+  workspace->Remove(window);
+  workspace->Normalize();
   UpdateClientList();
   ArrangeWindows();
 }
@@ -677,6 +702,48 @@ void WindowManager::MoveWindowToWorkspace(Window window, int next) {
   c->Unmap();
   workspaces_[next]->UnsetFocusedClient();
   workspaces_[current_]->Move(window, workspaces_[next].get());
+  ArrangeWindows();
+}
+
+void WindowManager::MoveWindow(Window window, Window ref, AreaType area_type,
+                               TilingDirection tiling_direction,
+                               TilingPosition tiling_position) {
+  Client* c = nullptr;
+  Client* ref_client = nullptr;
+  GET_CLIENT_OR_RETURN(window, c);
+  GET_CLIENT_OR_RETURN(ref, ref_client);
+
+  // Suppress the warning for the unused variable 'c'.
+  (void)c;
+
+  if (area_type == AreaType::CENTER || ref_client->is_floating()) {
+    SwapWindows(window, ref);
+    return;
+  }
+
+  workspaces_[current_]->Move(window, ref, area_type, tiling_direction, tiling_position);
+
+  ArrangeWindows();
+}
+
+void WindowManager::SwapWindows(Window window0, Window window1) {
+  Client* c0 = nullptr;
+  Client* c1 = nullptr;
+  GET_CLIENT_OR_RETURN(window0, c0);
+  GET_CLIENT_OR_RETURN(window1, c1);
+
+  workspaces_[current_]->Swap(window0, window1);
+
+  // Also swap the coordinates of the windows. (Apply it if the window is floating.)
+  XWindowAttributes attr0 = c0->GetXWindowAttributes();
+  if (c0->is_floating()) {
+    XWindowAttributes attr = c1->GetXWindowAttributes();
+    c0->MoveResize(attr.x, attr.y, attr.width, attr.height);
+  }
+  if (c1->is_floating()) {
+    c1->MoveResize(attr0.x, attr0.y, attr0.width, attr0.height);
+  }
+
   ArrangeWindows();
 }
 
@@ -853,6 +920,76 @@ Client::Area WindowManager::GetFloatingWindowArea(Window window, bool use_defaul
   }
 
   return area;
+}
+
+// Detect where the mouse button was released.
+tuple<Window, AreaType, TilingDirection, TilingPosition> WindowManager::GetDropLocation(
+    const XButtonEvent& e) const {
+  Client* c = nullptr;
+  auto it = Client::mapper_.find(e.subwindow);
+
+  if (it != Client::mapper_.end()) {
+    c = it->second;
+  } else {  // If the point dropped at is not on a window, try to find the window which area
+            // contains the point.
+    int pad_lt = 1 + config_->gap_width() / 2;
+    int pad_rb = pad_lt + 2 * config_->border_width();
+    vector<Client*> clients = workspaces_[current_]->GetClients();
+    auto it = std::find_if(clients.begin(), clients.end(), [&](Client* client) {
+      if (client->is_floating()) {
+        return false;
+      }
+
+      XWindowAttributes attr = client->GetXWindowAttributes();
+
+      return e.x >= attr.x - pad_lt && e.x <= attr.x + attr.width + pad_rb &&
+          e.y >= attr.y - pad_lt && e.y <= attr.y + attr.height + pad_rb;
+    });
+
+    if (it != clients.end()) {
+      c = *it;
+    } else {
+      return std::make_tuple(None, AreaType::UNDEFINED, TilingDirection::UNSPECIFIED,
+                             TilingPosition::AFTER);
+    }
+  }
+
+  XWindowAttributes attr = c->GetXWindowAttributes();
+
+  int width = attr.width + 2 * config_->border_width();
+  int height = attr.height + 2 * config_->border_width();
+  int x = e.x - attr.x - 0.5 * width;
+  int y = e.y - attr.y - 0.5 * height;
+  double r = x != 0 ? (double)y / x : 0.;
+  double r_diagonal = width != 0 ? (double)height / width : 0.;
+
+  TilingDirection tiling_direction;
+  // How the point dropped at differ from the center of the window. (Normalized in [-0.5, 0.5])
+  double d;
+  // Value of `d` such that it is 35px away from the end of the window.
+  double d_edge;
+  if (x == 0 || r >= r_diagonal || r <= -r_diagonal) {  // Dropped in the North or the South
+    tiling_direction = TilingDirection::VERTICAL;
+    d = (double)y / height;
+    d_edge = 0.5 - 35. / height;
+  } else {  // Dropped in the East or the West
+    tiling_direction = TilingDirection::HORIZONTAL;
+    d = (double)x / width;
+    d_edge = 0.5 - 35. / width;
+  }
+
+  TilingPosition tiling_position = d >= 0. ? TilingPosition::AFTER : TilingPosition::BEFORE;
+
+  AreaType area_type;
+  if (d >= -0.1 && d <= 0.1) {
+    area_type = AreaType::CENTER;
+  } else if (d >= -d_edge && d <= d_edge) {
+    area_type = AreaType::MID;
+  } else {
+    area_type = AreaType::EDGE;
+  }
+
+  return std::make_tuple(c->window(), area_type, tiling_direction, tiling_position);
 }
 
 void WindowManager::UpdateClientList() {

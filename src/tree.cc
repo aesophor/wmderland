@@ -41,6 +41,10 @@ vector<Tree::Node*> Tree::GetLeaves() const {
   return root_node_->GetLeaves();
 }
 
+void Tree::Normalize() {
+  root_node_->Normalize();
+}
+
 Tree::Node* Tree::root_node() const {
   return root_node_.get();
 }
@@ -169,7 +173,7 @@ void Tree::DfsSerializeHelper(Tree::Node* node, string& data) const {
 }
 
 Tree::Node::Node(unique_ptr<Client> client)
-    : client_(std::move(client)), tiling_direction_(TilingDirection::UNSPECIFIED) {
+    : parent_(), client_(std::move(client)), tiling_direction_(TilingDirection::UNSPECIFIED) {
   if (client_) {
     Tree::Node::mapper_[client_.get()] = this;
   }
@@ -184,21 +188,81 @@ void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
   children_.push_back(std::move(child));
 }
 
-void Tree::Node::RemoveChild(Tree::Node* child) {
+unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
+  unique_ptr<Tree::Node> removed_ptr = nullptr;
+
   child->set_parent(nullptr);
-  children_.erase(
-      std::remove_if(children_.begin(), children_.end(),
-                     [&](unique_ptr<Tree::Node>& node) { return node.get() == child; }),
-      children_.end());
+  children_.erase(std::remove_if(children_.begin(), children_.end(),
+                                 [&](unique_ptr<Tree::Node>& node) {
+                                   return node.get() == child &&
+                                       (removed_ptr = std::move(node), true);
+                                 }),
+                  children_.end());
+  return removed_ptr;
 }
 
 void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref) {
+  InsertChildBeside(std::move(child), ref, TilingPosition::AFTER);
+}
+
+void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref,
+                                   TilingPosition tiling_position) {
   child->set_parent(this);
   ptrdiff_t ref_idx =
       std::find_if(children_.begin(), children_.end(),
                    [&](unique_ptr<Tree::Node>& node) { return node.get() == ref; }) -
       children_.begin();
-  children_.insert(children_.begin() + ref_idx + 1, std::move(child));
+  ptrdiff_t position = tiling_position == TilingPosition::BEFORE ? 0 : 1;
+  children_.insert(children_.begin() + ref_idx + position, std::move(child));
+}
+
+// Insert a child node, but every current child of this node will be the child of the inserted
+// node.
+void Tree::Node::InsertChildAboveChildren(unique_ptr<Tree::Node> child) {
+  for (const auto current_child : children()) {
+    unique_ptr<Tree::Node> current_child_ptr = RemoveChild(current_child);
+    child->AddChild(std::move(current_child_ptr));
+  }
+
+  AddChild(std::move(child));
+}
+
+// Insert a node as a parent while lifting the current parent up to the grandparent.
+void Tree::Node::InsertParent(std::unique_ptr<Tree::Node> parent) {
+  Tree::Node* parent_raw = parent.get();
+
+  parent_->InsertChildAfter(std::move(parent), this);
+  unique_ptr<Tree::Node> this_ptr = parent_->RemoveChild(this);
+  parent_raw->AddChild(std::move(this_ptr));
+}
+
+void Tree::Node::Swap(Tree::Node* destination) {
+  if (!leaf() || !destination->leaf() || !parent_ || !destination->parent_) {
+    return;
+  }
+
+  unique_ptr<Tree::Node>& this_ptr = owning_pointer_();
+  unique_ptr<Tree::Node>& dest_ptr = destination->owning_pointer_();
+
+  this_ptr.swap(dest_ptr);
+  std::swap(parent_, destination->parent_);
+}
+
+// Delete redundant internal nodes below this node.
+void Tree::Node::Normalize() {
+  for (auto& child : children()) {
+    if (child->children_.size() == 1) {
+      unique_ptr<Tree::Node> grandchild = child->RemoveChild(child->children_.front().get());
+      Tree::Node* grandchild_raw = grandchild.get();
+
+      InsertChildAfter(std::move(grandchild), child);
+      RemoveChild(child);
+
+      grandchild_raw->Normalize();
+    } else {
+      child->Normalize();
+    }
+  }
 }
 
 Tree::Node* Tree::Node::GetLeftSibling() const {
@@ -301,6 +365,11 @@ void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
 
 bool Tree::Node::leaf() const {
   return children_.empty();
+}
+
+unique_ptr<Tree::Node>& Tree::Node::owning_pointer_() const {
+  return *std::find_if(parent_->children_.begin(), parent_->children_.end(),
+                       [&](unique_ptr<Tree::Node>& node) { return node.get() == this; });
 }
 
 }  // namespace wmderland
