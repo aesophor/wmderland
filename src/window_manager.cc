@@ -91,6 +91,7 @@ WindowManager::WindowManager(Display* dpy)
 
   // Initialization.
   wm_utils::Init(dpy_, prop_.get(), root_window_);
+  mouse_->SetCursor(Mouse::CursorType::NORMAL);
   config_->Load();
   InitWorkspaces();
   InitProperties();
