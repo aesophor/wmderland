@@ -629,6 +629,10 @@ void WindowManager::HandleAction(const Action& action) {
       }
       workspaces_[current_]->EnableFocusFollowsMouse();
       break;
+    case Action::Type::RESIZE_FIX_FRACTION:
+      workspaces_[current_]->ResizeTiledToFraction(std::stoi(action.argument()));
+      ArrangeWindows();
+      break;
     case Action::Type::TILE_H:
       workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
       break;

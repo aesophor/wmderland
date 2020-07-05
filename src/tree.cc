@@ -279,6 +279,28 @@ void Tree::Node::Resize(double delta) {
   FitChildrenFractions();
 }
 
+void Tree::Node::ResizeToFraction(double fraction) {
+  if (!parent_) {
+    return;
+  }
+
+  const double min_fraction = 0.01;
+  size_t num_siblings = parent_->children_.size() - 1;
+  double min_siblings_fraction = min_fraction * num_siblings;
+  if (fraction + min_siblings_fraction > 1.) {
+    fraction = 1. - min_siblings_fraction;
+  }
+  if (fraction < min_fraction) {
+    fraction = min_fraction;
+  }
+
+  fraction_ = fraction;
+  double sibling_fraction = (1. - fraction) / num_siblings;
+  for (auto& child : parent_->children()) {
+    if (child != this) child->fraction_ = sibling_fraction;
+  }
+}
+
 void Tree::Node::FitChildrenFractions() {
   double total_fraction = 0.;
   for (const auto& child : children()) {

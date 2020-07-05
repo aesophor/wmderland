@@ -65,6 +65,8 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::RESIZE_WIDTH;
   } else if (s == "resize_height") {
     return Action::Type::RESIZE_HEIGHT;
+  } else if (s == "resize_fix_fraction") {
+    return Action::Type::RESIZE_FIX_FRACTION;
   } else if (s == "tile_h") {
     return Action::Type::TILE_H;
   } else if (s == "tile_v") {

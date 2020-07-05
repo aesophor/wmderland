@@ -478,6 +478,10 @@ void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage
   node->Resize(deltaPercentage * 0.01);
 }
 
+void Workspace::ResizeTiledToFraction(int percentage) {
+  client_tree_.current_node()->ResizeToFraction(percentage * 0.01);
+}
+
 void Workspace::Navigate(Action::Type focus_action_type) {
   // Do not let user navigate between windows if
   // 1. there's no currently focused client

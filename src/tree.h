@@ -40,6 +40,7 @@ class Tree {
     void InsertParent(std::unique_ptr<Tree::Node> parent);
     void Swap(Tree::Node* destination);
     void Resize(double delta);
+    void ResizeToFraction(double fraction);
 
     void FitChildrenFractions();
     void Normalize();

@@ -38,6 +38,8 @@ class Workspace {
   void MoveAndInsert(Window window, Window ref, TilingPosition tiling_position,
                      bool insert_outer = false);
   void Swap(Window window0, Window window1);
+  void ResizeTiled(Action::Type resize_action_type, int deltaPercentage);
+  void ResizeTiledToFraction(int percentage);
   void Tile(const Client::Area& tiling_area) const;
   void SetTilingDirection(TilingDirection tiling_direction);
 
@@ -50,7 +52,6 @@ class Workspace {
   void DisableFocusFollowsMouse() const;
   void EnableFocusFollowsMouse() const;
 
-  void ResizeTiled(Action::Type resize_action_type, int deltaPercentage);
   void Navigate(Action::Type navigate_action_type);
   Client* GetFocusedClient() const;
   Client* GetClient(Window window) const;
