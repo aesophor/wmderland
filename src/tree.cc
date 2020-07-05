@@ -263,14 +263,16 @@ void Tree::Node::Resize(double delta) {
     return;
   }
 
+  const double min_fraction = 0.01;
   Tree::Node* sibling = GetRightSibling();
   if (!sibling) {
     sibling = GetLeftSibling();
   }
-  if (!sibling || sibling->fraction_ <= delta + 0.01 || this->fraction_ <= -delta + 0.01) {
+  if (!sibling || sibling->fraction_ < delta + min_fraction ||
+      this->fraction_ < -delta + min_fraction) {
     return;
   }
-  
+
   this->fraction_ += delta;
   sibling->fraction_ -= delta;
 
