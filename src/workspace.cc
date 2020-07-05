@@ -330,6 +330,11 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
     return;
   }
 
+  double total_fraction = 0.;
+  for (const auto& child : children) {
+    total_fraction += child->fraction();
+  }
+
   // Calculate each child's x, y, width and height based on node's tiling
   // direction.
   TilingDirection dir = node->tiling_direction();
@@ -338,8 +343,10 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
 
   for (size_t i = 0; i < children.size(); i++) {
     Tree::Node* child = children[i];
-    int child_width = (dir == TilingDirection::HORIZONTAL) ? w * child->fraction() : w;
-    int child_height = (dir == TilingDirection::VERTICAL) ? h * child->fraction() : h;
+    int child_width =
+        (dir == TilingDirection::HORIZONTAL) ? w * child->fraction() / total_fraction : w;
+    int child_height =
+        (dir == TilingDirection::VERTICAL) ? h * child->fraction() / total_fraction : h;
 
     if (child->leaf()) {
       int new_x = child_x + gap_width / 2;
@@ -449,8 +456,8 @@ void Workspace::EnableFocusFollowsMouse() const {
 }
 
 void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage) {
-  if (!client_tree_.current_node() || !client_tree_.current_node()->parent()
-      || this->is_fullscreen()) {
+  if (!client_tree_.current_node() || !client_tree_.current_node()->parent() ||
+      this->is_fullscreen()) {
     return;
   }
 
@@ -467,7 +474,7 @@ void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage
       return;
   }
   if (node->parent()->tiling_direction() != target_direction) node = node->parent();
-  
+
   node->Resize(deltaPercentage * 0.01);
 }
 
