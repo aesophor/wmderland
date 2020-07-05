@@ -633,6 +633,10 @@ void WindowManager::HandleAction(const Action& action) {
       workspaces_[current_]->ResizeTiledToFraction(std::stoi(action.argument()));
       ArrangeWindows();
       break;
+    case Action::Type::RESIZE_DISTRIBUTE_FRACTIONS:
+      workspaces_[current_]->ResizeDistributeFractions();
+      ArrangeWindows();
+      break;
     case Action::Type::TILE_H:
       workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);
       break;

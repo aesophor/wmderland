@@ -303,6 +303,12 @@ void Tree::Node::ResizeToFraction(double fraction) {
   parent_->FitChildrenFractions();
 }
 
+void Tree::Node::DistributeChildrenFractions() {
+  for (auto& child : children()) {
+    child->fraction_ = 1. / children_.size();
+  }
+}
+
 void Tree::Node::FitChildrenFractions() {
   double total_fraction = 0.;
   for (const auto& child : children()) {

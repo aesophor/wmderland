@@ -41,6 +41,7 @@ class Tree {
     void Swap(Tree::Node* destination);
     void Resize(double delta);
     void ResizeToFraction(double fraction);
+    void DistributeChildrenFractions();
 
     void FitChildrenFractions();
     void Normalize();
