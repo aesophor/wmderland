@@ -335,13 +335,11 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
   TilingDirection dir = node->tiling_direction();
   int child_x = x;
   int child_y = y;
-  int child_width = (dir == TilingDirection::HORIZONTAL) ? w / children.size() : w;
-  int child_height = (dir == TilingDirection::VERTICAL) ? h / children.size() : h;
 
   for (size_t i = 0; i < children.size(); i++) {
     Tree::Node* child = children[i];
-    if (node->tiling_direction() == TilingDirection::HORIZONTAL) child_x = x + child_width * i;
-    if (node->tiling_direction() == TilingDirection::VERTICAL) child_y = y + child_height * i;
+    int child_width = (dir == TilingDirection::HORIZONTAL) ? w * child->fraction() : w;
+    int child_height = (dir == TilingDirection::VERTICAL) ? h * child->fraction() : h;
 
     if (child->leaf()) {
       int new_x = child_x + gap_width / 2;
@@ -353,6 +351,9 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
       DfsTileHelper(child, child_x, child_y, child_width, child_height, border_width,
                     gap_width);
     }
+
+    if (node->tiling_direction() == TilingDirection::HORIZONTAL) child_x += child_width;
+    if (node->tiling_direction() == TilingDirection::VERTICAL) child_y += child_height;
   }
 }
 

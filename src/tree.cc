@@ -184,8 +184,11 @@ Tree::Node::~Node() {
 }
 
 void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
+  Tree::Node* child_raw = child.get();
   child->set_parent(this);
   children_.push_back(std::move(child));
+
+  FitChildrenFractionsAfterInsertion(child_raw);
 }
 
 unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
@@ -198,6 +201,9 @@ unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
                                        (removed_ptr = std::move(node), true);
                                  }),
                   children_.end());
+
+  FitChildrenFractions();
+
   return removed_ptr;
 }
 
@@ -207,6 +213,8 @@ void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref)
 
 void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref,
                                    TilingPosition tiling_position) {
+  Tree::Node* child_raw = child.get();
+
   child->set_parent(this);
   ptrdiff_t ref_idx =
       std::find_if(children_.begin(), children_.end(),
@@ -214,6 +222,8 @@ void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref
       children_.begin();
   ptrdiff_t position = tiling_position == TilingPosition::BEFORE ? 0 : 1;
   children_.insert(children_.begin() + ref_idx + position, std::move(child));
+
+  FitChildrenFractionsAfterInsertion(child_raw);
 }
 
 // Insert a child node, but every current child of this node will be the child of the inserted
@@ -246,6 +256,28 @@ void Tree::Node::Swap(Tree::Node* destination) {
 
   this_ptr.swap(dest_ptr);
   std::swap(parent_, destination->parent_);
+}
+
+void Tree::Node::FitChildrenFractions() {
+  double total_fraction = 0.;
+  for (const auto& ch child : children()) {
+    total_fraction += child->fraction_;
+  }
+
+  if (total_fraction == 0.) {
+    return;
+  }
+
+  for (auto& ch child : children()) {
+    child->fraction_ /= total_fraction;
+  }
+}
+
+void Tree::Node::FitChildrenFractionsAfterInsertion(Tree::Node* inserted) {
+  size_t n = children_.size() - 1;
+  inserted->fraction_ = n == 0 ? 1. : 1. / n;
+
+  FitChildrenFractions();
 }
 
 // Delete redundant internal nodes below this node.
@@ -361,6 +393,10 @@ TilingDirection Tree::Node::tiling_direction() const {
 
 void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
   tiling_direction_ = tiling_direction;
+}
+
+double Tree::Node::fraction() const {
+  return fraction_;
 }
 
 bool Tree::Node::leaf() const {
