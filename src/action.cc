@@ -45,10 +45,6 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::NAVIGATE_UP;
   } else if (s == "navigate_down") {
     return Action::Type::NAVIGATE_DOWN;
-  } else if (s == "resize_width") {
-    return Action::Type::RESIZE_WIDTH;
-  } else if (s == "resize_height") {
-    return Action::Type::RESIZE_HEIGHT;
   } else if (s == "float_move_left") {
     return Action::Type::FLOAT_MOVE_LEFT;
   } else if (s == "float_move_right") {
@@ -65,6 +61,10 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::FLOAT_RESIZE_UP;
   } else if (s == "float_resize_down") {
     return Action::Type::FLOAT_RESIZE_DOWN;
+  } else if (s == "resize_width") {
+    return Action::Type::RESIZE_WIDTH;
+  } else if (s == "resize_height") {
+    return Action::Type::RESIZE_HEIGHT;
   } else if (s == "tile_h") {
     return Action::Type::TILE_H;
   } else if (s == "tile_v") {

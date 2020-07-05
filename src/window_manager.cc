@@ -606,9 +606,11 @@ void WindowManager::HandleAction(const Action& action) {
       break;
     case Action::Type::RESIZE_WIDTH:
     case Action::Type::RESIZE_HEIGHT:
-      workspaces_[current_]->ResizeTiled(action.type(), std::stoi(action.argument()));
-      ArrangeWindows();
-      break;
+      if (!focused_client || !focused_client->is_floating()) {
+        workspaces_[current_]->ResizeTiled(action.type(), std::stoi(action.argument()));
+        ArrangeWindows();
+        break;
+      }
     case Action::Type::FLOAT_MOVE_LEFT:
     case Action::Type::FLOAT_MOVE_RIGHT:
     case Action::Type::FLOAT_MOVE_UP:
