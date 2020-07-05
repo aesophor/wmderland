@@ -448,6 +448,39 @@ void Workspace::EnableFocusFollowsMouse() const {
   }
 }
 
+void Workspace::ResizeTiled(Action::Type resize_action_type) {
+  if (!client_tree_.current_node() || this->is_fullscreen()) {
+    return;
+  }
+
+  Tree::Node* node = client_tree_.current_node();
+  TilingDirection target_direction;
+  TilingPosition target_position;
+  switch (resize_action_type) {
+    case Action::Type::RESIZE_LEFT:
+      target_direction = TilingDirection::HORIZONTAL;
+      target_position = TilingPosition::BEFORE;
+      break;
+    case Action::Type::RESIZE_RIGHT:
+      target_direction = TilingDirection::HORIZONTAL;
+      target_position = TilingPosition::AFTER;
+      break;
+    case Action::Type::RESIZE_UP:
+      target_direction = TilingDirection::VERTICAL;
+      target_position = TilingPosition::BEFORE;
+      break;
+    case Action::Type::RESIZE_DOWN:
+      target_direction = TilingDirection::VERTICAL;
+      target_position = TilingPosition::AFTER;
+      break;
+    default:
+      return;
+  }
+  if (node->parent()->tiling_direction() != target_direction) node = node->parent();
+
+  node->Resize(target_position);
+}
+
 void Workspace::Navigate(Action::Type focus_action_type) {
   // Do not let user navigate between windows if
   // 1. there's no currently focused client

@@ -258,9 +258,27 @@ void Tree::Node::Swap(Tree::Node* destination) {
   std::swap(parent_, destination->parent_);
 }
 
+void Tree::Node::Resize(TilingPosition tiling_position) {
+  double delta = 0.05;
+
+  Tree::Node* sibling =
+      tiling_position == TilingPosition::BEFORE ? GetLeftSibling() : GetRightSibling();
+  if (!sibling) {
+    return;
+  }
+  if (sibling->fraction_ <= delta + 0.01) {
+    return;
+  }
+  
+  this->fraction_ += delta;
+  sibling->fraction_ -= delta;
+
+  FitChildrenFractions();
+}
+
 void Tree::Node::FitChildrenFractions() {
   double total_fraction = 0.;
-  for (const auto& ch child : children()) {
+  for (const auto& child : children()) {
     total_fraction += child->fraction_;
   }
 
@@ -268,7 +286,7 @@ void Tree::Node::FitChildrenFractions() {
     return;
   }
 
-  for (auto& ch child : children()) {
+  for (auto& child : children()) {
     child->fraction_ /= total_fraction;
   }
 }

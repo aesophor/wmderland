@@ -50,6 +50,7 @@ class Workspace {
   void DisableFocusFollowsMouse() const;
   void EnableFocusFollowsMouse() const;
 
+  void ResizeTiled(Action::Type resize_action_type);
   void Navigate(Action::Type navigate_action_type);
   Client* GetFocusedClient() const;
   Client* GetClient(Window window) const;

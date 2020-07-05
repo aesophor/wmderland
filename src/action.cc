@@ -45,6 +45,14 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::NAVIGATE_UP;
   } else if (s == "navigate_down") {
     return Action::Type::NAVIGATE_DOWN;
+  } else if (s == "resize_left") {
+    return Action::Type::RESIZE_LEFT;
+  } else if (s == "resize_right") {
+    return Action::Type::RESIZE_RIGHT;
+  } else if (s == "resize_up") {
+    return Action::Type::RESIZE_UP;
+  } else if (s == "resize_down") {
+    return Action::Type::RESIZE_DOWN;
   } else if (s == "float_move_left") {
     return Action::Type::FLOAT_MOVE_LEFT;
   } else if (s == "float_move_right") {

@@ -604,6 +604,13 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::NAVIGATE_DOWN:
       workspaces_[current_]->Navigate(action.type());
       break;
+    case Action::Type::RESIZE_LEFT:
+    case Action::Type::RESIZE_RIGHT:
+    case Action::Type::RESIZE_UP:
+    case Action::Type::RESIZE_DOWN:
+      workspaces_[current_]->ResizeTiled(action.type());
+      ArrangeWindows();
+      break;
     case Action::Type::FLOAT_MOVE_LEFT:
     case Action::Type::FLOAT_MOVE_RIGHT:
     case Action::Type::FLOAT_MOVE_UP:
