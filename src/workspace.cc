@@ -448,37 +448,27 @@ void Workspace::EnableFocusFollowsMouse() const {
   }
 }
 
-void Workspace::ResizeTiled(Action::Type resize_action_type) {
-  if (!client_tree_.current_node() || this->is_fullscreen()) {
+void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage) {
+  if (!client_tree_.current_node() || !client_tree_.current_node()->parent()
+      || this->is_fullscreen()) {
     return;
   }
 
   Tree::Node* node = client_tree_.current_node();
   TilingDirection target_direction;
-  TilingPosition target_position;
   switch (resize_action_type) {
-    case Action::Type::RESIZE_LEFT:
+    case Action::Type::RESIZE_WIDTH:
       target_direction = TilingDirection::HORIZONTAL;
-      target_position = TilingPosition::BEFORE;
       break;
-    case Action::Type::RESIZE_RIGHT:
-      target_direction = TilingDirection::HORIZONTAL;
-      target_position = TilingPosition::AFTER;
-      break;
-    case Action::Type::RESIZE_UP:
+    case Action::Type::RESIZE_HEIGHT:
       target_direction = TilingDirection::VERTICAL;
-      target_position = TilingPosition::BEFORE;
-      break;
-    case Action::Type::RESIZE_DOWN:
-      target_direction = TilingDirection::VERTICAL;
-      target_position = TilingPosition::AFTER;
       break;
     default:
       return;
   }
   if (node->parent()->tiling_direction() != target_direction) node = node->parent();
-
-  node->Resize(target_position);
+  
+  node->Resize(deltaPercentage * 0.01);
 }
 
 void Workspace::Navigate(Action::Type focus_action_type) {

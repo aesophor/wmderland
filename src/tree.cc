@@ -258,15 +258,16 @@ void Tree::Node::Swap(Tree::Node* destination) {
   std::swap(parent_, destination->parent_);
 }
 
-void Tree::Node::Resize(TilingPosition tiling_position) {
-  double delta = 0.05;
-
-  Tree::Node* sibling =
-      tiling_position == TilingPosition::BEFORE ? GetLeftSibling() : GetRightSibling();
-  if (!sibling) {
+void Tree::Node::Resize(double delta) {
+  if (!parent_) {
     return;
   }
-  if (sibling->fraction_ <= delta + 0.01) {
+
+  Tree::Node* sibling = GetRightSibling();
+  if (!sibling) {
+    sibling = GetLeftSibling();
+  }
+  if (!sibling || sibling->fraction_ <= delta + 0.01 || this->fraction_ <= -delta + 0.01) {
     return;
   }
   

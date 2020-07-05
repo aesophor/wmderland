@@ -39,7 +39,7 @@ class Tree {
     void InsertChildAboveChildren(std::unique_ptr<Tree::Node> child);
     void InsertParent(std::unique_ptr<Tree::Node> parent);
     void Swap(Tree::Node* destination);
-    void Resize(TilingPosition tiling_position);
+    void Resize(double delta);
 
     void FitChildrenFractions();
     void Normalize();
