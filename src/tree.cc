@@ -276,7 +276,7 @@ void Tree::Node::Resize(double delta) {
   this->fraction_ += delta;
   sibling->fraction_ -= delta;
 
-  FitChildrenFractions();
+  parent_->FitChildrenFractions();
 }
 
 void Tree::Node::ResizeToFraction(double fraction) {
@@ -299,6 +299,8 @@ void Tree::Node::ResizeToFraction(double fraction) {
   for (auto& child : parent_->children()) {
     if (child != this) child->fraction_ = sibling_fraction;
   }
+
+  parent_->FitChildrenFractions();
 }
 
 void Tree::Node::FitChildrenFractions() {
