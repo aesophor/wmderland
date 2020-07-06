@@ -279,6 +279,7 @@ void Tree::Node::Resize(double delta) {
   parent_->FitChildrenFractions();
 }
 
+// Resize this node to specific fraction and distribute the remaining space to siblings evenly.
 void Tree::Node::ResizeToFraction(double fraction) {
   if (!parent_) {
     return;
@@ -303,12 +304,14 @@ void Tree::Node::ResizeToFraction(double fraction) {
   parent_->FitChildrenFractions();
 }
 
+// Resize the children to distribute this node's length to children evenly.
 void Tree::Node::DistributeChildrenFractions() {
   for (auto& child : children()) {
     child->fraction_ = 1. / children_.size();
   }
 }
 
+// Normalize the children's fractions so that the sum of them equals to 1.0.
 void Tree::Node::FitChildrenFractions() {
   double total_fraction = 0.;
   for (const auto& child : children()) {
@@ -324,6 +327,7 @@ void Tree::Node::FitChildrenFractions() {
   }
 }
 
+// Determine the fraction for new node and then do the fraction normalization.
 void Tree::Node::FitChildrenFractionsAfterInsertion(Tree::Node* inserted) {
   size_t n = children_.size() - 1;
   inserted->fraction_ = n == 0 ? 1. : 1. / n;
