@@ -132,10 +132,10 @@ bindsym $Mod+$Alt+Shift+h float_move_left
 bindsym $Mod+$Alt+Shift+l float_move_right
 bindsym $Mod+$Alt+Shift+k float_move_up
 bindsym $Mod+$Alt+Shift+j float_move_down
-bindsym $Mod+$Alt+h float_resize_left
-bindsym $Mod+$Alt+l float_resize_right
-bindsym $Mod+$Alt+k float_resize_up
-bindsym $Mod+$Alt+j float_resize_down
+bindsym $Mod+$Alt+h resize_width -3
+bindsym $Mod+$Alt+l resize_width +3
+bindsym $Mod+$Alt+k resize_height -3
+bindsym $Mod+$Alt+j resize_height +3
 bindsym $Mod+g tile_h
 bindsym $Mod+v tile_v
 bindsym $Mod+Shift+space toggle_floating
@@ -143,6 +143,18 @@ bindsym $Mod+f toggle_fullscreen
 bindsym $Mod+Shift+q kill
 bindsym $Mod+Shift+Escape exit
 bindsym $Mod+Shift+r reload
+
+bindsym $Mod+$Alt+1 resize_set_ratio 10
+bindsym $Mod+$Alt+2 resize_set_ratio 20
+bindsym $Mod+$Alt+3 resize_set_ratio 30
+bindsym $Mod+$Alt+4 resize_set_ratio 40
+bindsym $Mod+$Alt+5 resize_set_ratio 50
+bindsym $Mod+$Alt+6 resize_set_ratio 60
+bindsym $Mod+$Alt+7 resize_set_ratio 70
+bindsym $Mod+$Alt+8 resize_set_ratio 80
+bindsym $Mod+$Alt+9 resize_set_ratio 90
+bindsym $Mod+$Alt+0 resize_set_ratio 100
+bindsym $Mod+$Alt+equal resize_reset_ratios
 
 bindsym XF86MonBrightnessUp exec light -A 10
 bindsym XF86MonBrightnessDown exec light -U 10
