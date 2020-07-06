@@ -330,9 +330,9 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
     return;
   }
 
-  double total_fraction = 0.;
+  double total_ratio = 0.;
   for (const auto& child : children) {
-    total_fraction += child->fraction();
+    total_ratio += child->ratio();
   }
 
   // Calculate each child's x, y, width and height based on node's tiling
@@ -344,9 +344,9 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
   for (size_t i = 0; i < children.size(); i++) {
     Tree::Node* child = children[i];
     int child_width =
-        (dir == TilingDirection::HORIZONTAL) ? w * child->fraction() / total_fraction : w;
+        (dir == TilingDirection::HORIZONTAL) ? w * child->ratio() / total_ratio : w;
     int child_height =
-        (dir == TilingDirection::VERTICAL) ? h * child->fraction() / total_fraction : h;
+        (dir == TilingDirection::VERTICAL) ? h * child->ratio() / total_ratio : h;
 
     if (child->leaf()) {
       int new_x = child_x + gap_width / 2;
@@ -478,16 +478,16 @@ void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage
   node->Resize(deltaPercentage * 0.01);
 }
 
-void Workspace::ResizeTiledToFraction(int percentage) {
-  client_tree_.current_node()->ResizeToFraction(percentage * 0.01);
+void Workspace::ResizeTiledToRatio(int percentage) {
+  client_tree_.current_node()->ResizeToRatio(percentage * 0.01);
 }
 
-void Workspace::ResizeDistributeFractions() {
+void Workspace::ResizeDistributeRatios() {
   if (!client_tree_.current_node()->parent()) {
     return;
   }
 
-  client_tree_.current_node()->parent()->DistributeChildrenFractions();
+  client_tree_.current_node()->parent()->DistributeChildrenRatios();
 }
 
 void Workspace::Navigate(Action::Type focus_action_type) {

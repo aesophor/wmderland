@@ -40,10 +40,10 @@ class Tree {
     void InsertParent(std::unique_ptr<Tree::Node> parent);
     void Swap(Tree::Node* destination);
     void Resize(double delta);
-    void ResizeToFraction(double fraction);
-    void DistributeChildrenFractions();
+    void ResizeToRatio(double ratio);
+    void DistributeChildrenRatios();
 
-    void FitChildrenFractions();
+    void FitChildrenRatios();
     void Normalize();
 
     Tree::Node* GetLeftSibling() const;
@@ -56,7 +56,7 @@ class Tree {
     Tree::Node* parent() const;
     Client* client() const;
     TilingDirection tiling_direction() const;
-    double fraction() const;
+    double ratio() const;
     bool leaf() const;
 
     void set_parent(Tree::Node* parent);
@@ -67,8 +67,8 @@ class Tree {
     static std::unordered_map<Client*, Tree::Node*> mapper_;
 
    private:
-    static const double min_fraction_;
-    void FitChildrenFractionsAfterInsertion(Tree::Node* inserted);
+    static const double min_ratio_;
+    void FitChildrenRatiosAfterInsertion(Tree::Node* inserted);
     std::unique_ptr<Tree::Node>& owning_pointer_() const;
 
     std::vector<std::unique_ptr<Tree::Node>> children_;
@@ -76,7 +76,7 @@ class Tree {
 
     std::unique_ptr<Client> client_;
     TilingDirection tiling_direction_;
-    double fraction_;
+    double ratio_;
   };
 
   Tree::Node* GetTreeNode(Client* client) const;

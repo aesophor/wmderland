@@ -65,10 +65,10 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::RESIZE_WIDTH;
   } else if (s == "resize_height") {
     return Action::Type::RESIZE_HEIGHT;
-  } else if (s == "resize_fix_fraction") {
-    return Action::Type::RESIZE_FIX_FRACTION;
-  } else if (s == "resize_distribute_fractions") {
-    return Action::Type::RESIZE_DISTRIBUTE_FRACTIONS;
+  } else if (s == "resize_set_ratio") {
+    return Action::Type::RESIZE_SET_RATIO;
+  } else if (s == "resize_reset_ratios") {
+    return Action::Type::RESIZE_RESET_RATIOS;
   } else if (s == "tile_h") {
     return Action::Type::TILE_H;
   } else if (s == "tile_v") {

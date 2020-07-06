@@ -39,8 +39,8 @@ class Workspace {
                      bool insert_outer = false);
   void Swap(Window window0, Window window1);
   void ResizeTiled(Action::Type resize_action_type, int deltaPercentage);
-  void ResizeTiledToFraction(int percentage);
-  void ResizeDistributeFractions();
+  void ResizeTiledToRatio(int percentage);
+  void ResizeDistributeRatios();
   void Tile(const Client::Area& tiling_area) const;
   void SetTilingDirection(TilingDirection tiling_direction);
 

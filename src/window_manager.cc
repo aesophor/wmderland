@@ -629,12 +629,12 @@ void WindowManager::HandleAction(const Action& action) {
       }
       workspaces_[current_]->EnableFocusFollowsMouse();
       break;
-    case Action::Type::RESIZE_FIX_FRACTION:
-      workspaces_[current_]->ResizeTiledToFraction(std::stoi(action.argument()));
+    case Action::Type::RESIZE_SET_RATIO:
+      workspaces_[current_]->ResizeTiledToRatio(std::stoi(action.argument()));
       ArrangeWindows();
       break;
-    case Action::Type::RESIZE_DISTRIBUTE_FRACTIONS:
-      workspaces_[current_]->ResizeDistributeFractions();
+    case Action::Type::RESIZE_RESET_RATIOS:
+      workspaces_[current_]->ResizeDistributeRatios();
       ArrangeWindows();
       break;
     case Action::Type::TILE_H:

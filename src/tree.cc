@@ -18,7 +18,7 @@ using std::vector;
 
 namespace wmderland {
 
-const double Tree::Node::min_fraction_ = 0.01;
+const double Tree::Node::min_ratio_ = 0.01;
 
 unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
@@ -190,7 +190,7 @@ void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
   child->set_parent(this);
   children_.push_back(std::move(child));
 
-  FitChildrenFractionsAfterInsertion(child_raw);
+  FitChildrenRatiosAfterInsertion(child_raw);
 }
 
 unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
@@ -204,7 +204,7 @@ unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
                                  }),
                   children_.end());
 
-  FitChildrenFractions();
+  FitChildrenRatios();
 
   return removed_ptr;
 }
@@ -225,7 +225,7 @@ void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref
   ptrdiff_t position = tiling_position == TilingPosition::BEFORE ? 0 : 1;
   children_.insert(children_.begin() + ref_idx + position, std::move(child));
 
-  FitChildrenFractionsAfterInsertion(child_raw);
+  FitChildrenRatiosAfterInsertion(child_raw);
 }
 
 // Insert a child node, but every current child of this node will be the child of the inserted
@@ -269,70 +269,69 @@ void Tree::Node::Resize(double delta) {
   if (!sibling) {
     sibling = GetLeftSibling();
   }
-  if (!sibling || sibling->fraction_ < delta + min_fraction_ ||
-      this->fraction_ < -delta + min_fraction_) {
+  if (!sibling || sibling->ratio_ < delta + min_ratio_ || this->ratio_ < -delta + min_ratio_) {
     return;
   }
 
-  this->fraction_ += delta;
-  sibling->fraction_ -= delta;
+  this->ratio_ += delta;
+  sibling->ratio_ -= delta;
 
-  parent_->FitChildrenFractions();
+  parent_->FitChildrenRatios();
 }
 
-// Resize this node to specific fraction and distribute the remaining space to siblings evenly.
-void Tree::Node::ResizeToFraction(double fraction) {
+// Resize this node to specific ratio and distribute the remaining space to siblings evenly.
+void Tree::Node::ResizeToRatio(double ratio) {
   if (!parent_) {
     return;
   }
 
   size_t num_siblings = parent_->children_.size() - 1;
-  double min_siblings_fraction = min_fraction_ * num_siblings;
-  if (fraction + min_siblings_fraction > 1.) {
-    fraction = 1. - min_siblings_fraction;
+  double min_siblings_ratio = min_ratio_ * num_siblings;
+  if (ratio + min_siblings_ratio > 1.) {
+    ratio = 1. - min_siblings_ratio;
   }
-  if (fraction < min_fraction_) {
-    fraction = min_fraction_;
+  if (ratio < min_ratio_) {
+    ratio = min_ratio_;
   }
 
-  fraction_ = fraction;
-  double sibling_fraction = (1. - fraction) / num_siblings;
+  ratio_ = ratio;
+  double sibling_ratio = (1. - ratio) / num_siblings;
   for (auto& child : parent_->children()) {
-    if (child != this) child->fraction_ = sibling_fraction;
+    if (child != this) child->ratio_ = sibling_ratio;
   }
 
-  parent_->FitChildrenFractions();
+  parent_->FitChildrenRatios();
 }
 
 // Resize the children to distribute this node's length to children evenly.
-void Tree::Node::DistributeChildrenFractions() {
+void Tree::Node::DistributeChildrenRatios() {
   for (auto& child : children()) {
-    child->fraction_ = 1. / children_.size();
+    child->ratio_ = 1. / children_.size();
   }
 }
 
-// Normalize the children's fractions so that the sum of them equals to 1.0.
-void Tree::Node::FitChildrenFractions() {
-  double total_fraction = 0.;
+// Normalize the children's ratios so that the sum of them equals to 1.0.
+void Tree::Node::FitChildrenRatios() {
+  double total_ratio = 0.;
   for (const auto& child : children()) {
-    total_fraction += child->fraction_;
+    total_ratio += child->ratio_;
   }
 
-  if (total_fraction == 0.) {
+  if (total_ratio == 0.) {
     return;
   }
 
   for (auto& child : children()) {
-    child->fraction_ /= total_fraction;
+    child->ratio_ /= total_ratio;
   }
 }
 
-// Determine the fraction for new node and then do the fraction normalization.
-void Tree::Node::FitChildrenFractionsAfterInsertion(Tree::Node* inserted) {
+// Determine the ratio for new node and then do the ratio normalization.
+void Tree::Node::FitChildrenRatiosAfterInsertion(Tree::Node* inserted) {
   size_t n = children_.size() - 1;
-  inserted->fraction_ = n == 0 ? 1. : 1. / n;
+  inserted->ratio_ = n == 0 ? 1. : 1. / n;
 
-  FitChildrenFractions();
+  FitChildrenRatios();
 }
 
 // Delete redundant internal nodes below this node.
@@ -450,8 +449,8 @@ void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
   tiling_direction_ = tiling_direction;
 }
 
-double Tree::Node::fraction() const {
-  return fraction_;
+double Tree::Node::ratio() const {
+  return ratio_;
 }
 
 bool Tree::Node::leaf() const {
