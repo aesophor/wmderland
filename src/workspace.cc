@@ -473,7 +473,9 @@ void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage
     default:
       return;
   }
-  if (node->parent()->tiling_direction() != target_direction) node = node->parent();
+  while (node->parent() && node->parent()->tiling_direction() != target_direction) {
+    node = node->parent();
+  }
 
   node->Resize(deltaPercentage * 0.01);
 }
