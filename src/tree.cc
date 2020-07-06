@@ -18,6 +18,8 @@ using std::vector;
 
 namespace wmderland {
 
+const double Tree::Node::min_fraction_ = 0.01;
+
 unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
 Tree::Tree() : root_node_(std::make_unique<Tree::Node>(nullptr)), current_node_() {
@@ -263,13 +265,12 @@ void Tree::Node::Resize(double delta) {
     return;
   }
 
-  const double min_fraction = 0.01;
   Tree::Node* sibling = GetRightSibling();
   if (!sibling) {
     sibling = GetLeftSibling();
   }
-  if (!sibling || sibling->fraction_ < delta + min_fraction ||
-      this->fraction_ < -delta + min_fraction) {
+  if (!sibling || sibling->fraction_ < delta + min_fraction_ ||
+      this->fraction_ < -delta + min_fraction_) {
     return;
   }
 
@@ -285,14 +286,13 @@ void Tree::Node::ResizeToFraction(double fraction) {
     return;
   }
 
-  const double min_fraction = 0.01;
   size_t num_siblings = parent_->children_.size() - 1;
-  double min_siblings_fraction = min_fraction * num_siblings;
+  double min_siblings_fraction = min_fraction_ * num_siblings;
   if (fraction + min_siblings_fraction > 1.) {
     fraction = 1. - min_siblings_fraction;
   }
-  if (fraction < min_fraction) {
-    fraction = min_fraction;
+  if (fraction < min_fraction_) {
+    fraction = min_fraction_;
   }
 
   fraction_ = fraction;

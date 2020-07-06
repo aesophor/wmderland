@@ -67,6 +67,7 @@ class Tree {
     static std::unordered_map<Client*, Tree::Node*> mapper_;
 
    private:
+    static const double min_fraction_;
     void FitChildrenFractionsAfterInsertion(Tree::Node* inserted);
     std::unique_ptr<Tree::Node>& owning_pointer_() const;
 
