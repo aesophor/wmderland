@@ -281,7 +281,7 @@ void Tree::Node::Resize(double delta) {
 
 // Resize this node to specific ratio and distribute the remaining space to siblings evenly.
 void Tree::Node::ResizeToRatio(double ratio) {
-  if (!parent_) {
+  if (!parent_ || ratio >= 1.) {
     return;
   }
 
