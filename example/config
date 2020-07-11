@@ -153,7 +153,6 @@ bindsym $Mod+$Alt+6 resize_set_ratio 60
 bindsym $Mod+$Alt+7 resize_set_ratio 70
 bindsym $Mod+$Alt+8 resize_set_ratio 80
 bindsym $Mod+$Alt+9 resize_set_ratio 90
-bindsym $Mod+$Alt+0 resize_set_ratio 100
 bindsym $Mod+$Alt+equal resize_reset_ratios
 
 bindsym XF86MonBrightnessUp exec light -A 10
