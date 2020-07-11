@@ -157,6 +157,12 @@ void Client::Resize(const Action& action) const {
     case Action::Type::FLOAT_RESIZE_DOWN:
       height_offset = resize_step;
       break;
+    case Action::Type::RESIZE_WIDTH:
+      width_offset = std::stoi(action.argument()) >= 0 ? resize_step : -resize_step;
+      break;
+    case Action::Type::RESIZE_HEIGHT:
+      height_offset = std::stoi(action.argument()) >= 0 ? resize_step : -resize_step;
+      break;
     default:
       break;
   }

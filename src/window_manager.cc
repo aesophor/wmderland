@@ -604,6 +604,13 @@ void WindowManager::HandleAction(const Action& action) {
     case Action::Type::NAVIGATE_DOWN:
       workspaces_[current_]->Navigate(action.type());
       break;
+    case Action::Type::RESIZE_WIDTH:
+    case Action::Type::RESIZE_HEIGHT:
+      if (!focused_client || !focused_client->is_floating()) {
+        workspaces_[current_]->ResizeTiled(action.type(), std::stoi(action.argument()));
+        ArrangeWindows();
+        break;
+      }
     case Action::Type::FLOAT_MOVE_LEFT:
     case Action::Type::FLOAT_MOVE_RIGHT:
     case Action::Type::FLOAT_MOVE_UP:
@@ -621,6 +628,14 @@ void WindowManager::HandleAction(const Action& action) {
         focused_client->Resize(action);
       }
       workspaces_[current_]->EnableFocusFollowsMouse();
+      break;
+    case Action::Type::RESIZE_SET_RATIO:
+      workspaces_[current_]->ResizeTiledToRatio(std::stoi(action.argument()));
+      ArrangeWindows();
+      break;
+    case Action::Type::RESIZE_RESET_RATIOS:
+      workspaces_[current_]->ResizeDistributeRatios();
+      ArrangeWindows();
       break;
     case Action::Type::TILE_H:
       workspaces_[current_]->SetTilingDirection(TilingDirection::HORIZONTAL);

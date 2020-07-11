@@ -61,6 +61,14 @@ Action::Type Action::StrToActionType(const string& s) {
     return Action::Type::FLOAT_RESIZE_UP;
   } else if (s == "float_resize_down") {
     return Action::Type::FLOAT_RESIZE_DOWN;
+  } else if (s == "resize_width") {
+    return Action::Type::RESIZE_WIDTH;
+  } else if (s == "resize_height") {
+    return Action::Type::RESIZE_HEIGHT;
+  } else if (s == "resize_set_ratio") {
+    return Action::Type::RESIZE_SET_RATIO;
+  } else if (s == "resize_reset_ratios") {
+    return Action::Type::RESIZE_RESET_RATIOS;
   } else if (s == "tile_h") {
     return Action::Type::TILE_H;
   } else if (s == "tile_v") {

@@ -330,18 +330,23 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
     return;
   }
 
+  double total_ratio = 0.;
+  for (const auto& child : children) {
+    total_ratio += child->ratio();
+  }
+
   // Calculate each child's x, y, width and height based on node's tiling
   // direction.
   TilingDirection dir = node->tiling_direction();
   int child_x = x;
   int child_y = y;
-  int child_width = (dir == TilingDirection::HORIZONTAL) ? w / children.size() : w;
-  int child_height = (dir == TilingDirection::VERTICAL) ? h / children.size() : h;
 
   for (size_t i = 0; i < children.size(); i++) {
     Tree::Node* child = children[i];
-    if (node->tiling_direction() == TilingDirection::HORIZONTAL) child_x = x + child_width * i;
-    if (node->tiling_direction() == TilingDirection::VERTICAL) child_y = y + child_height * i;
+    int child_width =
+        (dir == TilingDirection::HORIZONTAL) ? w * child->ratio() / total_ratio : w;
+    int child_height =
+        (dir == TilingDirection::VERTICAL) ? h * child->ratio() / total_ratio : h;
 
     if (child->leaf()) {
       int new_x = child_x + gap_width / 2;
@@ -353,6 +358,9 @@ void Workspace::DfsTileHelper(Tree::Node* node, int x, int y, int w, int h, int 
       DfsTileHelper(child, child_x, child_y, child_width, child_height, border_width,
                     gap_width);
     }
+
+    if (node->tiling_direction() == TilingDirection::HORIZONTAL) child_x += child_width;
+    if (node->tiling_direction() == TilingDirection::VERTICAL) child_y += child_height;
   }
 }
 
@@ -445,6 +453,43 @@ void Workspace::EnableFocusFollowsMouse() const {
   for (const auto c : GetClients()) {
     c->SelectInput(EnterWindowMask);
   }
+}
+
+void Workspace::ResizeTiled(Action::Type resize_action_type, int deltaPercentage) {
+  if (!client_tree_.current_node() || !client_tree_.current_node()->parent() ||
+      this->is_fullscreen()) {
+    return;
+  }
+
+  Tree::Node* node = client_tree_.current_node();
+  TilingDirection target_direction;
+  switch (resize_action_type) {
+    case Action::Type::RESIZE_WIDTH:
+      target_direction = TilingDirection::HORIZONTAL;
+      break;
+    case Action::Type::RESIZE_HEIGHT:
+      target_direction = TilingDirection::VERTICAL;
+      break;
+    default:
+      return;
+  }
+  while (node->parent() && node->parent()->tiling_direction() != target_direction) {
+    node = node->parent();
+  }
+
+  node->Resize(deltaPercentage * 0.01);
+}
+
+void Workspace::ResizeTiledToRatio(int percentage) {
+  client_tree_.current_node()->ResizeToRatio(percentage * 0.01);
+}
+
+void Workspace::ResizeDistributeRatios() {
+  if (!client_tree_.current_node()->parent()) {
+    return;
+  }
+
+  client_tree_.current_node()->parent()->DistributeChildrenRatios();
 }
 
 void Workspace::Navigate(Action::Type focus_action_type) {

@@ -18,6 +18,8 @@ using std::vector;
 
 namespace wmderland {
 
+const double Tree::Node::min_ratio_ = 0.01;
+
 unordered_map<Client*, Tree::Node*> Tree::Node::mapper_;
 
 Tree::Tree() : root_node_(std::make_unique<Tree::Node>(nullptr)), current_node_() {
@@ -184,8 +186,11 @@ Tree::Node::~Node() {
 }
 
 void Tree::Node::AddChild(unique_ptr<Tree::Node> child) {
+  Tree::Node* child_raw = child.get();
   child->set_parent(this);
   children_.push_back(std::move(child));
+
+  FitChildrenRatiosAfterInsertion(child_raw);
 }
 
 unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
@@ -198,6 +203,9 @@ unique_ptr<Tree::Node> Tree::Node::RemoveChild(Tree::Node* child) {
                                        (removed_ptr = std::move(node), true);
                                  }),
                   children_.end());
+
+  FitChildrenRatios();
+
   return removed_ptr;
 }
 
@@ -207,6 +215,8 @@ void Tree::Node::InsertChildAfter(unique_ptr<Tree::Node> child, Tree::Node* ref)
 
 void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref,
                                    TilingPosition tiling_position) {
+  Tree::Node* child_raw = child.get();
+
   child->set_parent(this);
   ptrdiff_t ref_idx =
       std::find_if(children_.begin(), children_.end(),
@@ -214,6 +224,8 @@ void Tree::Node::InsertChildBeside(unique_ptr<Tree::Node> child, Tree::Node* ref
       children_.begin();
   ptrdiff_t position = tiling_position == TilingPosition::BEFORE ? 0 : 1;
   children_.insert(children_.begin() + ref_idx + position, std::move(child));
+
+  FitChildrenRatiosAfterInsertion(child_raw);
 }
 
 // Insert a child node, but every current child of this node will be the child of the inserted
@@ -246,6 +258,80 @@ void Tree::Node::Swap(Tree::Node* destination) {
 
   this_ptr.swap(dest_ptr);
   std::swap(parent_, destination->parent_);
+}
+
+void Tree::Node::Resize(double delta) {
+  if (!parent_) {
+    return;
+  }
+
+  Tree::Node* sibling = GetRightSibling();
+  if (!sibling) {
+    sibling = GetLeftSibling();
+  }
+  if (!sibling || sibling->ratio_ < delta + min_ratio_ || this->ratio_ < -delta + min_ratio_) {
+    return;
+  }
+
+  this->ratio_ += delta;
+  sibling->ratio_ -= delta;
+
+  parent_->FitChildrenRatios();
+}
+
+// Resize this node to specific ratio and distribute the remaining space to siblings evenly.
+void Tree::Node::ResizeToRatio(double ratio) {
+  if (!parent_ || ratio >= 1.) {
+    return;
+  }
+
+  size_t num_siblings = parent_->children_.size() - 1;
+  double min_siblings_ratio = min_ratio_ * num_siblings;
+  if (ratio + min_siblings_ratio > 1.) {
+    ratio = 1. - min_siblings_ratio;
+  }
+  if (ratio < min_ratio_) {
+    ratio = min_ratio_;
+  }
+
+  ratio_ = ratio;
+  double sibling_ratio = (1. - ratio) / num_siblings;
+  for (auto& child : parent_->children()) {
+    if (child != this) child->ratio_ = sibling_ratio;
+  }
+
+  parent_->FitChildrenRatios();
+}
+
+// Resize the children to distribute this node's length to children evenly.
+void Tree::Node::DistributeChildrenRatios() {
+  for (auto& child : children()) {
+    child->ratio_ = 1. / children_.size();
+  }
+}
+
+// Normalize the children's ratios so that the sum of them equals to 1.0.
+void Tree::Node::FitChildrenRatios() {
+  double total_ratio = 0.;
+  for (const auto& child : children()) {
+    total_ratio += child->ratio_;
+  }
+
+  if (total_ratio == 0.) {
+    return;
+  }
+
+  for (auto& child : children()) {
+    child->ratio_ /= total_ratio;
+  }
+}
+
+// Determine the ratio for new node and then do the ratio normalization.
+void Tree::Node::FitChildrenRatiosAfterInsertion(Tree::Node* inserted) {
+  size_t n = children_.size() - 1;
+  inserted->ratio_ = n == 0 ? 1. : 1. / n;
+
+  FitChildrenRatios();
 }
 
 // Delete redundant internal nodes below this node.
@@ -361,6 +447,10 @@ TilingDirection Tree::Node::tiling_direction() const {
 
 void Tree::Node::set_tiling_direction(TilingDirection tiling_direction) {
   tiling_direction_ = tiling_direction;
+}
+
+double Tree::Node::ratio() const {
+  return ratio_;
 }
 
 bool Tree::Node::leaf() const {
