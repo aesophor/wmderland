@@ -2,22 +2,35 @@
 #ifndef WMDERLAND_LOG_H_
 #define WMDERLAND_LOG_H_
 
+#define LOG_OVERDUE_DAYS 3
+
 #include "config.h"
+
 
 // If glog is not installed on the compiling machine,
 // then these macros will do nothing.
 #if GLOG_FOUND
 #include <glog/logging.h>
-#define WM_INIT_LOGGING(executable_name) google::InitGoogleLogging(executable_name)
+
+#define WM_INIT_LOGGING(executable_name)        \
+  do {                                          \
+    google::InitGoogleLogging(executable_name); \
+    google::EnableLogCleaner(LOG_OVERDUE_DAYS); \
+  } while (0)
+
 #define WM_LOG(severity, msg)                \
   do {                                       \
     LOG(severity) << msg;                    \
     google::FlushLogFiles(google::severity); \
   } while (0)
+
 #else
+
 #define WM_INIT_LOGGING(executable_name)
 #define WM_LOG(severity, msg)
+
 #endif
+
 
 
 #define WM_LOG_WITH_ERRNO(reason, errno)               \
