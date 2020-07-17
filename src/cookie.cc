@@ -1,11 +1,17 @@
 // Copyright (c) 2018-2019 Marco Wang <m.aesophor@gmail.com>
 #include "cookie.h"
 
+extern "C" {
+#include <sys/stat.h>
+#include <sys/types.h>
+}
+
 #include <sstream>
 #include <vector>
 
 #include "client.h"
 #include "util.h"
+#include "log.h"
 
 using std::endl;
 using std::ifstream;
@@ -22,6 +28,13 @@ const char Cookie::kDelimiter_ = ' ';
 
 Cookie::Cookie(Display* dpy, Properties* prop, string filename)
     : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {
+
+  // mkdir ~/.cache/wmderland
+  string cookie_dirname = filename_.substr(0, filename_.find_last_of('/'));
+  mode_t cookie_dir_mode = 0755;
+  mkdir(cookie_dirname.c_str(), cookie_dir_mode);
+  WM_LOG(INFO, "Cookie directory: " << cookie_dirname);
+
   // Load cookie from file.
   ifstream fin(filename_);
   fin >> *this;
