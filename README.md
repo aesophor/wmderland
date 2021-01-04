@@ -18,7 +18,7 @@
 
 <br>
 
-## Wmderland (Pronounced "Wonderland")
+## wmderland (Pronounced "wonderland")
 A minimal i3-gaps, written in C++ and Xlib.
 
 <a href="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/floating.png"><img src="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/floating.png" width="43%" align="right"></a>
