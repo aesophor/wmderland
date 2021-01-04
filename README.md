@@ -1,6 +1,6 @@
 <div align="center">
 
-<h3>WMDERLAND</h3>
+<img src="https://github.com/aesophor/wmderland/raw/master/.meta/logo.png" width=25%><br>
 <p>Modern and Minimal X11 Tiling Window Manager</p>
 
 <a href="http://hits.dwyl.io/aesophor/Wmderland">
@@ -12,6 +12,8 @@
 <a href="https://travis-ci.org/aesophor/wmderland">
   <img src="https://travis-ci.org/aesophor/wmderland.svg?branch=master">
 </a>
+
+<br><br>
 
 <img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
 </div>
