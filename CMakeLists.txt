@@ -24,7 +24,13 @@ find_package(X11 REQUIRED)
 find_package(glog)
 
 # CMake will generate config.h from config.h.in
-include_directories("src")
+if(APPLE)
+  include_directories("src" "/opt/X11/include")
+  link_directories("/opt/X11/lib")
+else()
+  include_directories("src")
+endif()
+
 configure_file("src/config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h")
 
 # Grab all files end in .cc
