@@ -23,7 +23,7 @@ enum class AreaType {
 
 class Workspace {
  public:
-  Workspace(Display* dpy, Window root_window_, Config* config, int id);
+  Workspace(Display* dpy, /*Window root_window_,*/ Config* config, int id);
   virtual ~Workspace() = default;
 
   bool Has(Window window) const;
@@ -76,7 +76,7 @@ class Workspace {
                      int gap_width) const;
 
   Display* dpy_;
-  Window root_window_;
+//  Window root_window_;
   Config* config_;
   Tree client_tree_;
 

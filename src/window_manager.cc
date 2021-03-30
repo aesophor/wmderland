@@ -71,8 +71,8 @@ WindowManager::WindowManager(Display* dpy)
       wmcheckwin_(XCreateSimpleWindow(dpy_, root_window_, 0, 0, 1, 1, 0, 0, 0)),
       mouse_(std::make_unique<Mouse>(dpy_, root_window_)),
       prop_(std::make_unique<Properties>(dpy_)),
-      config_(std::make_unique<Config>(dpy_, prop_.get(), CONFIG_FILE)),
-      cookie_(dpy_, prop_.get(), COOKIE_FILE),
+      config_(std::make_unique<Config>(dpy_, /*prop_.get(),*/ CONFIG_FILE)),
+      cookie_(/*dpy_, prop_.get(),*/ COOKIE_FILE),
       ipc_evmgr_(),
       snapshot_(SNAPSHOT_FILE),
       docks_(),
@@ -200,7 +200,7 @@ void WindowManager::InitWorkspaces() {
 
   for (size_t i = 0; i < workspaces_.size(); i++) {
     // Initialize workspace objects.
-    workspaces_[i] = std::make_unique<Workspace>(dpy_, root_window_, config_.get(), i);
+    workspaces_[i] = std::make_unique<Workspace>(dpy_, /*root_window_,*/ config_.get(), i);
 
     // Copy workspace name const char* to names[i], which is needed later.
     // See the XSetTextProperty below.

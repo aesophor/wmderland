@@ -45,7 +45,7 @@ namespace wmderland {
 
 class Config {
  public:
-  Config(Display* dpy, Properties* prop, const std::string& filename);
+  Config(Display* dpy, /*Properties* prop,*/ const std::string& filename);
   virtual ~Config() = default;
   void Load();
 
@@ -118,7 +118,7 @@ class Config {
   std::vector<std::string> autostart_cmds_on_reload_;
 
   Display* dpy_;
-  Properties* prop_;
+//  Properties* prop_;
   const std::string filename_;
   static const char kCommentSymbol = ';';
 };

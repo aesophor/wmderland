@@ -20,8 +20,8 @@ namespace wmderland {
 
 const vector<Action> Config::kEmptyActions_;
 
-Config::Config(Display* dpy, Properties* prop, const string& filename)
-    : dpy_(dpy), prop_(prop), filename_(sys_utils::ToAbsPath(filename)) {}
+Config::Config(Display* dpy, /*Properties* prop,*/ const string& filename)
+    : dpy_(dpy), /*prop_(prop),*/ filename_(sys_utils::ToAbsPath(filename)) {}
 
 void Config::Load() {
   WM_LOG(INFO, "Loading user configuration: " << filename_);

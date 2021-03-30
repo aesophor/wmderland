@@ -68,7 +68,8 @@ int main(int argc, char* args[]) {
     std::cerr << ex.what() << std::endl;
 
     const char* old_snapshot_name = wm->snapshot().filename().c_str();
-    const char* new_snapshot_name = (wm->snapshot().filename() + ".failed_to_load").c_str();
+    std::string new_snapshot_name_str = wm->snapshot().filename() + ".failed_to_load";
+    const char* new_snapshot_name = new_snapshot_name_str.c_str();
 
     if (rename(old_snapshot_name, new_snapshot_name) == -1) {
       WM_LOG_WITH_ERRNO("Failed to rename corrupted snapshot", errno);

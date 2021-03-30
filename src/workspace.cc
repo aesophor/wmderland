@@ -17,9 +17,9 @@ namespace wmderland {
 
 class WindowManager;
 
-Workspace::Workspace(Display* dpy, Window root_window, Config* config, int id)
+Workspace::Workspace(Display* dpy, /*Window root_window,*/ Config* config, int id)
     : dpy_(dpy),
-      root_window_(root_window),
+//      root_window_(root_window),
       config_(config),
       client_tree_(),
       id_(id),

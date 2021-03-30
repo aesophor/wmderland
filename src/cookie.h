@@ -13,12 +13,12 @@ extern "C" {
 
 namespace wmderland {
 
-class Properties;
+struct Properties;
 
 // Cookie holds the user-prefered positions and sizes of windows.
 class Cookie {
  public:
-  Cookie(Display* dpy, Properties* prop, const std::string filename);
+  Cookie(/*Display* dpy, Properties* prop, */ const std::string & filename);
   virtual ~Cookie() = default;
 
   Client::Area Get(Window window) const;
@@ -31,8 +31,8 @@ class Cookie {
   static const char kDelimiter_;
   std::string GetCookieKey(Window window) const;
 
-  Display* dpy_;
-  Properties* prop_;
+//  Display* dpy_;
+//  Properties* prop_;
   std::string filename_;
   std::unordered_map<std::string, Client::Area> client_area_map_;
 };
