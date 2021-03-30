@@ -18,13 +18,23 @@ if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 endif()
 
-
 # Find the required libraries.
 find_package(X11 REQUIRED)
 find_package(glog)
 
-# CMake will generate config.h from config.h.in
+# Platform specific include and link dirs
+message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+if(APPLE)
+  include_directories("/opt/X11/include")
+  link_directories("/opt/X11/lib")
+elseif(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  include_directories("/usr/local/include")
+  link_directories("/usr/local/lib")
+endif()
+
+# Add wm code
 include_directories("src")
+# CMake will generate config.h from config.h.in
 configure_file("src/config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h")
 
 # Grab all files end in .cc
