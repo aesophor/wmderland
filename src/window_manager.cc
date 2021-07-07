@@ -131,6 +131,13 @@ void WindowManager::InitXGrabs() {
              GrabModeAsync);
   }
 
+  // Notes On Apple's XQuartz
+  // ------------------------
+  // The above calls to XGrabKey() will make all programs unable to receive
+  // input from the user, and thus these extra calls to XUngrabKey() are needed.
+  XUngrabKey(dpy_, AnyKey, None, root_window_);
+  XUngrabKey(dpy_, AnyKey, LockMask, root_window_);
+
   // Define which mouse clicks will send us X events.
   XGrabButton(dpy_, AnyButton, Mod4Mask, root_window_, True,
               ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync,
