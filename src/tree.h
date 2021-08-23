@@ -69,7 +69,7 @@ class Tree {
    private:
     static const double min_ratio_;
     void FitChildrenRatiosAfterInsertion(Tree::Node* inserted);
-    std::unique_ptr<Tree::Node>& owning_pointer_() const;
+    std::unique_ptr<Tree::Node>& owning_pointer() const;
 
     std::vector<std::unique_ptr<Tree::Node>> children_;
     Tree::Node* parent_;

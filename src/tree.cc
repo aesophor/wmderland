@@ -253,8 +253,8 @@ void Tree::Node::Swap(Tree::Node* destination) {
     return;
   }
 
-  unique_ptr<Tree::Node>& this_ptr = owning_pointer_();
-  unique_ptr<Tree::Node>& dest_ptr = destination->owning_pointer_();
+  unique_ptr<Tree::Node>& this_ptr = owning_pointer();
+  unique_ptr<Tree::Node>& dest_ptr = destination->owning_pointer();
 
   this_ptr.swap(dest_ptr);
   std::swap(parent_, destination->parent_);
@@ -457,7 +457,7 @@ bool Tree::Node::leaf() const {
   return children_.empty();
 }
 
-unique_ptr<Tree::Node>& Tree::Node::owning_pointer_() const {
+unique_ptr<Tree::Node>& Tree::Node::owning_pointer() const {
   return *std::find_if(parent_->children_.begin(), parent_->children_.end(),
                        [&](unique_ptr<Tree::Node>& node) { return node.get() == this; });
 }
