@@ -1,11 +1,8 @@
 <div align="center">
 
 <img src="https://github.com/aesophor/wmderland/raw/master/.meta/logo.png" width=25%><br>
-<p>Modern and Minimal X11 Tiling Window Manager</p>
+<p>X11 tiling window manager using space partitioning trees</p>
 
-<a href="http://hits.dwyl.io/aesophor/Wmderland">
-  <img src="http://hits.dwyl.io/aesophor/Wmderland.svg">
-</a>
 <a href="https://github.com/aesophor/wmderland/blob/master/LICENSE">
   <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
  </a>
