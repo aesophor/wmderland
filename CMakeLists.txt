@@ -7,7 +7,6 @@ project(wmderland VERSION 1.0.5)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(BuildType)
 
-# Request C++14 standard, using new CMake variables.
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -Wall")
@@ -18,8 +17,6 @@ if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 endif()
 
-
-# Find the required libraries.
 find_package(X11 REQUIRED)
 find_package(glog)
 
@@ -27,15 +24,29 @@ find_package(glog)
 include_directories("src")
 configure_file("src/config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h")
 
-# Grab all files end in .cc
-FILE(GLOB cpp_sources src/*.cc)
-add_executable(wmderland ${cpp_sources})
+add_executable(
+  ${PROJECT_NAME}
+
+  src/action.cc
+  src/client.cc
+  src/config.cc
+  src/cookie.cc
+  src/ipc.cc
+  src/main.cc
+  src/mouse.cc
+  src/properties.cc
+  src/snapshot.cc
+  src/stacktrace.cc
+  src/tree.cc
+  src/util.cc
+  src/window_manager.cc
+  src/workspace.cc
+)
 
 set(LINK_LIBRARIES X11)
-if(GLOG_FOUND)
+if (GLOG_FOUND)
   set(LINK_LIBRARIES ${LINK_LIBRARIES} glog)
 endif()
-target_link_libraries(wmderland ${LINK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
 
-# Install rule
-install(TARGETS wmderland DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
