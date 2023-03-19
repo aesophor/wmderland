@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/aesophor/wmderland/raw/master/.meta/logo.png" width=25%><br>
+<img src="https://github.com/aesophor/wmderland/raw/master/.meta/logo.png" width=20%><br>
 <p>X11 tiling window manager using space partitioning trees</p>
 
 <a href="https://github.com/aesophor/wmderland/blob/master/LICENSE">
@@ -10,9 +10,6 @@
   <img src="https://travis-ci.org/aesophor/wmderland.svg?branch=master">
 </a>
 
-<br><br>
-
-<img src="https://github.com/aesophor/wmderland/raw/master/.meta/tiling.png">
 </div>
 
 <br>
@@ -20,7 +17,7 @@
 ## wmderland (Pronounced "wonderland")
 A minimal i3-gaps, written in C++ and Xlib.
 
-<a href="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/floating.png"><img src="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/floating.png" width="43%" align="right"></a>
+<a href="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/tiling.png"><img src="https://raw.githubusercontent.com/aesophor/wmderland/master/.meta/tiling.png" width="43%" align="right"></a>
 
 * Configurable workflow (keyboard, mouse, or both)
 * i3-like [config](https://github.com/aesophor/wmderland/blob/master/example/config); easy to use!
