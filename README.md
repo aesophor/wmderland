@@ -30,6 +30,15 @@ A minimal i3-gaps, written in C++ and Xlib.
 * Supports [a subset of EWMH](https://github.com/aesophor/wmderland/blob/master/src/properties.cc)
 * [Tiny IPC Client](https://github.com/aesophor/wmderland/tree/master/ipc-client)
 
+## Videos on YouTube
+* [MiyoLinux](https://www.youtube.com/@miyolinux)
+  - [A Sneak-Peek of the upcoming Wmderland build](https://www.youtube.com/watch?v=-D7HbKbyzqU)
+  - [wmderland (Wonderland) Tiling Window Manager](https://www.youtube.com/watch?v=u8iCW4FYD_o)
+  - [More fun with wmderland window manager](https://www.youtube.com/watch?v=f9VVhRDJONU)
+* [Erik Dubois](https://www.youtube.com/@ErikDubois)
+  - [ArcoLinux : 2437 Installing Wmderland with an iso of September 2021 - black screen solution](https://www.youtube.com/watch?v=e83zCcBib7Y)
+  - [ArcoLinux : 2429 Where are the configuration files of Wmderland - Tiling Window Manager](https://www.youtube.com/watch?v=bbuAdOebUec)
+
 ## Advantages over i3wm and i3-gaps
 wmderland, while derived from i3wm, is built with a different philosophy in mind:
 
